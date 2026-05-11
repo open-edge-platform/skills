@@ -6,7 +6,7 @@ argument-hint: "Optional: a specific repo name to re-scan (e.g. 'anomalib'). Lea
 
 # Update Skills Index
 
-Regenerate the `README.md` in `open-edge-platform/skills` by discovering all `SKILL.md` files across the org and rebuilding the index table.
+Regenerate the `README.md` in `open-edge-platform/skills` by discovering all `SKILL.md` files across the org — including this repo — and rebuilding the customer-facing index.
 
 ## When to Use
 
@@ -19,7 +19,7 @@ Regenerate the `README.md` in `open-edge-platform/skills` by discovering all `SK
 
 ### Step 1 — Discover all SKILL.md files in the org
 
-Use the GitHub code search API to find every `SKILL.md` in the org:
+Use the GitHub code search API to find every `SKILL.md` in the org, **including `open-edge-platform/skills` itself**:
 
 ```bash
 gh api --paginate search/code \
@@ -46,7 +46,26 @@ gh api repos/<owner>/<repo>/contents/<path-to-SKILL.md> \
 
 Parse with a simple approach: extract lines between the first `---` and second `---`, then read `name:` and `description:` values.
 
-### Step 3 — Determine the default branch for each repo
+### Step 2b — Filter to customer-facing skills only
+
+Present the full list of discovered skills to the user (across all repos, including `open-edge-platform/skills`) and ask them to confirm which are **customer-facing** (i.e., used by end-users building with Open Edge Platform products). Only the selected skills will appear in the README index.
+
+Display the list in this format:
+
+```
+Discovered skills:
+
+  1. [<repo-name>] <skill-name> — <description>
+  2. [<repo-name>] <skill-name> — <description>
+  ...
+
+Which of these are customer-facing skills that should appear in the README?
+(Enter numbers separated by commas, or "all" / "none")
+```
+
+Wait for the user's response before proceeding. Use their selection as the definitive set of skills to include in the README.
+
+### Step 3 — Determine the default branch for each selected repo
 
 ```bash
 gh api repos/open-edge-platform/<repo> --jq '.default_branch'
@@ -54,33 +73,22 @@ gh api repos/open-edge-platform/<repo> --jq '.default_branch'
 
 Use this branch name when constructing GitHub URLs for skill links.
 
-### Step 4 — Also discover reusable skills in this repo
+### Step 4 — Rebuild README.md
 
-The `open-edge-platform/skills` repository itself contains reusable skills under `.github/skills/`. These go in the **Reusable Skills** section of README.md, separate from per-repo skills.
+Regenerate the repo-root `README.md` using this exact structure:
 
-```bash
-gh api repos/open-edge-platform/skills/contents/.github/skills \
-  --jq '.[].name'
-```
-
-### Step 5 — Rebuild README.md
-
-Regenerate the repo-root `README.md` (or clone the repo if running outside the local checkout) using this exact structure:
-
-```markdown
+````markdown
 # Open Edge Platform — Agent Skills Index
 
-<intro paragraph>
+This repository is the central hub for **External facing agent skills** to be used by the customers.
+
+A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specific instructions. When a prompt matches a skill's description, the agent loads that skill's guidance automatically.
 
 ---
 
-## Reusable Skills (this repo)
+## Customer-Facing Skills
 
-<table of skills from open-edge-platform/skills itself>
-
----
-
-## Skills by Repository
+Skills designed for end-users building solutions with Open Edge Platform products.
 
 ### [<repo-name>](<repo-url>) — <repo description>
 
@@ -92,7 +100,7 @@ Skills live in `<skills-path>` within the repo.
 
 ---
 
-<repeat for each repo that has skills, sorted alphabetically>
+<repeat for each repo that has customer-facing skills, sorted alphabetically>
 
 ## Contributing a Skill
 
@@ -101,22 +109,21 @@ Skills live in `<skills-path>` within the repo.
 ---
 
 *This index is maintained by the [update-skills-index](.github/skills/update-skills-index/SKILL.md) skill. Run it on demand to sync with the latest skills across the org.*
-```
+````
 
 **Sorting rules:**
 - Repos are sorted alphabetically by name
 - Skills within a repo are listed in the order returned by the search API (effectively alphabetical by folder name)
-- The `open-edge-platform/skills` reusable section always appears first, before per-repo sections
 
 **Link format:**
-- Skill name links to the raw `SKILL.md` on open-edge-platform GitHub organization: `https://github.com/open-edge-platform/<repo>/blob/<default_branch>/<path>`
+- Skill name links to the `SKILL.md` on GitHub: `https://github.com/open-edge-platform/<repo>/blob/<default_branch>/<path>`
 - Repo header links to the repository root: `https://github.com/open-edge-platform/<repo>`
 
 **Repo description:**
 - Use the GitHub API `description` field for the repo subtitle: `gh api repos/open-edge-platform/<repo> --jq '.description'`
 - Truncate to ~80 chars if too long; omit if empty
 
-### Step 6 — Commit the updated README
+### Step 5 — Commit the updated README
 
 After writing the new README.md:
 
@@ -136,8 +143,7 @@ If running as part of a PR workflow, create a branch and open a PR instead of pu
 ## Output
 
 A fully regenerated `README.md` committed to `open-edge-platform/skills` with:
-- All current skills across the org indexed with correct links and descriptions
-- The reusable skills section up to date
+- **Customer-Facing Skills** section listing only the skills confirmed by the user as end-user-facing, drawn from all repos in the org including `open-edge-platform/skills` itself
 - The Contributing section preserved unchanged
 
 ## Notes
