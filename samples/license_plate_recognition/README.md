@@ -35,7 +35,7 @@ source → decodebin3 → gvadetect → gvaclassify → sink
 
 | Model | Purpose | Source |
 |-------|---------|--------|
-| `yolov8_license_plate_detector` | Detect license plates in each frame | [edge-ai-resources](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/license-plate-reader.zip) |
+| `yolov8_license_plate_detector` | Detect license plates in each frame | [edge-ai-resources](https://github.com/open-edge-platform/edge-ai-resources) (packaged in `license-plate-reader.zip`, converted by `download_public_models.sh`) |
 | `ch_PP-OCRv4_rec_infer` | OCR — read the text on each plate | [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) |
 
 Both models are downloaded and converted to OpenVINO™ IR format by the `download_public_models.sh` script from the DL Streamer repository.

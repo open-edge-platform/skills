@@ -68,8 +68,8 @@ OCR_MODEL="${MODELS_PATH}/public/ch_PP-OCRv4_rec_infer/FP32/ch_PP-OCRv4_rec_infe
 check_model() {
   if [ ! -f "$1" ]; then
     echo "Error: model not found: $1" >&2
-    echo "Download it first with:" >&2
-    echo "  \$MODELS_PATH/../../samples/download_public_models.sh $(basename "$(dirname "$(dirname "$1")")")" >&2
+    echo "Download it first with (from a DL Streamer installation):" >&2
+    echo "  /opt/intel/dlstreamer/samples/download_public_models.sh $(basename "$(dirname "$(dirname "$1")")")" >&2
     exit 1
   fi
 }

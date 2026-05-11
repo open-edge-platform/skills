@@ -13,6 +13,7 @@ Supported inputs : local file, RTSP/HTTP URL, /dev/videoN webcam
 Supported outputs: display, fps, json, file
 """
 
+import os
 import sys
 from argparse import ArgumentParser
 
@@ -121,7 +122,6 @@ def _build_sink(output: str, input_uri: str, device: str) -> str:
             "fakesink async=false"
         )
     if output == "file":
-        import os
         basename = os.path.splitext(os.path.basename(input_uri))[0]
         out_file = f"lpr_{basename}_{device}.mp4"
         return (
