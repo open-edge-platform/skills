@@ -22,7 +22,7 @@ Regenerate the `README.md` in `open-edge-platform/skills` by discovering all `SK
 Use the GitHub code search API to find every `SKILL.md` in the org:
 
 ```bash
-gh api search/code \
+gh api --paginate search/code \
   --method GET \
   -f q='org:open-edge-platform filename:SKILL.md' \
   --jq '.items[] | {repo: .repository.full_name, path: .path}'
@@ -65,7 +65,7 @@ gh api repos/open-edge-platform/skills/contents/.github/skills \
 
 ### Step 5 — Rebuild README.md
 
-Regenerate `/home/vinod/repos/skills/README.md` (or clone the repo if running outside the local checkout) using this exact structure:
+Regenerate the repo-root `README.md` (or clone the repo if running outside the local checkout) using this exact structure:
 
 ```markdown
 # Open Edge Platform — Agent Skills Index
@@ -109,8 +109,8 @@ Skills live in `<skills-path>` within the repo.
 - The `open-edge-platform/skills` reusable section always appears first, before per-repo sections
 
 **Link format:**
-- Skill name links to the raw `SKILL.md` on GitHub: `https://github.com/<owner>/<repo>/blob/<default_branch>/<path>`
-- Repo header links to the repository root: `https://github.com/<owner>/<repo>`
+- Skill name links to the raw `SKILL.md` on open-edge-platform GitHub organization: `https://github.com/open-edge-platform/<repo>/blob/<default_branch>/<path>`
+- Repo header links to the repository root: `https://github.com/open-edge-platform/<repo>`
 
 **Repo description:**
 - Use the GitHub API `description` field for the repo subtitle: `gh api repos/open-edge-platform/<repo> --jq '.description'`
