@@ -37,7 +37,7 @@ issue_cert() {
   local KEYFILE="$SECRETSDIR/certs/scenescape-${HOST}.key"
   local CSRFILE="$SECRETSDIR/certs/scenescape-${HOST}.csr"
   local CRTFILE="$SECRETSDIR/certs/scenescape-${HOST}.crt"
-  local SAN="DNS.1=${HOST}.${CERTDOMAIN}"
+  local SAN="DNS:${HOST}.${CERTDOMAIN}"
 
   echo "Generating ${HOST}.key..."
   openssl ecparam -name secp384r1 -genkey -noout -out "$KEYFILE"

@@ -6,7 +6,7 @@ description: >
   docker-compose, DLStreamer pipeline config, tracker config, bringing up containers, verifying
   MQTT data flow, running 3D mapping, creating the scene and cameras via REST API, and confirming
   object tracking is live on the regulated topic.
-argument-hint: 'Optional: path to a directory where deployment files should be created (default: current directory)'
+argument-hint: "Optional: path to a directory where deployment files should be created (default: current directory)"
 ---
 
 # SceneScape End-to-End Setup
@@ -21,19 +21,19 @@ required on the host — no SceneScape source checkout needed.
 Execute these steps in order. Each step links to a reference file with the exact content
 to generate or commands to run.
 
-| # | Step | Reference |
-|---|---|---|
-| 1 | Gather inputs from user | (below) |
-| 2 | Create deployment directory | (below) |
-| 3 | Generate `docker-compose.yml` | [docker-compose-template.md](./references/docker-compose-template.md) |
-| 4 | Generate DLStreamer pipeline config | [pipeline-config.md](./references/pipeline-config.md) |
-| 5 | Generate tracker config | (below — one JSON block) |
-| 6 | Generate secrets and bring up containers | [generate_secrets.sh](./references/generate_secrets.sh) |
-| 7 | Verify camera MQTT data flow | (below) |
-| 8 | Check mapping service health | (below) |
-| 9 | Capture frames and run 3D reconstruction | [reconstruction.md](./references/reconstruction.md) |
-| 10 | Create scene and cameras via REST API | [scene-and-cameras.md](./references/scene-and-cameras.md) |
-| 11 | Verify object tracking | [verify-tracking.md](./references/verify-tracking.md) |
+| #   | Step                                                     | Reference                                                                                                        |
+| --- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 1   | Gather inputs from user                                  | (below)                                                                                                          |
+| 2   | Create deployment directory                              | (below)                                                                                                          |
+| 3   | Generate `docker-compose.yml`                            | [docker-compose-template.md](./references/docker-compose-template.md)                                            |
+| 4   | Generate DLStreamer pipeline config                      | [pipeline-config.md](./references/pipeline-config.md)                                                            |
+| 5   | Generate tracker and ReID config                      | (below — two JSON blocks)                                                                                       |
+| 6   | Generate broker config, secrets, and bring up containers | [generate_secrets.sh](./references/generate_secrets.sh), [mosquitto-config.md](./references/mosquitto-config.md) |
+| 7   | Verify camera MQTT data flow                             | (below)                                                                                                          |
+| 8   | Check mapping service health                             | (below)                                                                                                          |
+| 9   | Capture frames and run 3D reconstruction                 | [reconstruction.md](./references/reconstruction.md)                                                              |
+| 10  | Create scene and cameras via REST API                    | [scene-and-cameras.md](./references/scene-and-cameras.md)                                                        |
+| 11  | Verify object tracking                                   | [verify-tracking.md](./references/verify-tracking.md)                                                            |
 
 Load a reference file only when you reach that step.
 
@@ -43,12 +43,12 @@ Load a reference file only when you reach that step.
 
 Prompt for:
 
-| Field | Description | Example |
-|---|---|---|
-| `streams` | RTSP URL per camera | `rtsp://192.168.1.10:554/stream` |
-| `camera_ids` | Unique ID per stream (same order) | `cam1`, `cam2` |
-| `scene_name` | Human-readable scene name | `Warehouse Floor A` |
-| `deploy_dir` | Directory for generated files | `./scenescape-deploy` |
+| Field        | Description                       | Example                          |
+| ------------ | --------------------------------- | -------------------------------- |
+| `streams`    | RTSP URL per camera               | `rtsp://192.168.1.10:554/stream` |
+| `camera_ids` | Unique ID per stream (same order) | `cam1`, `cam2`                   |
+| `scene_name` | Human-readable scene name         | `Warehouse Floor A`              |
+| `deploy_dir` | Directory for generated files     | `./scenescape-deploy`            |
 
 Validate: `len(streams) == len(camera_ids)`, IDs are unique and contain no `/`, at least 1 camera.
 
@@ -67,7 +67,7 @@ All generated files go under `<deploy_dir>/`.
 
 ---
 
-## Step 5 — Tracker Config
+## Step 5 — Tracker and ReID Config
 
 Write `<deploy_dir>/tracker-config.json`:
 
@@ -82,11 +82,25 @@ Write `<deploy_dir>/tracker-config.json`:
 }
 ```
 
+Write `<deploy_dir>/reid-config.json`:
+
+```json
+{
+  "similarity_metric": "COSINE",
+  "stale_feature_timeout_secs": 5.0,
+  "stale_feature_check_interval_secs": 1.0,
+  "feature_accumulation_threshold": 12,
+  "minimum_bbox_area": 5000,
+  "feature_slice_size": 10,
+  "similarity_threshold": 0.5
+}
+```
+
 ---
 
 ## Step 7 — Verify Camera MQTT Data Flow
 
-After all containers are healthy, wait up to **2 minutes** for DLStreamer to initialise its
+After all containers are healthy, wait up to **2 minutes** for video-analytics to initialise its
 pipelines. Subscribe to `scenescape/data/camera/+` and confirm a message arrives for every
 camera ID the user provided.
 
@@ -105,8 +119,9 @@ docker compose exec broker mosquitto_sub \
 ```
 
 If timeout is reached without all cameras reporting, warn the user:
-1. `docker compose logs dlstreamer --tail 50` — look for RTSP connection errors
-2. Verify RTSP URLs are reachable: `docker compose exec dlstreamer curl <rtsp_url>`
+
+1. `docker compose logs video-analytics --tail 50` — look for RTSP connection errors
+2. Verify RTSP URLs are reachable: `docker compose exec video-analytics curl <rtsp_url>`
 3. `docker compose logs broker --tail 20` — check broker is accepting connections
 
 ---

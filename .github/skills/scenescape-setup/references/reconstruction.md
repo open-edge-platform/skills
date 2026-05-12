@@ -2,7 +2,7 @@
 
 ## 1. Capture Calibration Frames via MQTT
 
-Send `getcalibrationimage` to the DLStreamer command topic for each camera. The
+Send `getcalibrationimage` to the video-analytics command topic for each camera. The
 `PostInferenceDataPublish` adapter responds by publishing an unannotated JPEG frame to
 `scenescape/image/calibration/camera/<camera_id>`.
 
@@ -36,7 +36,7 @@ client = mqtt.Client()
 client.tls_set(ca_certs=CA_CERT)
 client.username_pw_set(auth["user"], auth["password"])
 client.on_message = on_message
-client.connect("localhost", 8883, 60)
+client.connect("localhost", 1883, 60)
 client.subscribe("scenescape/image/calibration/camera/+", qos=2)
 client.loop_start()
 

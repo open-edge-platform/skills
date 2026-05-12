@@ -32,7 +32,7 @@ client = mqtt.Client()
 client.tls_set(ca_certs=CA_CERT)
 client.username_pw_set(auth["user"], auth["password"])
 client.on_message = on_message
-client.connect("localhost", 8883, 60)
+client.connect("localhost", 1883, 60)
 client.subscribe(TOPIC, qos=1)
 client.loop_start()
 
@@ -41,7 +41,7 @@ if done.wait(timeout=TIMEOUT_S):
     print(f"Tracking confirmed — {result['count']} object(s) seen on {TOPIC}")
 else:
     print("WARNING: No tracked objects seen within 2 minutes.")
-    print_troubleshooting_checklist(scene_uid)
+    print("See troubleshooting section below for diagnostic steps.")
 
 client.loop_stop()
 client.disconnect()
@@ -52,13 +52,16 @@ client.disconnect()
 If no objects appear:
 
 ### 1. Check the Scene Controller logs
+
 ```bash
 cd <deploy_dir>
 docker compose logs scene --tail=50
 ```
+
 Look for errors about: MQTT connection failures, schema validation errors, missing cameras.
 
 ### 2. Verify cameras are registered in the scene
+
 ```python
 import requests
 resp = requests.get(
@@ -72,10 +75,12 @@ for c in cameras:
 ```
 
 ### 3. Check for non-zero camera pose
+
 A camera with all-zero translation will be ignored by the controller.
 Inspect `translation` in each registered camera's response JSON.
 
 ### 4. Check scene scale is non-zero
+
 ```python
 resp = requests.get(
     f"https://localhost/api/v1/scene/{scene_uid}",
@@ -83,25 +88,31 @@ resp = requests.get(
 )
 print("scale =", resp.json().get("scale"))
 ```
+
 A zero scale prevents regulated topic output. Fix: set a real-world scale via the UI
 (Scene → Edit → Scale) or PATCH the field directly.
 
-### 5. Verify raw detections are arriving from DLStreamer
+### 5. Verify raw detections are arriving from video-analytics
+
 ```bash
 docker compose exec broker mosquitto_sub \
-  -h broker.scenescape.intel.com -p 8883 \
+  -h broker.scenescape.intel.com -p 1883 \
   --cafile /mosquitto/secrets/certs/scenescape-ca.pem \
   -u webuser -P "<browser.auth password>" \
   -t "scenescape/data/camera/+" -C 3
 ```
-If no messages appear, DLStreamer pipelines are not detecting anything. Check:
+
+If no messages appear, video-analytics pipelines are not detecting anything. Check:
+
 - RTSP streams are accessible from inside the container
 - The model files exist in the `vol-models` volume
-- `docker compose logs dlstreamer --tail=30`
+- `docker compose logs video-analytics --tail=30`
 
 ### 6. Confirm controller sees the scene
+
 ```bash
 docker compose logs scene | grep -i "scene\|camera\|calibrat"
 ```
+
 The controller should log something like `"Loading scene <scene_uid>"` and
 `"Camera <camera_id> calibrated"` after cameras are registered.
