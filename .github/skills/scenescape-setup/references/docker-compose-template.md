@@ -28,7 +28,7 @@ secrets:
   vdms-server-key:
     file: ${SECRETSDIR}/certs/scenescape-vdms-s.key
   django:
-    file: ${SECRETSDIR}/django/secrets.py
+    file: ${SECRETSDIR}/django
   controller.auth:
     file: ${SECRETSDIR}/controller.auth
   browser.auth:
@@ -110,6 +110,8 @@ services:
         condition: service_healthy
       broker:
         condition: service_started
+      init-models:
+        condition: service_completed_successfully
     ports:
       - "443:443"
     command: >
@@ -119,7 +121,7 @@ services:
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem
     healthcheck:
-      test: "curl --insecure -X GET https://web.scenescape.intel.com:443/api/v1/database-ready | grep 'true'"
+      test: "curl --insecure -s https://localhost:443/api/v1/database-ready | grep 'true'"
       interval: 10s
       timeout: 120s
       retries: 10
@@ -132,10 +134,14 @@ services:
       BROKER: broker.scenescape.intel.com
       BROKERAUTH: /run/secrets/browser.auth
       BROKERROOTCERT: /run/secrets/certs/scenescape-ca.pem
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com
     volumes:
       - vol-media:/workspace/media
-      - vol-models:/home/scenescape/SceneScape/models
-      - ./secrets/django/secrets.py:/home/scenescape/SceneScape/manager/secrets.py:ro
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -146,6 +152,7 @@ services:
       - django
       - browser.auth
       - calibration.auth
+      - controller.auth
       - source: vdms-client-cert
         target: certs/scenescape-vdms-c.crt
       - source: vdms-client-key
@@ -164,6 +171,13 @@ services:
         condition: service_started
       ntpserv:
         condition: service_started
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},.scenescape.intel.com
+      HTTP_PROXY: ${http_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      NO_PROXY: ${no_proxy},.scenescape.intel.com
     command: >
       --restauth /run/secrets/controller.auth
       --brokerauth /run/secrets/controller.auth
@@ -176,7 +190,6 @@ services:
         target: /home/scenescape/SceneScape/reid-config.json
     volumes:
       - vol-media:/home/scenescape/SceneScape/media
-      - ./secrets/django/secrets.py:/home/scenescape/SceneScape/manager/secrets.py:ro
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
@@ -195,13 +208,29 @@ services:
     depends_on:
       broker:
         condition: service_started
+      mediaserver:
+        condition: service_started
     environment:
       MQTT_HOST: broker.scenescape.intel.com
-      no_proxy: broker.scenescape.intel.com
+      # no_proxy must include mediaserver to prevent proxy from intercepting RTSP DESCRIBE
+      no_proxy: broker.scenescape.intel.com,mediaserver
+      NO_PROXY: broker.scenescape.intel.com,mediaserver
     volumes:
       - ./pipeline-config.json:/home/pipeline-server/config.json:ro
       - vol-models:/home/pipeline-server/models:ro
+      - ./dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts:ro
+      - ./dlstreamer-pipeline-server/model-proc-files:/home/pipeline-server/model-proc-files:ro
+    tmpfs:
+      - /var/cache/pipeline_root:mode=01777
     restart: unless-stopped
+
+  init-models:
+    image: alpine:latest
+    user: root
+    volumes:
+      - vol-models:/models
+    command: chown -R 1000:1000 /models
+    restart: "no"
 
   model_downloader:
     image: scenescape-model-installer:latest
@@ -240,7 +269,7 @@ services:
 
 configs:
   mosquitto-secure:
-    file: ./mosquitto.conf
+    file: ./dlstreamer-pipeline-server/mosquitto/mosquitto-secure.conf
   tracker-config:
     file: ./tracker-config.json
   reid-config:
@@ -257,12 +286,6 @@ volumes:
   vol-mapping-hf-cache:
     driver: local
 ```
-
-## Required Supporting File: `mosquitto.conf`
-
-Write `<deploy_dir>/mosquitto.conf` using the dedicated broker reference:
-
-[mosquitto-config.md](./mosquitto-config.md)
 
 ## Environment Variables
 

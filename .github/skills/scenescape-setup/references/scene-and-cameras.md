@@ -21,6 +21,10 @@ HEADERS = {"Authorization": f"Token {TOKEN}"}
 
 ## 2. Create the Scene (upload GLB map)
 
+> **Note:** The `/api/v1/scene` POST endpoint requires `parent`, `transform`, `map_processed`,
+> `regions`, and `tripwires` — all mandatory when a map file is **not** provided. If no GLB map
+> is available yet (pre-mapping), use the Django ORM fallback below.
+
 ```python
 with open(f"{DEPLOY_DIR}/scene.glb", "rb") as glb_file:
     resp = requests.post(
@@ -34,6 +38,24 @@ resp.raise_for_status()
 scene = resp.json()
 scene_uid = scene["uid"]
 print(f"Scene created: uid={scene_uid}")
+```
+
+### Fallback — create scene without a map (pre-mapping)
+
+If no GLB map file is available yet, create the scene directly via the Django shell:
+
+```bash
+SCENE_UUID=$(docker exec scenescape-web-1 bash -c "
+cd /home/scenescape/SceneScape && python manage.py shell -c \"
+from manager.models import Scene
+s = Scene(name='${scene_name}')
+s.save()
+print(s.pk)
+\" 2>/dev/null" | tail -1)
+echo "Scene UUID: $SCENE_UUID"
+```
+
+Save `SCENE_UUID` — it is used as `scene_uid` when creating cameras below.
 
 # Guard: if scale came back as zero, set a placeholder and warn
 if float(scene.get("scale") or 0) == 0.0:
