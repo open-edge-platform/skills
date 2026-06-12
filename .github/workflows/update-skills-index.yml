@@ -1,0 +1,70 @@
+name: Update Skills Index
+
+on:
+  # Run every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+
+  # Allow manual trigger with optional repo override
+  workflow_dispatch:
+    inputs:
+      repos:
+        description: >
+          Comma-separated repo names to scan (e.g. anomalib,dlstreamer).
+          Leave blank to use the DEFAULT_REPOS list in the script.
+          Use "all" to scan the entire open-edge-platform org.
+        required: false
+        default: ''
+      dry_run:
+        description: 'Print the generated README without committing (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout skills repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run skills index updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOS: ${{ inputs.repos }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python scripts/update_skills_index.py --dry-run
+          else
+            python scripts/update_skills_index.py
+          fi
+
+      - name: Commit and push if README changed
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet README.md; then
+            echo "README.md is already up to date — nothing to commit."
+            exit 0
+          fi
+
+          git add README.md
+          git commit -m "chore: auto-update skills index
+
+Scanned open-edge-platform org and refreshed all skill entries.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          git push
