@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
+
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
-Sync earmarked skills into .agents/skills/ and regenerate README.md.
+Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
 skills-config.json is the single source of truth.  The script:
   1. Reads skills-config.json and runs `npx skills add/update` for each entry,
@@ -127,12 +134,16 @@ def parse_frontmatter(skill_md: Path) -> dict:
 # README builder (reads from .agents/skills/ + skills-lock.json)
 # ---------------------------------------------------------------------------
 
-def build_skills_table(skills_lock: dict, local_skills_dir: Path) -> str:
+def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> str:
     """
     Build only the skills table rows from installed SKILL.md files.
     Returns the full replacement block including sentinel comments and timestamp.
+    config_entries supplies optional extra metadata (e.g. prompts_url) per skill.
     """
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+
+    # Index config extras by skill name for quick lookup
+    config_by_skill = {e["skill"]: e for e in config_entries}
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
@@ -149,12 +160,14 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path) -> str:
             continue
 
         print(f"  + [{repo}] {fm['name']}", file=sys.stderr)
+        prompts_url = config_by_skill.get(skill_name, {}).get("prompts_url") or None
         rows.append({
             "repo_name": repo.split("/")[-1],
             "repo_url": f"https://github.com/{repo}",
             "skill_name": fm["name"],
             "skill_url": f"https://github.com/{repo}/blob/main/{skill_path}",
             "description": fm.get("description", ""),
+            "prompts_url": prompts_url,
         })
 
     rows.sort(key=lambda r: (r["repo_name"], r["skill_name"]))
@@ -162,12 +175,14 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path) -> str:
     lines = [
         f"{SKILLS_INDEX_BEGIN}",
         f"<!-- Last updated: {now} -->",
-        "| Repository | Skill | Description |",
-        "|------------|-------|-------------|",
+        "| Repository | Prompts | Skill | Description |",
+        "|------------|---------|-------|-------------|",
     ]
     for row in rows:
+        prompts_cell = f"[Prompts]({row['prompts_url']})" if row["prompts_url"] else "—"
         lines.append(
             f"| [{row['repo_name']}]({row['repo_url']}) "
+            f"| {prompts_cell} "
             f"| [{row['skill_name']}]({row['skill_url']}) "
             f"| {row['description']} |"
         )
@@ -175,7 +190,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path) -> str:
     return "\n".join(lines)
 
 
-def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path) -> None:
+def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> None:
     """
     Splice the generated skills table into README.md between the sentinel
     comments, leaving everything outside the sentinels unchanged.
@@ -191,7 +206,7 @@ def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path) 
             f"sentinels in {readme_path}. Add them to README.md to mark the auto-updated region."
         )
 
-    new_block = build_skills_table(skills_lock, local_skills_dir)
+    new_block = build_skills_table(skills_lock, local_skills_dir, config_entries)
     updated = content[:begin_idx] + new_block + content[end_idx + len(SKILLS_INDEX_END):]
     readme_path.write_text(updated, encoding="utf-8")
 
@@ -216,8 +231,8 @@ def main():
     args = parser.parse_args()
 
     # Step 1 — install / update skills via npx skills
+    entries = load_skills_config(Path(args.config))
     if args.install:
-        entries = load_skills_config(Path(args.config))
         print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
         install_skills(entries, repo_root, dry_run=args.dry_run)
 
@@ -231,14 +246,12 @@ def main():
     readme_path = repo_root / "README.md"
 
     if args.dry_run:
-        print(build_skills_table(skills_lock, local_skills_dir))
+        print(build_skills_table(skills_lock, local_skills_dir, entries))
         return
 
-    update_readme(readme_path, skills_lock, local_skills_dir)
+    update_readme(readme_path, skills_lock, local_skills_dir, entries)
     print("README.md updated.", file=sys.stderr)
 
 
 if __name__ == "__main__":
     main()
-
-
