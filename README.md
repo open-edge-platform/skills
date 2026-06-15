@@ -7,12 +7,13 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 
 ---
 
-<!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-06-13 10:46 UTC -->
-| Repository | Prompts | Skill | Description |
+| Product | Prompts | Skill | Description |
 |------------|---------|-------|-------------|
 | [dlstreamer](https://github.com/open-edge-platform/dlstreamer) | [Prompts](https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/dlstreamer/blob/main/.github/skills/dlstreamer-coding-agent/SKILL.md) | Build new DL Streamer video-analytics applications (Python, C, C++ or GStreamer command line). Use when: user describes a vision AI pipeline, wants to create a new sample app, combine elements from existing samples, add detection/classification/VLM/tracking/alerts/recording to a video pipeline, or create custom GStreamer elements in Python or C++. Translates natural-language pipeline descriptions into working DL Streamer code using established design patterns. |
-<!-- END SKILLS INDEX -->
+| [Scenescape](https://github.com/open-edge-platform/scenescape) | [Prompts](TBU) | [scenescape-setup](https://github.com/open-edge-platform/scenescape/tree/main/.github/skills/scenescape-setup/SKILL.md) | Deploy a working Intel® SceneScape installation from scratch (outside the repo). Gathers user-provided streams, camera IDs, and scene name, then runs bootstrap through tracking verification via scripts/deploy_scenescape.sh. |
+| [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) | [Prompts](TBU) | [vss-search](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization/.github/skills/vss-search) | Search a video library with natural language via the VSS Pipeline Manager — upload a video (POST /videos), generate its embeddings (POST /videos/search-embeddings/{id}), then run a query (POST /search/query) with optional tag and time filters and read the ranked clip results. Use when the user says "search my videos", "find <thing> in the videos", "when did X happen", or wants to ingest/index a video for search. Requires a search-capable deployment (--search, --dual, or --unified). |
+| [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) | [Prompts](TBU) | [vss-summarize](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization/.github/skills/vss-summarize) | Summarize a video through the VSS Pipeline Manager — start a summary pipeline with POST /summary (full required body), poll GET /summary/{stateId} until complete, then return the summary via GET /summary/{stateId}/raw. Use when the user says "summarize this video", "create a summary", "what happens in this video" (on an ingested video), or wants to run/inspect the summarization pipeline. Requires a summary-capable deployment (--summary, --dual, or --unified). |
+
 
 ---
 
@@ -124,8 +125,7 @@ To add a skill to the org index:
 
 1. Create a `SKILL.md` in your repo under `.github/skills/<skill-name>/SKILL.md` (or `.agents/skills/<skill-name>/SKILL.md`)
 2. Include a YAML frontmatter block with at minimum `name` and `description`
-3. Add an entry to `skills-config.json` in this repo, open a PR, and after it is merged, trigger the
-   `update-skills-index` workflow to install it and update this README
+3. Update the skills index table above with all the relevant details
 
 ### SKILL.md frontmatter format
 

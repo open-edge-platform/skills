@@ -1,9 +1,0 @@
-{
-  "skills": [
-    {
-      "repo": "open-edge-platform/dlstreamer",
-      "skill": "dlstreamer-coding-agent",
-      "prompts_url": "https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples"
-    }
-  ]
-}
