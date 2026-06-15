@@ -7,24 +7,22 @@
 #
 
 """
-Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
+Regenerate the skills index section in README.md.
 
-skills-config.json is the single source of truth.  The script:
-  1. Reads skills-config.json and runs `npx skills add/update` for each entry,
-     targeting only .agents/skills/ (via --agent universal --copy).
-  2. Reads the installed SKILL.md files from .agents/skills/ directly to
-     parse frontmatter, and reads skills-lock.json for upstream repo/path
-     metadata to build GitHub links.
+For each skill in skills-config.json, fetches SKILL.md directly from GitHub
+to extract the skill name and description, then splices an updated table into
+README.md between the sentinel comments.
 
 Usage:
-    python scripts/update_skills_index.py [--dry-run] [--no-install] [--config PATH]
+    python scripts/update_skills_index.py [--config PATH]
 """
 
 import argparse
 import json
 import re
-import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -40,8 +38,11 @@ SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
 def load_skills_config(config_path: Path) -> list[dict]:
     """
     Read skills-config.json.  Each entry must have:
-      repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skill  — skill folder name     (becomes .agents/skills/<skill>)
+      repo   — full "org/repo" name       (e.g. "open-edge-platform/dlstreamer")
+      skill  — list of skill folder names
+    Optional per entry:
+      ref    — branch, tag, or commit hash to read from (default: "main")
+      path   — path prefix inside the repo where skills live (default: ".github/skills")
     """
     if not config_path.exists():
         sys.exit(f"Error: skills-config.json not found at {config_path}")
@@ -51,84 +52,40 @@ def load_skills_config(config_path: Path) -> list[dict]:
     valid = []
     for entry in entries:
         if "repo" in entry and "skill" in entry:
+            if isinstance(entry["skill"], str):
+                entry = {**entry, "skill": [entry["skill"]]}
             valid.append(entry)
         else:
             print(f"  [warn] skipping malformed entry (needs repo+skill): {entry}", file=sys.stderr)
     return valid
 
 
-def load_skills_lock(lock_path: Path) -> dict:
-    """
-    Return the skills dict from skills-lock.json (written by `npx skills`).
-    Keys are skill names; values include source, skillPath, etc.
-    """
-    if not lock_path.exists():
-        return {}
-    with lock_path.open(encoding="utf-8") as f:
-        return json.load(f).get("skills", {})
-
-
 # ---------------------------------------------------------------------------
-# Installation via `npx skills`
+# GitHub fetch + frontmatter parser
 # ---------------------------------------------------------------------------
 
-def _run(cmd: list[str], cwd: Path) -> int:
-    print(f"  $ {' '.join(cmd)}", file=sys.stderr)
-    return subprocess.run(cmd, cwd=str(cwd)).returncode
+def fetch_skill_md(repo: str, ref: str, skill_file_path: str) -> str:
+    """Fetch raw SKILL.md content from GitHub for the given repo/ref/path."""
+    url = f"https://raw.githubusercontent.com/{repo}/{ref}/{skill_file_path}"
+    try:
+        with urllib.request.urlopen(url) as resp:  # noqa: S310
+            return resp.read().decode("utf-8")
+    except urllib.error.HTTPError as exc:
+        print(f"  [warn] HTTP {exc.code} fetching {url}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  [warn] failed to fetch {url}: {exc}", file=sys.stderr)
+    return ""
 
 
-def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
-    """
-    For each entry in skills-config.json:
-      - `npx skills update <name> --yes`                        if already in skills-lock.json
-      - `npx skills add <repo> --skill <name>
-           --agent universal --copy --yes`                      otherwise
-
-    --agent universal  → installs only into .agents/skills/
-    --copy             → copies files (no symlinks; fully committable)
-
-    Returns True if all skills synced successfully, False if any failed.
-    """
-    installed = set(load_skills_lock(repo_root / "skills-lock.json").keys())
-    has_error = False
-
-    for entry in config_entries:
-        repo, skill = entry["repo"], entry["skill"]
-        if skill in installed:
-            cmd = ["npx", "skills", "update", skill, "--yes"]
-        else:
-            cmd = ["npx", "skills", "add", repo,
-                   "--skill", skill, "--agent", "universal", "--copy", "--yes"]
-
-        if dry_run:
-            print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
-            continue
-
-        rc = _run(cmd, repo_root)
-        if rc != 0:
-            print(f"  [error] exited {rc} for '{skill}'", file=sys.stderr)
-            has_error = True
-        else:
-            print(f"  ✓ {skill}", file=sys.stderr)
-
-    return not has_error
-
-
-# ---------------------------------------------------------------------------
-# Frontmatter parser (reads from local disk — no API call)
-# ---------------------------------------------------------------------------
-
-def parse_frontmatter(skill_md: Path) -> dict:
-    """Parse YAML frontmatter from a locally installed SKILL.md file.
+def parse_frontmatter(content: str) -> dict:
+    """Parse YAML frontmatter from SKILL.md content.
 
     Handles plain scalar values and YAML block scalars (>, >-, |, |-).
     """
-    if not skill_md.exists():
-        return {}
-    lines = skill_md.read_text(encoding="utf-8").splitlines()
+    lines = content.splitlines()
     if not lines or lines[0].strip() != "---":
         return {}
-    end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "---"), None)
+    end = next((i for i, ln in enumerate(lines[1:], 1) if ln.strip() == "---"), None)
     if end is None:
         return {}
     fm: dict = {}
@@ -150,64 +107,65 @@ def parse_frontmatter(skill_md: Path) -> dict:
                     i += 1
                 fm[key] = " ".join(block_lines) if folded else "\n".join(block_lines)
                 continue
-            else:
-                fm[key] = val.strip('"').strip("'")
+            fm[key] = val.strip('"').strip("'")
         i += 1
     return fm
 
 
 # ---------------------------------------------------------------------------
-# README builder (reads from .agents/skills/ + skills-lock.json)
+# README builder
 # ---------------------------------------------------------------------------
 
-def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> str:
+def build_skills_table(config_entries: list[dict]) -> str:
     """
-    Build only the skills table rows from installed SKILL.md files.
+    Build the skills table by fetching SKILL.md from GitHub for each configured skill.
     Returns the full replacement block including sentinel comments and timestamp.
-    config_entries supplies optional extra metadata (e.g. prompts_url) per skill.
     """
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
-    # Index config extras by skill name for quick lookup
-    config_by_skill = {e["skill"]: e for e in config_entries}
-
     rows: list[dict] = []
-    for skill_name, lock_meta in skills_lock.items():
-        repo = lock_meta.get("source", "")
-        skill_path = lock_meta.get("skillPath", "")
-        if not repo or not skill_path:
-            print(f"  [skip] {skill_name} — missing source/skillPath in lock", file=sys.stderr)
-            continue
+    for entry in config_entries:
+        repo = entry["repo"]
+        product = entry.get("product") or repo.split("/")[-1]
+        ref = entry.get("ref") or "main"
+        path = entry.get("path", ".github/skills")
+        prompts_url = entry.get("prompts_url") or None
 
-        local_skill_md = local_skills_dir / skill_name / "SKILL.md"
-        fm = parse_frontmatter(local_skill_md)
-        if not fm.get("name"):
-            print(f"  [skip] {skill_name} — no name in frontmatter", file=sys.stderr)
-            continue
+        for skill_name in entry["skill"]:
+            skill_file_path = f"{path}/{skill_name}/SKILL.md" if path else f"{skill_name}/SKILL.md"
+            content = fetch_skill_md(repo, ref, skill_file_path)
+            if not content:
+                print(f"  [skip] {skill_name} — could not fetch SKILL.md", file=sys.stderr)
+                continue
 
-        print(f"  + [{repo}] {fm['name']}", file=sys.stderr)
-        prompts_url = config_by_skill.get(skill_name, {}).get("prompts_url") or None
-        rows.append({
-            "repo_name": repo.split("/")[-1],
-            "repo_url": f"https://github.com/{repo}",
-            "skill_name": fm["name"],
-            "skill_url": f"https://github.com/{repo}/blob/HEAD/{skill_path}",
-            "description": fm.get("description", ""),
-            "prompts_url": prompts_url,
-        })
+            fm = parse_frontmatter(content)
+            if not fm.get("name"):
+                print(f"  [skip] {skill_name} — no name in frontmatter", file=sys.stderr)
+                continue
 
-    rows.sort(key=lambda r: (r["repo_name"], r["skill_name"]))
+            print(f"  + [{repo}] {fm['name']}", file=sys.stderr)
+            repo_path_url = f"https://github.com/{repo}/tree/{ref}/{path}" if path else f"https://github.com/{repo}"
+            rows.append({
+                "product": product,
+                "repo_path_url": repo_path_url,
+                "skill_name": fm["name"],
+                "skill_url": f"https://github.com/{repo}/blob/{ref}/{skill_file_path}",
+                "description": fm.get("description", ""),
+                "prompts_url": prompts_url,
+            })
+
+    rows.sort(key=lambda r: (r["product"], r["skill_name"]))
 
     lines = [
         f"{SKILLS_INDEX_BEGIN}",
         f"<!-- Last updated: {now} -->",
-        "| Repository | Prompts | Skill | Description |",
+        "| Product | Prompts | Skill | Description |",
         "|------------|---------|-------|-------------|",
     ]
     for row in rows:
         prompts_cell = f"[Prompts]({row['prompts_url']})" if row["prompts_url"] else "—"
         lines.append(
-            f"| [{row['repo_name']}]({row['repo_url']}) "
+            f"| [{row['product']}]({row['repo_path_url']}) "
             f"| {prompts_cell} "
             f"| [{row['skill_name']}]({row['skill_url']}) "
             f"| {row['description']} |"
@@ -216,7 +174,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     return "\n".join(lines)
 
 
-def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> None:
+def update_readme(readme_path: Path, config_entries: list[dict]) -> None:
     """
     Splice the generated skills table into README.md between the sentinel
     comments, leaving everything outside the sentinels unchanged.
@@ -232,7 +190,7 @@ def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path, 
             f"sentinels in {readme_path}. Add them to README.md to mark the auto-updated region."
         )
 
-    new_block = build_skills_table(skills_lock, local_skills_dir, config_entries)
+    new_block = build_skills_table(config_entries)
     updated = content[:begin_idx] + new_block + content[end_idx + len(SKILLS_INDEX_END):]
     readme_path.write_text(updated, encoding="utf-8")
 
@@ -243,41 +201,19 @@ def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path, 
 
 def main():
     repo_root = Path(__file__).resolve().parent.parent
-    local_skills_dir = repo_root / ".agents" / "skills"
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Show install commands and print the generated skills table block without writing anything.")
-    parser.add_argument("--install", dest="install", action="store_true", default=True,
-                        help="Sync earmarked skills via npx skills (default: on).")
-    parser.add_argument("--no-install", dest="install", action="store_false",
-                        help="Skip installation; only rebuild README.md.")
     parser.add_argument("--config", default=str(repo_root / "skills-config.json"),
                         help="Path to skills-config.json.")
     args = parser.parse_args()
 
-    # Step 1 — install / update skills via npx skills
     entries = load_skills_config(Path(args.config))
-    if args.install:
-        print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
-        success = install_skills(entries, repo_root, dry_run=args.dry_run)
-        if not success:
-            sys.exit(1)
+    skill_count = sum(len(e["skill"]) for e in entries)
+    print(f"Updating README skills index for {skill_count} skill(s) …", file=sys.stderr)
 
-    # Step 2 — update only the skills index section in README.md
-    skills_lock = load_skills_lock(repo_root / "skills-lock.json")
-    if not skills_lock:
-        print("skills-lock.json is empty or missing — README not updated.", file=sys.stderr)
-        sys.exit(0)
-
-    print(f"Updating README skills index from {len(skills_lock)} installed skill(s) …", file=sys.stderr)
     readme_path = repo_root / "README.md"
 
-    if args.dry_run:
-        print(build_skills_table(skills_lock, local_skills_dir, entries))
-        return
-
-    update_readme(readme_path, skills_lock, local_skills_dir, entries)
+    update_readme(readme_path, entries)
     print("README.md updated.", file=sys.stderr)
 
 

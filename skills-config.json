@@ -1,9 +1,20 @@
 {
   "skills": [
     {
+      "product": "DL Streamer",
       "repo": "open-edge-platform/dlstreamer",
-      "skill": "dlstreamer-coding-agent",
+      "ref": "main",
+      "path": ".github/skills",
+      "skill": ["dlstreamer-coding-agent"],
       "prompts_url": "https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples"
+    },
+    {
+      "product": "Video Search and Summarization",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "sample-applications/video-search-and-summarization/.github/skills",
+      "skill": ["vss-search", "vss-summarize"],
+      "prompts_url": ""
     }
   ]
 }
