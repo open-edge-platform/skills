@@ -124,8 +124,8 @@ To add a skill to the org index:
 
 1. Create a `SKILL.md` in your repo under `.github/skills/<skill-name>/SKILL.md` (or `.agents/skills/<skill-name>/SKILL.md`)
 2. Include a YAML frontmatter block with at minimum `name` and `description`
-3. Add an entry to `skills-config.json` in this repo, then open a PR and post merge
-   trigger the `update-skills-index` workflow to install it and update this README
+3. Add an entry to `skills-config.json` in this repo, open a PR, and after it is merged, trigger the
+   `update-skills-index` workflow to install it and update this README
 
 ### SKILL.md frontmatter format
 

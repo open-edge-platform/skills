@@ -77,7 +77,7 @@ def _run(cmd: list[str], cwd: Path) -> int:
     return subprocess.run(cmd, cwd=str(cwd)).returncode
 
 
-def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> None:
+def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     For each entry in skills-config.json:
       - `npx skills update <name> --yes`                        if already in skills-lock.json
@@ -86,8 +86,11 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
 
     --agent universal  → installs only into .agents/skills/
     --copy             → copies files (no symlinks; fully committable)
+
+    Returns True if all skills synced successfully, False if any failed.
     """
     installed = set(load_skills_lock(repo_root / "skills-lock.json").keys())
+    has_error = False
 
     for entry in config_entries:
         repo, skill = entry["repo"], entry["skill"]
@@ -103,9 +106,12 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
 
         rc = _run(cmd, repo_root)
         if rc != 0:
-            print(f"  [warn] exited {rc} for '{skill}'", file=sys.stderr)
+            print(f"  [error] exited {rc} for '{skill}'", file=sys.stderr)
+            has_error = True
         else:
             print(f"  ✓ {skill}", file=sys.stderr)
+
+    return not has_error
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +119,10 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
 # ---------------------------------------------------------------------------
 
 def parse_frontmatter(skill_md: Path) -> dict:
-    """Parse YAML frontmatter from a locally installed SKILL.md file."""
+    """Parse YAML frontmatter from a locally installed SKILL.md file.
+
+    Handles plain scalar values and YAML block scalars (>, >-, |, |-).
+    """
     if not skill_md.exists():
         return {}
     lines = skill_md.read_text(encoding="utf-8").splitlines()
@@ -123,10 +132,27 @@ def parse_frontmatter(skill_md: Path) -> dict:
     if end is None:
         return {}
     fm: dict = {}
-    for line in lines[1:end]:
+    fm_lines = lines[1:end]
+    i = 0
+    while i < len(fm_lines):
+        line = fm_lines[i]
         m = re.match(r'^(\w[\w-]*):\s*(.*)', line)
         if m:
-            fm[m.group(1)] = m.group(2).strip().strip('"').strip("'")
+            key = m.group(1)
+            val = m.group(2).strip()
+            if val in (">", ">-", "|", "|-"):
+                # YAML block scalar: collect subsequent indented continuation lines
+                folded = val in (">", ">-")
+                block_lines = []
+                i += 1
+                while i < len(fm_lines) and fm_lines[i][:1] in (" ", "\t"):
+                    block_lines.append(fm_lines[i].strip())
+                    i += 1
+                fm[key] = " ".join(block_lines) if folded else "\n".join(block_lines)
+                continue
+            else:
+                fm[key] = val.strip('"').strip("'")
+        i += 1
     return fm
 
 
@@ -165,7 +191,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
             "repo_name": repo.split("/")[-1],
             "repo_url": f"https://github.com/{repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/{repo}/blob/main/{skill_path}",
+            "skill_url": f"https://github.com/{repo}/blob/HEAD/{skill_path}",
             "description": fm.get("description", ""),
             "prompts_url": prompts_url,
         })
@@ -221,7 +247,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dry-run", action="store_true",
-                        help="Show install commands and print README without writing anything.")
+                        help="Show install commands and print the generated skills table block without writing anything.")
     parser.add_argument("--install", dest="install", action="store_true", default=True,
                         help="Sync earmarked skills via npx skills (default: on).")
     parser.add_argument("--no-install", dest="install", action="store_false",
@@ -234,7 +260,9 @@ def main():
     entries = load_skills_config(Path(args.config))
     if args.install:
         print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
-        install_skills(entries, repo_root, dry_run=args.dry_run)
+        success = install_skills(entries, repo_root, dry_run=args.dry_run)
+        if not success:
+            sys.exit(1)
 
     # Step 2 — update only the skills index section in README.md
     skills_lock = load_skills_lock(repo_root / "skills-lock.json")

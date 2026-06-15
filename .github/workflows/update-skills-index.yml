@@ -37,7 +37,7 @@ jobs:
           node-version: '20'
 
       - name: Install npx skills CLI
-        run: npm install -g skills
+        run: npm install -g skills@1.5.11
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -72,10 +72,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore: sync skills and update README index
-
-Installed/updated earmarked skills from skills-config.json and rebuilt README.
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          git commit -m "chore: sync skills and update README index \
+          Installed/updated selected skills from skills-config.json and rebuilt README."
           git push
 
