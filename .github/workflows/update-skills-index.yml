@@ -1,0 +1,78 @@
+name: Update Skills Index
+
+on:
+  # Run every 6 hours
+  schedule:
+    - cron: '0 */6 * * *'
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      install:
+        description: 'Sync earmarked skills into .agents/skills/ (true/false)'
+        required: false
+        default: 'true'
+      dry_run:
+        description: 'Preview changes without writing or committing (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout skills repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npx skills CLI
+        run: npm install -g skills@1.5.11
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Sync skills and update README index
+        env:
+          # Required by `npx skills add/update` to clone from GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FLAGS=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            FLAGS="$FLAGS --dry-run"
+          fi
+          if [ "${{ inputs.install }}" = "false" ]; then
+            FLAGS="$FLAGS --no-install"
+          fi
+          python3 scripts/update_skills_index.py $FLAGS
+
+      - name: Commit and push if anything changed
+        # Skip on dry-run; also safe when inputs are empty (scheduled run)
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add README.md .agents/skills/ skills-lock.json
+
+          if git diff --cached --quiet; then
+            echo "Nothing changed — skipping commit."
+            exit 0
+          fi
+
+          git commit -m "chore: sync skills and update README index \
+          Installed/updated selected skills from skills-config.json and rebuilt README."
+          git push
+
