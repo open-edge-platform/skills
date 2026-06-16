@@ -18,6 +18,13 @@ skills-config.json is the single source of truth.  The script:
 
 Usage:
     python scripts/update_skills_index.py [--dry-run] [--no-install] [--config PATH]
+
+Modes:
+    (default)     Sync skills via npx and update README.md skills index.
+    --no-install  Skip npx sync; only rebuild the README.md skills index from
+                  already-installed skills in .agents/skills/ and skills-lock.json.
+    --dry-run     Print the npx commands that would run and the generated skills
+                  table block to stdout without installing anything or writing files.
 """
 
 import argparse
@@ -77,12 +84,32 @@ def _run(cmd: list[str], cwd: Path) -> int:
     return subprocess.run(cmd, cwd=str(cwd)).returncode
 
 
+def _build_source(entry: dict) -> str:
+    """
+    Build the npx skills add source argument from a config entry.
+
+    Format used per ref:
+        <repo>                  — main branch, no custom path (shorthand)
+        <repo>#<ref>            — non-main branch or tag
+    """
+    repo = entry["repo"]
+    ref = entry.get("ref", "").strip()
+
+    if not ref or ref == "main":
+        return repo
+
+    return f"{repo}#{ref}"
+
+
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     For each entry in skills-config.json:
       - `npx skills update <name> --yes`                        if already in skills-lock.json
-      - `npx skills add <repo> --skill <name>
+      - `npx skills add <source> --skill <name>
            --agent universal --copy --yes`                      otherwise
+
+    <source> is derived from repo + ref + path via _build_source(), supporting
+    the default branch, alternate branches/tags, and sub-directory paths.
 
     --agent universal  → installs only into .agents/skills/
     --copy             → copies files (no symlinks; fully committable)
@@ -93,23 +120,26 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
     has_error = False
 
     for entry in config_entries:
-        repo, skill = entry["repo"], entry["skill"]
-        if skill in installed:
-            cmd = ["npx", "skills", "update", skill, "--yes"]
-        else:
-            cmd = ["npx", "skills", "add", repo,
-                   "--skill", skill, "--agent", "universal", "--copy", "--yes"]
+        source = _build_source(entry)
+        skills = entry["skill"] if isinstance(entry["skill"], list) else [entry["skill"]]
+        for skill in skills:
+            skill_name = skill["name"] if isinstance(skill, dict) else skill
+            if skill_name in installed:
+                cmd = ["npx", "skills", "update", skill_name, "--yes"]
+            else:
+                cmd = ["npx", "skills", "add", source,
+                       "--skill", skill_name, "--agent", "universal", "--copy", "--yes"]
 
-        if dry_run:
-            print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
-            continue
+            if dry_run:
+                print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
+                continue
 
-        rc = _run(cmd, repo_root)
-        if rc != 0:
-            print(f"  [error] exited {rc} for '{skill}'", file=sys.stderr)
-            has_error = True
-        else:
-            print(f"  ✓ {skill}", file=sys.stderr)
+            rc = _run(cmd, repo_root)
+            if rc != 0:
+                print(f"  [error] exited {rc} for '{skill_name}'", file=sys.stderr)
+                has_error = True
+            else:
+                print(f"  ✓ {skill_name}", file=sys.stderr)
 
     return not has_error
 
@@ -168,8 +198,15 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     """
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
-    # Index config extras by skill name for quick lookup
-    config_by_skill = {e["skill"]: e for e in config_entries}
+    # Index config extras by individual skill name for quick lookup.
+    # Each value stores the parent entry plus the skill-level prompts_url (if any).
+    config_by_skill: dict = {}
+    for e in config_entries:
+        skills = e["skill"] if isinstance(e["skill"], list) else [e["skill"]]
+        for s in skills:
+            skill_name = s["name"] if isinstance(s, dict) else s
+            skill_prompts_url = s.get("prompts_url") if isinstance(s, dict) else None
+            config_by_skill[skill_name] = {**e, "_skill_prompts_url": skill_prompts_url or ""}
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
@@ -185,33 +222,51 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
             print(f"  [skip] {skill_name} — no name in frontmatter", file=sys.stderr)
             continue
 
-        print(f"  + [{repo}] {fm['name']}", file=sys.stderr)
-        prompts_url = config_by_skill.get(skill_name, {}).get("prompts_url") or None
+        cfg = config_by_skill.get(skill_name, {})
+        product = cfg.get("product") or repo.split("/")[-1]
+        # Use the canonical repo from config if available; fall back to lock source
+        canonical_repo = cfg.get("repo") or repo
+        ref = cfg.get("ref") or "HEAD"
+        print(f"  + [{product}] {fm['name']}", file=sys.stderr)
+        prompts_url = cfg.get("_skill_prompts_url") or None
         rows.append({
-            "repo_name": repo.split("/")[-1],
-            "repo_url": f"https://github.com/{repo}",
+            "product": product,
+            "repo_url": f"https://github.com/{canonical_repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/{repo}/blob/HEAD/{skill_path}",
+            "skill_url": f"https://github.com/{canonical_repo}/blob/{ref}/{skill_path}",
             "description": fm.get("description", ""),
             "prompts_url": prompts_url,
         })
 
-    rows.sort(key=lambda r: (r["repo_name"], r["skill_name"]))
+    rows.sort(key=lambda r: (r["product"], r["skill_name"]))
+
+    # Group rows by product so multi-skill products appear on a single table row.
+    product_groups: dict[str, list[dict]] = {}
+    for row in rows:
+        product_groups.setdefault(row["product"], []).append(row)
 
     lines = [
         f"{SKILLS_INDEX_BEGIN}",
         f"<!-- Last updated: {now} -->",
-        "| Repository | Prompts | Skill | Description |",
-        "|------------|---------|-------|-------------|",
+        "| Product | Skill | Skill Description |",
+        "|---------|-------|-------------------|",
     ]
-    for row in rows:
-        prompts_cell = f"[Prompts]({row['prompts_url']})" if row["prompts_url"] else "—"
-        lines.append(
-            f"| [{row['repo_name']}]({row['repo_url']}) "
-            f"| {prompts_cell} "
-            f"| [{row['skill_name']}]({row['skill_url']}) "
-            f"| {row['description']} |"
-        )
+    for product, group in product_groups.items():
+        repo_url = group[0]["repo_url"]
+        for i, r in enumerate(group):
+            # First skill shows the linked product name; subsequent skills use
+            # a continuation marker so readers know they belong to the same product.
+            product_cell = f"[{product}]({repo_url})" if i == 0 else f"↳"
+            skill_cell = (
+                f"[{r['skill_name']}]({r['skill_url']}) ([Prompts]({r['prompts_url']}))"
+                if r["prompts_url"]
+                else f"[{r['skill_name']}]({r['skill_url']})"
+            )
+            lines.append(
+                f"| {product_cell} "
+                f"| {skill_cell} "
+                f"| {r['description']} |"
+            )
     lines.append(SKILLS_INDEX_END)
     return "\n".join(lines)
 
@@ -247,11 +302,11 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dry-run", action="store_true",
-                        help="Show install commands and print the generated skills table block without writing anything.")
+                        help="Print npx commands and the generated skills table to stdout without installing or writing any files.")
     parser.add_argument("--install", dest="install", action="store_true", default=True,
-                        help="Sync earmarked skills via npx skills (default: on).")
+                        help="Sync skills via npx skills add/update, then rebuild README.md (default).")
     parser.add_argument("--no-install", dest="install", action="store_false",
-                        help="Skip installation; only rebuild README.md.")
+                        help="Skip npx sync; only rebuild the README.md skills index from already-installed skills.")
     parser.add_argument("--config", default=str(repo_root / "skills-config.json"),
                         help="Path to skills-config.json.")
     args = parser.parse_args()

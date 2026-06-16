@@ -8,11 +8,16 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-06-16 00:53 UTC -->
-| Repository | Prompts | Skill | Description |
-|------------|---------|-------|-------------|
-| [dlstreamer](https://github.com/open-edge-platform/dlstreamer) | [Prompts](https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/dlstreamer/blob/HEAD/.github/skills/dlstreamer-coding-agent/SKILL.md) | Build new DL Streamer video-analytics applications (Python, C, C++ or GStreamer command line). Use when: user describes a vision AI pipeline, wants to create a new sample app, combine elements from existing samples, add detection/classification/VLM/tracking/alerts/recording to a video pipeline, or create custom GStreamer elements in Python or C++. Translates natural-language pipeline descriptions into working DL Streamer code using established design patterns. |
+<!-- Last updated: 2026-06-16 10:58 UTC -->
+| Product | Skill | Skill Description |
+|---------|-------|-------------------|
+| [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/dlstreamer/blob/main/.github/skills/dlstreamer-coding-agent/SKILL.md) ([Prompts](https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples)) | Build new DL Streamer video-analytics applications (Python, C, C++ or GStreamer command line). Use when: user describes a vision AI pipeline, wants to create a new sample app, combine elements from existing samples, add detection/classification/VLM/tracking/alerts/recording to a video pipeline, or create custom GStreamer elements in Python or C++. Translates natural-language pipeline descriptions into working DL Streamer code using established design patterns. |
+| [Scenescape](https://github.com/open-edge-platform/scenescape) | [scenescape-setup](https://github.com/open-edge-platform/scenescape/blob/feature/sscape-app-skill/.github/skills/scenescape-setup/SKILL.md) | Deploy a working Intel® SceneScape installation from scratch (outside the repo). Gathers user-provided streams, camera IDs, and scene name, then runs bootstrap through tracking verification via scripts/deploy_scenescape.sh. |
+| [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-search](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/.github/skills/vss-search/SKILL.md) | Search a video library with natural language via the VSS Pipeline Manager — upload a video (POST /videos), generate its embeddings (POST /videos/search-embeddings/{id}), then run a query (POST /search/query) with optional tag and time filters and read the ranked clip results. Use when the user says "search my videos", "find <thing> in the videos", "when did X happen", or wants to ingest/index a video for search. Requires a search-capable deployment (--search, --dual, or --unified). |
+| ↳ | [vss-summarize](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/.github/skills/vss-summarize/SKILL.md) | Summarize a video through the VSS Pipeline Manager — start a summary pipeline with POST /summary (full required body), poll GET /summary/{stateId} until complete, then return the summary via GET /summary/{stateId}/raw. Use when the user says "summarize this video", "create a summary", "what happens in this video" (on an ingested video), or wants to run/inspect the summarization pipeline. Requires a summary-capable deployment (--summary, --dual, or --unified). |
 <!-- END SKILLS INDEX -->
+
+> **Disclaimer:** The skills listed above are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
 
 ---
 
@@ -113,6 +118,17 @@ npx skills experimental_install
 ```
 
 > **Tip:** Use `--agent universal` to install into `.agents/skills/` only (no symlinks to other agent directories).
+
+---
+
+## Maintaining the Index
+
+The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow keeps this README and the `.agents/skills/` directory in sync automatically. It:
+
+- Runs on a schedule as configured to pick up upstream skill changes
+- Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews
+- Reads [`skills-config.json`](skills-config.json) as the single source of truth for which skills to install
+- Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in this README
 
 ---
 

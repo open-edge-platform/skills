@@ -3,7 +3,7 @@ name: Update Skills Index
 on:
   # Run every 6 hours
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */4 * * *'
 
   # Allow manual trigger
   workflow_dispatch:
@@ -29,7 +29,7 @@ jobs:
       - name: Checkout skills repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SKILLS_PAT }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -47,7 +47,7 @@ jobs:
       - name: Sync skills and update README index
         env:
           # Required by `npx skills add/update` to clone from GitHub
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SKILLS_PAT }}
         run: |
           FLAGS=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then
