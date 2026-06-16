@@ -108,8 +108,8 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
       - `npx skills add <source> --skill <name>
            --agent universal --copy --yes`                      otherwise
 
-    <source> is derived from repo + ref + path via _build_source(), supporting
-    the default branch, alternate branches/tags, and sub-directory paths.
+    <source> is derived from repo + ref via _build_source(): plain "org/repo"
+    for the default (main) branch, or "org/repo#ref" for a non-main branch or tag.
 
     --agent universal  → installs only into .agents/skills/
     --copy             → copies files (no symlinks; fully committable)

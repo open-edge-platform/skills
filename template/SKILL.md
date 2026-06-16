@@ -13,10 +13,6 @@ description: >-
 # Optional. License name or path to a bundled license file (e.g. "Apache-2.0" or "LICENSE").
 license: Apache-2.0
 
-# Hidden from normal discovery — this is a template, not an installable skill.
-metadata:
-  internal: true
-
 # Optional. Max 500 chars. Describe environment requirements only if the skill
 # has specific needs: intended product, required system packages, network access, etc.
 compatibility: >-
@@ -28,6 +24,7 @@ metadata:
   author: open-edge-platform
   version: "1.0.0"
   tags: "replace with space-separated topic tags"
+  internal: true # Hidden from normal discovery — this is a template, not an installable skill.
 
 # Optional (Experimental). Space-separated list of tools pre-approved for this skill.
 # Support varies between agent implementations.
