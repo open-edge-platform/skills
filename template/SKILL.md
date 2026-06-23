@@ -24,6 +24,7 @@ metadata:
   author: open-edge-platform
   version: "1.0.0"
   tags: "replace with space-separated topic tags"
+  internal: true # Hidden from normal discovery — this is a template, not an installable skill.
 
 # Optional (Experimental). Space-separated list of tools pre-approved for this skill.
 # Support varies between agent implementations.
