@@ -6,6 +6,25 @@
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
       "computedHash": "5e84ada13dd52768355c5f334ee4d5e72e6539979db0ee3691881c3fec0435be"
+    },
+    "scenescape-setup": {
+      "source": "open-edge-platform/scenescape",
+      "ref": "feature/sscape-app-skill",
+      "sourceType": "github",
+      "skillPath": ".github/skills/scenescape-setup/SKILL.md",
+      "computedHash": "f3f67a98d05ec83e9123e4821008a9ee85c64dd2e03332d96bcaecf75f92348f"
+    },
+    "vss-search": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search/SKILL.md",
+      "computedHash": "58852f58fc8c998c0bf6b199caac51a1061f9a7003b31c49d0f2c5f0b9e79028"
+    },
+    "vss-summarize": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-summarize/SKILL.md",
+      "computedHash": "63c944e82498de75c6c9cc0e730c32c3cda4e430a1250b4a6f9df841b986b4fb"
     }
   }
 }
