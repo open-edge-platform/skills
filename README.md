@@ -129,6 +129,7 @@ The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow 
 - Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews
 - Reads [`skills-config.json`](skills-config.json) as the single source of truth for which skills to install
 - Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in this README
+- Opens or updates a pull request with the generated changes instead of pushing directly to `main`
 
 ---
 

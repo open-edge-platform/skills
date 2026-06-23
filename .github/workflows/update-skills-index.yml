@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-index:
@@ -58,21 +59,21 @@ jobs:
           fi
           python3 scripts/update_skills_index.py $FLAGS
 
-      - name: Commit and push if anything changed
+      - name: Create pull request if anything changed
         # Skip on dry-run; also safe when inputs are empty (scheduled run)
         if: ${{ inputs.dry_run != 'true' }}
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          commit-message: "chore: sync skills and update README index"
+          branch: automation/update-skills-index
+          delete-branch: true
+          title: "chore: sync skills and update README index"
+          body: |
+            Automated update from the `update-skills-index` workflow.
 
-          git add README.md .agents/skills/ skills-lock.json
-
-          if git diff --cached --quiet; then
-            echo "Nothing changed — skipping commit."
-            exit 0
-          fi
-
-          git commit -m "chore: sync skills and update README index \
-          Installed/updated selected skills from skills-config.json and rebuilt README."
-          git push
-
+            - sync installed skills from `skills-config.json`
+            - rebuild the README skills index
+          add-paths: |
+            README.md
+            .agents/skills/
+            skills-lock.json
