@@ -51,8 +51,8 @@ jobs:
 
       - name: Sync skills and update README index
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
-          INSTALL: ${{ inputs.install }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          INSTALL: ${{ inputs.install || 'true' }}
         run: |
           FLAGS=""
           if [ "$DRY_RUN" = "true" ]; then
