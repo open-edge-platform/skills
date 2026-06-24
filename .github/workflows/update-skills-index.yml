@@ -1,10 +1,14 @@
 name: Update Skills Index
 
 on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'skills-config.json'
   # Run every 4 hours
   schedule:
     - cron: '0 */4 * * *'
-
   # Allow manual trigger
   workflow_dispatch:
     inputs:
@@ -30,6 +34,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.SKILLS_PAT }}
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
