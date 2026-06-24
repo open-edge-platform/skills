@@ -29,7 +29,7 @@ jobs:
       - name: Checkout skills repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SKILLS_PAT }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -45,9 +45,6 @@ jobs:
           python-version: '3.12'
 
       - name: Sync skills and update README index
-        env:
-          # Required by `npx skills add/update` to clone from GitHub
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FLAGS=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then
@@ -59,8 +56,6 @@ jobs:
           python3 scripts/update_skills_index.py $FLAGS
 
       - name: Commit and push if anything changed
-        env:
-          GITHUB_TOKEN: ${{ secrets.SKILLS_PAT }}
         # Skip on dry-run; also safe when inputs are empty (scheduled run)
         if: ${{ inputs.dry_run != 'true' }}
         run: |
