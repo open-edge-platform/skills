@@ -1,15 +1,19 @@
 name: Update Skills Index
 
 on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'skills-config.json'
   # Run every 4 hours
   schedule:
     - cron: '0 */4 * * *'
-
   # Allow manual trigger
   workflow_dispatch:
     inputs:
       install:
-        description: 'Sync earmarked skills into .agents/skills/ (true/false)'
+        description: 'Sync skills into .agents/skills/ (true/false)'
         required: false
         default: 'true'
       dry_run:
@@ -27,9 +31,10 @@ jobs:
 
     steps:
       - name: Checkout skills repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SKILLS_PAT }}
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -45,9 +50,6 @@ jobs:
           python-version: '3.12'
 
       - name: Sync skills and update README index
-        env:
-          # Required by `npx skills add/update` to clone from GitHub
-          GITHUB_TOKEN: ${{ secrets.SKILLS_PAT }}
         run: |
           FLAGS=""
           if [ "${{ inputs.dry_run }}" = "true" ]; then
