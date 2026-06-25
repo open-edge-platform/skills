@@ -1,15 +1,19 @@
 name: Update Skills Index
 
 on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'skills-config.json'
   # Run every 4 hours
   schedule:
     - cron: '0 */4 * * *'
-
   # Allow manual trigger
   workflow_dispatch:
     inputs:
       install:
-        description: 'Sync earmarked skills into .agents/skills/ (true/false)'
+        description: 'Sync skills into .agents/skills/ (true/false)'
         required: false
         default: 'true'
       dry_run:
@@ -26,13 +30,8 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout skills repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 
@@ -40,20 +39,26 @@ jobs:
         run: npm install -g skills@1.5.11
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
 
+      - name: Checkout skills repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.SKILLS_PAT }}
+          persist-credentials: true
+      
       - name: Sync skills and update README index
         env:
-          # Required by `npx skills add/update` to clone from GitHub
-          GITHUB_TOKEN: ${{ secrets.SKILLS_PAT }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          INSTALL: ${{ inputs.install || 'true' }}
         run: |
           FLAGS=""
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
+          if [ "$DRY_RUN" = "true" ]; then
             FLAGS="$FLAGS --dry-run"
           fi
-          if [ "${{ inputs.install }}" = "false" ]; then
+          if [ "$INSTALL" = "false" ]; then
             FLAGS="$FLAGS --no-install"
           fi
           python3 scripts/update_skills_index.py $FLAGS
@@ -62,8 +67,8 @@ jobs:
         # Skip on dry-run; also safe when inputs are empty (scheduled run)
         if: ${{ inputs.dry_run != 'true' }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "sys-siv-oep"
+          git config user.email "sys-siv-oep@intel.com"
 
           git add README.md .agents/skills/ skills-lock.json
 
