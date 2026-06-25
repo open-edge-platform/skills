@@ -1,7 +1,5 @@
 # Agent Skills Guide
 
----
-
 ## Table of Contents
 
 1. [What Are Agent Skills?](#1-what-are-agent-skills)
@@ -107,9 +105,6 @@ metadata:
     - video-analytics
     - gstreamer
     - python
-permissions:
-  - write
-  - command
 ---
 ```
 
@@ -720,7 +715,7 @@ Negative prompts    Requests that look similar but should NOT trigger skill
 ### Canonical Layout
 
 ```
-repo-root/ # the below structure can be at the folder level inside the .git repo too
+repo-root/ # this layout can also live in a subfolder within the repository
 │
 ├── .github/
 │   ├── skills/                        ← all skill directories
@@ -1009,11 +1004,14 @@ Skills with executable scripts receive a **1.3× multiplier**.
 
 ## 8. Prompts: Showcasing & Evaluating Skills
 
-> TO BE DEFINED
+Use prompts to demonstrate (a) when the skill should trigger and (b) what “good output” looks like.
+ - Include at least 2 should-trigger prompts and 1 should-not-trigger near-miss.
+ - For each prompt, write an expected-output description and 2–5 concrete assertions (see Section 9).
 
 ## 9. Evaluations & Benchmarks
 
-> TO BE DEFINED
+Store evals in `evals/evals.json` and run with/without the skill to compare output quality, token usage, and latency.
+Persist raw outputs under `benchmark/<iteration>/` and summarize outcomes in `BENCHMARK.md`
 
 ## 10. Managing Skills
 
