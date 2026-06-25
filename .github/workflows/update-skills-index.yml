@@ -67,8 +67,8 @@ jobs:
         # Skip on dry-run; also safe when inputs are empty (scheduled run)
         if: ${{ inputs.dry_run != 'true' }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "sys-siv-oep"
+          git config user.email "sys-siv-oep@intel.com"
 
           git add README.md .agents/skills/ skills-lock.json
 
