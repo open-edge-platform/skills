@@ -30,12 +30,6 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout skills repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          token: ${{ secrets.SKILLS_PAT }}
-          persist-credentials: false
-
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -49,6 +43,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Checkout skills repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.SKILLS_PAT }}
+          persist-credentials: true
+      
       - name: Sync skills and update README index
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
