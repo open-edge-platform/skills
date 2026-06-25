@@ -1004,14 +1004,111 @@ Skills with executable scripts receive a **1.3× multiplier**.
 
 ## 8. Prompts: Showcasing & Evaluating Skills
 
-Use prompts to demonstrate (a) when the skill should trigger and (b) what “good output” looks like.
- - Include at least 2 should-trigger prompts and 1 should-not-trigger near-miss.
- - For each prompt, write an expected-output description and 2–5 concrete assertions (see Section 9).
+Prompts demonstrate (a) when the skill should trigger and (b) what “good output” looks like. The `skill-creator` skill (**Stage 4**) generates these automatically; you can also write them manually.
+
+### Via `skill-creator` (Recommended)
+
+The `skill-creator` drafts 2–3 realistic test prompts based on the interview from Stage 2 and presents them for your review before saving:
+
+```
+"Here are a few test cases I'd like to try. Do these look right,
+or do you want to add more?"
+```
+
+Install and invoke:
+
+```bash
+npx skills add anthropics/skills --skill skill-creator -a claude-code
+# or for GitHub Copilot:
+npx skills add anthropics/skills --skill skill-creator -a github-copilot
+```
+
+Then say: `"Create prompts for my skill at path/to/my-skill/"`
+
+The `skill-creator` saves prompts to `evals/evals.json` with `expected_output` descriptions and leaves `assertions` empty for grading in Stage 6.
+
+### Manually
+
+Create `evals/evals.json` in your skill directory with at least:
+
+- 2 should-trigger prompts covering the core use case
+- 1 should-not-trigger near-miss to guard against false activation
+
+For each prompt, include an `expected_output` description and 2–5 concrete `assertions` — prefer `contains`/`not_contains` checks over subjective criteria. See [Section 9](#9-evaluations--benchmarks) for the full schema and grading workflow.
+
+---
 
 ## 9. Evaluations & Benchmarks
 
-Store evals in `evals/evals.json` and run with/without the skill to compare output quality, token usage, and latency.
-Persist raw outputs under `benchmark/<iteration>/` and summarize outcomes in `BENCHMARK.md`
+Evaluations compare agent output with and without the skill loaded to measure quality, token usage, and latency. The `skill-creator` skill automates this across **Stages 5–7**; the steps below describe the manual equivalent.
+
+### Via `skill-creator` (Recommended)
+
+| Stage | What happens |
+| ----- | ------------ |
+| **Stage 5 — Run** | Spawns with-skill and baseline runs in parallel; saves `timing.json` per run under `benchmark/iteration-N/` |
+| **Stage 6 — Grade** | Evaluates assertions, produces `grading.json`, `benchmark.json`, and `BENCHMARK.md`; launches a browser eval viewer for side-by-side review |
+| **Stage 7 — Improve** | Applies your feedback to `SKILL.md`, re-runs into a new `benchmark/iteration-N+1/` folder, repeats until satisfied |
+
+```bash
+npx skills add anthropics/skills --skill skill-creator -a claude-code
+# Then say: "Run evals for my skill at path/to/my-skill/"
+```
+
+### Manually
+
+**Step 1 — Run with-skill and baseline**
+
+Run your agent on each prompt in `evals/evals.json` twice and save outputs:
+
+```
+benchmark/
+└── iteration-1/
+    └── <eval-name>/
+        ├── with_skill/
+        │   ├── output.md
+        │   └── timing.json
+        └── without_skill/
+            ├── output.md
+            └── timing.json
+```
+
+**Step 2 — Grade assertions**
+
+Check each assertion against the with-skill output and record results in `benchmark/iteration-1/grading.json`:
+
+```json
+[
+  {
+    "eval_id": 1,
+    "assertions": [
+      { "name": "key-pattern-present",  "passed": true, "evidence": "Found at line 4" },
+      { "name": "wrong-pattern-absent", "passed": true, "evidence": "Not found" }
+    ]
+  }
+]
+```
+
+**Step 3 — Summarize in `BENCHMARK.md`**
+
+Document pass rate, token delta, and latency per iteration:
+
+```markdown
+## Iteration 1
+
+| Eval   | With Skill            | Without Skill | Delta |
+| ------ | --------------------- | ------------- | ----- |
+| eval-1 | 2/2 assertions passed | 0/2           | +2    |
+| eval-2 | 1/2 assertions passed | 1/2           | 0     |
+
+**Overall pass rate (with skill):** 75%
+**Avg token overhead:** +1,200 tokens
+```
+
+**Step 4 — Iterate**
+
+Update `SKILL.md` based on failures, increment to `benchmark/iteration-2/`, and re-run.
+
 
 ## 10. Managing Skills
 
