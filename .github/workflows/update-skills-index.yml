@@ -3,37 +3,38 @@ name: Update Skills Index
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - 'skills-config.json'
+      - "skills-config.json"
   # Run every 4 hours
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: "0 */4 * * *"
   # Allow manual trigger
   workflow_dispatch:
     inputs:
       install:
-        description: 'Sync skills into .agents/skills/ (true/false)'
+        description: "Sync skills into .agents/skills/ (true/false)"
         required: false
-        default: 'true'
+        default: "true"
       dry_run:
-        description: 'Preview changes without writing or committing (true/false)'
+        description: "Preview changes without writing or committing (true/false)"
         required: false
-        default: 'false'
+        default: "false"
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   update-index:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 15
 
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install npx skills CLI
         run: npm install -g skills@1.5.11
@@ -41,14 +42,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Checkout skills repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          token: ${{ secrets.SKILLS_PAT }}
-          persist-credentials: true
-      
+          persist-credentials: false
+
       - name: Sync skills and update README index
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
@@ -66,9 +66,12 @@ jobs:
       - name: Commit and push if anything changed
         # Skip on dry-run; also safe when inputs are empty (scheduled run)
         if: ${{ inputs.dry_run != 'true' }}
+        env:
+          SKILLS_PAT: ${{ secrets.SKILLS_PAT }}
         run: |
           git config user.name  "sys-siv-oep"
           git config user.email "sys-siv-oep@intel.com"
+          git remote set-url origin "https://x-access-token:${SKILLS_PAT}@github.com/${{ github.repository }}.git"
 
           git add README.md .agents/skills/ skills-lock.json
 
@@ -80,4 +83,3 @@ jobs:
           git commit -m "chore: sync skills and update README index \
           Installed/updated selected skills from skills-config.json and rebuilt README."
           git push
-

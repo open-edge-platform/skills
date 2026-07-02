@@ -1,0 +1,47 @@
+name: Skill Scanner
+
+on:
+  pull_request:
+    paths:
+      - ".agents/skills/**"
+      - ".github/workflows/skill-scan.yml"
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: "Severity level for PR failure (CRITICAL, HIGH, MEDIUM, LOW)"
+        required: false
+        default: "CRITICAL"
+        type: choice
+        options:
+          - CRITICAL
+          - HIGH
+          - MEDIUM
+          - LOW
+
+permissions: {}
+
+jobs:
+  skill-scan:
+    name: SkillSpector Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      pull-requests: write # is required to comment pull request
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run SkillSpector scan
+        uses: ./.github/actions/skillspector-scan
+        with:
+          severity-level: ${{ github.event_name == 'pull_request' && (inputs.severity || 'CRITICAL') || 'LOW' }}
+          fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
