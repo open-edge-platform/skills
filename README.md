@@ -138,7 +138,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 To add a skill to the org index:
 
-1. Create a `SKILL.md` in your repo under `.github/skills/<skill-name>/SKILL.md` (or `.agents/skills/<skill-name>/SKILL.md`).
+1. Create a `SKILL.md` in your repo. Supported locations (in order of convention):
+
+   | Scenario | Path |
+   |----------|------|
+   | Standard (GitHub Copilot / VS Code) | `.github/skills/<skill-name>/SKILL.md` |
+   | Agent-agnostic | `.agents/skills/<skill-name>/SKILL.md` |
+   | Mono-repo — product subfolder | `<product-folder>/.github/skills/<skill-name>/SKILL.md` |
+   | Mono-repo — product subfolder (agent-agnostic) | `<product-folder>/.agents/skills/<skill-name>/SKILL.md` |
+   | Mono-repo — repo root, named skill folder | `skills/<skill-name>/SKILL.md` |
+   | Repo root, single skill | `SKILL.md` |
+
    Go through some of the guidelines documented at [SKILLS_GUIDE.md](./SKILLS_GUIDE.md) for defining, creating, validating and
    managing skills.
 2. Include a YAML frontmatter block with at minimum `name` and `description`

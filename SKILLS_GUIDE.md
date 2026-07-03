@@ -5,35 +5,23 @@
 1. [What Are Agent Skills?](#1-what-are-agent-skills)
 2. [Specification & SKILL.md Format](#2-specification--skillmd-format)
 3. [Defining a Skill](#3-defining-a-skill)
-4. [Creating a Skill](#4-creating-a-skill)
-5. [Repo Structure](#5-repo-structure)
-6. [Validation](#6-validation)
-7. [Security Scanning](#7-security-scanning)
-8. [Prompts: Showcasing & Evaluating Skills](#8-prompts-showcasing--evaluating-skills)
+4. [Prompts: Showcasing & Evaluating Skills](#4-prompts-showcasing--evaluating-skills)
+5. [Creating a Skill](#5-creating-a-skill)
+6. [Repo Structure](#6-repo-structure)
+7. [Validation](#7-validation)
+8. [Security Scanning](#8-security-scanning)
 9. [Evaluations & Benchmarks](#9-evaluations--benchmarks)
 10. [Managing Skills](#10-managing-skills)
-11. [Publishing & Marketplaces](#11-publishing--marketplaces)
-
----
+11. [Agent-Specific Best Practices](#11-agent-specific-best-practices)
+12. [Key Resources](#key-resources)
 
 ## 1. What Are Agent Skills?
 
 Agent Skills are a lightweight, open format for extending AI agent capabilities
 with specialized knowledge and workflows. At its core, a skill is a folder
 containing a `SKILL.md` file with metadata and instructions that tell an agent
-how to perform a specific task.
-
-```
-my-skill/
-├── SKILL.md          # Required: metadata + instructions
-├── scripts/          # Optional: executable code
-├── references/       # Optional: documentation loaded on demand
-├── assets/           # Optional: templates, code models, data
-├── evals/            # Optional: evaluation test cases
-├── benchmark/        # Optional: raw grading outputs
-├── BENCHMARK.md      # Optional: human-readable evaluation report
-└── skill-card.md     # Optional: disclosure, use case, eval summary
-```
+how to perform a specific task. See [Section 6: Repo Structure](#6-repo-structure)
+for the full canonical skill directory layout, including required and optional files.
 
 ### Why Skills?
 
@@ -47,18 +35,12 @@ on demand, providing:
 
 ### How Agents Load Skills (Progressive Disclosure)
 
-1. **Discovery** — At startup, agents load only `name` + `description` (~100 tokens
-   per skill). No context cost until needed.
+1. **Discovery** — At startup, agents load only `name` + `description` (~75 words
+   per skill). No context cost is incurred until the skill is activated.
 2. **Activation** — When a task matches a skill's description, the agent reads the
-   full `SKILL.md` body into context (<5,000 tokens recommended).
+   full `SKILL.md` body into context (under 4,000 words recommended).
 3. **Execution** — The agent follows instructions and optionally loads files from
    `scripts/`, `references/`, or `assets/` as needed (unlimited size, loaded on demand).
-
-### Supported Agents
-
-Skills work across 70+ agents including Claude Code, GitHub Copilot, Cursor,
-Gemini CLI, Codex, Windsurf, Cline, OpenCode, Goose, and many more. See
-[skills.sh/agent](https://www.skills.sh/agent) for the full list.
 
 ---
 
@@ -66,27 +48,15 @@ Gemini CLI, Codex, Windsurf, Cline, OpenCode, Goose, and many more. See
 
 > Source: [agentskills.io/specification](https://agentskills.io/specification)
 
-### Directory Structure
-
-The only required file is `SKILL.md` at the skill root. Three optional
-subdirectories are recognized by the spec and all compliant agents:
-
-```
-skill-name/
-├── SKILL.md          # Required
-├── scripts/          # Executable code (Python, Bash, JS)
-├── references/       # Markdown docs loaded on demand
-└── assets/           # Templates, data files, code models
-```
-
-> **Note**: Files or directories outside this structure (e.g., `evals/`,
-> `benchmark/`, `README.md` at skill root) are non-standard per the spec. They
-> work in many agents but may not be portable. Use `--allow-dirs=evals,benchmark`
-> with `skill-validator` to suppress warnings for known non-standard directories.
+> **Note**: The spec recognizes only `scripts/`, `references/`, and `assets/` as
+> standard subdirectories. Directories such as `evals/`, `benchmark/`, and
+> `example-prompts/` are non-standard per the spec — they work in many agents but
+> may not be portable. Use `--allow-dirs=evals,benchmark,example-prompts` with
+> `skill-validator` to suppress warnings for these known non-standard directories.
 
 ### SKILL.md Format
 
-Every `SKILL.md` must contain YAML frontmatter followed by Markdown content:
+Every `SKILL.md` **MUST** contain YAML frontmatter followed by Markdown content:
 
 ```yaml
 ---
@@ -100,7 +70,6 @@ license: Apache-2.0
 compatibility: Requires Docker with intel/dlstreamer image; Intel GPU, NPU, or CPU
 metadata:
   author: Intel Open Edge Platform Team
-  version: "2026.1"
   tags:
     - video-analytics
     - gstreamer
@@ -112,7 +81,7 @@ metadata:
 
 | Field           | Required | Constraints                                                                                                           | Purpose                                                            |
 | --------------- | -------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `name`          | Yes      | 1–64 chars, lowercase `a-z 0-9` and hyphens only. No leading/trailing/consecutive hyphens. Must match directory name. | Unique identifier                                                  |
+| `name`          | Yes      | 1–64 chars, lowercase `a-z 0-9` and hyphens only. No leading/trailing/consecutive hyphens. **MUST** match directory name. | Unique identifier                                                  |
 | `description`   | Yes      | 1–1024 chars, non-empty                                                                                               | Primary trigger — describes what the skill does AND when to use it |
 | `license`       | No       | Short string or filename                                                                                              | License name or reference to bundled LICENSE file                  |
 | `compatibility` | No       | 1–500 chars                                                                                                           | Environment requirements: product, packages, network access        |
@@ -176,19 +145,32 @@ Links to bundled reference files.
 **Writing style principles (Anthropic):**
 - Use imperative form: "Run the solver", "Check the status", "Add a constraint"
 - Explain *why* rules exist, not just *what* to do — agents follow reasoning
-- Avoid rigid ALL-CAPS MUST/NEVER — explain the reasoning instead
+- In agent-facing instruction text, prefer explanatory prose over bare ALL-CAPS directives
+  (MUST/NEVER) — agents follow reasoning more reliably than terse imperatives
 - Keep under 500 lines / 5,000 tokens — move detail to `references/`
 - If approaching 500 lines, add a table of contents and pointer sections
 
 ### Optional Directories
 
 #### `scripts/`
-Executable code the agent can run without loading into context. Must be self-contained
+Executable code the agent can run without loading into context. Scripts **MUST** be self-contained
 or clearly document dependencies. Common languages: Python, Bash, JavaScript.
 
 #### `references/`
 Additional docs loaded on demand. Keep individual files focused and under 300 lines
 (include ToC if longer). Agents load these files when SKILL.md references them.
+
+> **Rule: never copy existing documentation into the skill directory.**
+> Copying creates two versions of the same content that will inevitably diverge
+> and conflict. Instead, use GitHub URLs to redirect the agent to the canonical
+> source (e.g. `https://github.com/org/repo/blob/main/docs/guide.md`). Relative
+> paths and symlinks to files outside the skill folder break when the skill is
+> installed via `npx skills add` — only the skill folder itself is copied.
+>
+> Only create new files inside `references/` for knowledge that has **no existing
+> written form** anywhere — proprietary workflows, unpublished internal conventions,
+> or context the LLM demonstrably lacks. If the documentation already exists,
+> link to it; do not reproduce it.
 
 #### `assets/`
 Static resources used in output: templates, code models, data files, schemas.
@@ -237,13 +219,13 @@ Answer these questions. If you cannot answer all of them, the skill is not ready
 
 ### Structure Decisions
 
-| Content type                 | Where it goes                                  |
-| ---------------------------- | ---------------------------------------------- |
-| Step-by-step instructions    | `SKILL.md` body                                |
-| API reference, large tables  | `references/api-reference.md`                  |
-| Reusable code templates      | `assets/<model-name>/`                         |
-| Helper script the agent runs | `scripts/extract.py`                           |
-| Domain-specific deep docs    | `references/finance.md`, `references/legal.md` |
+| Content type                 | Where it goes                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| Step-by-step instructions    | `SKILL.md` body                                                                  |
+| API reference, large tables  | GitHub URL in `SKILL.md` — never copy into `references/`                         |
+| Reusable code templates      | `assets/<model-name>/` (only if no existing example exists in the repo)          |
+| Helper script the agent runs | `scripts/extract.py`                                                             |
+| Domain-specific deep docs    | GitHub URL in `SKILL.md` — never copy existing docs into `references/`           |
 
 ### Organizing Reference Files by Variant
 
@@ -261,15 +243,85 @@ cloud-deploy/
 
 ---
 
-## 4. Creating a Skill
+## 4. Prompts: Showcasing & Evaluating Skills
 
-Two paths exist. **Path A** uses the `skill-creator` skill — an AI-guided conversational
-workflow. **Path B** is the manual approach. Both produce the same artifacts. Path A is
-recommended for first-time skill authors.
+Prompts serve two purposes: they demonstrate when the skill should trigger and what good
+output looks like, and they act as ready-to-use starting points for skill consumers.
+Each prompt maps to an entry in `evals/evals.json`, keeping showcase and testing in sync.
+
+When you run the `skill-creator` skill (covered in [Section 5](#5-creating-a-skill)),
+it generates both artifacts automatically at
+[Stage 4](#stage-4-write-test-cases-and-example-prompts) of the creation workflow,
+using the 5+ scenarios you defined in your opening prompt. Each scenario produces:
+
+**`example-prompts/`** — one self-contained `.md` file per scenario, ready for consumers
+to `@`-mention or paste directly into their agent without reading `SKILL.md`:
+
+```
+my-skill/example-prompts/
+├── 01-<scenario-a-slug>.md
+├── 02-<scenario-b-slug>.md
+├── 03-<scenario-c-slug>.md
+├── 04-<scenario-d-slug>.md
+└── 05-<scenario-e-slug>.md
+```
+
+**`evals/evals.json`** — the same scenarios registered as machine-readable eval cases,
+with `prompt_file` linking back to the corresponding `example-prompts/` file so both
+stay in sync. Assertions are left empty at [Stage 4](#stage-4-write-test-cases-and-example-prompts)
+and filled automatically during [Stage 6](#stage-6-grade-benchmark-and-review) grading.
+
+> **Tip:** Before saving, skill-creator presents all prompts for your review and asks
+> whether you want to adjust any before they are written to disk.
+
+To add prompts to an existing skill, install skill-creator and use this opening prompt:
+
+```bash
+npx skills add anthropics/skills --skill skill-creator -a claude-code
+# for GitHub Copilot: -a github-copilot
+```
+
+Then say:
+
+```
+Create example prompts for my skill at path/to/my-skill/ — here are 5 scenarios
+it must handle: [list them]. Save each as a .md under example-prompts/ and
+register all in evals/evals.json with prompt_file back-references.
+```
 
 ---
 
-### Path A: Using the `skill-creator` Skill
+## 5. Creating a Skill
+
+Use the `skill-creator` skill to build a new skill from scratch. It guides you
+through 9 structured stages and produces all required artifacts automatically:
+`SKILL.md`, `example-prompts/`, `evals/`, and `BENCHMARK.md`.
+
+**Start here:** gather the inputs below before opening a skill-creator session.
+
+### What to Have Ready Before Starting
+
+```
+REQUIRED
+────────────────────────────────────────────────────────────────────
+5+ distinct scenarios   Different workflows, input types, edge cases
+Skill name              lowercase-hyphenated, matches directory name
+Scope                   One sentence: what does it enable the agent to do?
+Trigger description     USE FOR + DO NOT USE FOR + domain keywords
+Novel knowledge         What does the agent get wrong without this skill?
+
+RECOMMENDED
+────────────────────────────────────────────────────────────────────
+Environment reqs        Packages, Python version, auth, network access
+Reference doc URLs      GitHub URLs to existing API docs (do not copy docs into skill)
+Edge cases              Boundary conditions and common failure modes
+Success criteria        How to tell if agent output is correct
+Negative prompts        Requests that look similar but should NOT trigger skill
+```
+
+---
+
+### Using the `skill-creator` Skill
 
 Install the skill-creator first:
 
@@ -279,32 +331,107 @@ npx skills add anthropics/skills --skill skill-creator -a claude-code
 npx skills add anthropics/skills --skill skill-creator -a github-copilot
 ```
 
-Then start a conversation:
+Then start a conversation with a **scope-first prompt**. The key principle: define at
+least 5 distinct use cases the skill must handle *before* writing any instructions.
+Starting with a single workflow produces a point-solution that is hard to generalize
+later; starting with a broad, diverse set of scenarios forces the skill to be generic
+from the outset.
+
+**Recommended opening prompt:**
+
+Provide this as your first message to skill-creator. It sets scope, seeds all artifacts,
+and ensures the skill is generic from the outset. Copy and fill in the placeholders:
 
 ```
-"I want to create a skill for X"
-"Turn this workflow into a skill"
-"Help me improve my existing skill at path/to/my-skill/"
+I want to create a skill for <domain>.
+
+Before writing any instructions, here are 5+ distinct scenarios this skill must handle.
+These cover different workflows, input types, and user levels — not variations of the same task.
+
+1. <realistic user request A — core workflow, typical user>
+2. <realistic user request B — different input type or data source>
+3. <realistic user request C — edge case, advanced use, or unusual constraint>
+4. <realistic user request D — beginner or first-time task>
+5. <realistic user request E — integration, combination, or multi-step scenario>
+[add more if you have them — more diversity = better generalization]
+
+Please:
+- Derive the skill scope and a one-sentence capability statement from these scenarios,
+  not from the first scenario alone
+- Design the SKILL.md description to trigger on all of them
+- Save each scenario as a self-contained .md file under example-prompts/ (named
+  01-<slug>.md, 02-<slug>.md, … so consumers can run them directly)
+- Register each scenario in evals/evals.json with a prompt_file field pointing to
+  the corresponding example-prompts/ file
+- Show me the derived scope and all 5 example prompts for review before proceeding
+  to write the SKILL.md body
+```
+
+Example for a DL Streamer skill:
+
+```
+I want to create a skill for DL Streamer video analytics.
+
+Here are 5 distinct scenarios it must handle — these are meaningfully different,
+not variations of the same pipeline:
+
+1. Detect people in a live RTSP camera feed and save an annotated video clip to disk
+2. Run a multi-model pipeline (detect → classify → track objects) on a local video file
+3. Add a custom Python GStreamer element that post-processes inference metadata in-place
+4. Convert an existing NVIDIA DeepStream pipeline definition to DL Streamer equivalents
+5. Benchmark inference throughput and latency across CPU, Intel GPU, and NPU backends
+
+Please:
+- Derive the skill scope from all five scenarios, not just the first one
+- Design the description field to trigger on all five classes of request
+- Save each scenario as a self-contained .md prompt under example-prompts/
+  (01-rtsp-person-detection.md, 02-multi-model-pipeline.md, etc.)
+- Register all five in evals/evals.json with prompt_file pointing back to example-prompts/
+- Show me the derived scope statement and all 5 example-prompts for review before
+  writing the SKILL.md body
+```
+
+To improve an existing skill, use this form instead:
+
+```
+"Help me improve my existing skill at path/to/my-skill/ — here are 5 use cases
+ it currently handles poorly or not at all: [list them].
+ Save improved prompts to example-prompts/ and update evals/evals.json."
 ```
 
 The skill-creator guides you through 9 stages:
+
+| Stage | Name | What happens |
+| ----- | ---- | ------------ |
+| 1 | Capture Intent | Derives skill scope from your 5+ scenarios |
+| 2 | Interview & Research | Gathers domain knowledge, edge cases, dependencies |
+| 3 | Write the SKILL.md | Drafts and self-reviews the skill body |
+| 4 | Example Prompts & Evals | Saves scenarios to `example-prompts/` and `evals/evals.json` |
+| 5 | Run Test Cases | Parallel with-skill vs. baseline execution |
+| 6 | Grade & Review | Grades assertions, produces `BENCHMARK.md`, browser eval viewer |
+| 7 | Improve | Applies feedback, reruns; repeats until pass rate is satisfactory |
+| 8 | Optimize Trigger | Tunes the `description` field for activation accuracy |
+| 9 | Package | Bundles skill into installable `.skill` archive |
 
 ---
 
 #### Stage 1: Capture Intent
 
-If you are mid-conversation with a workflow already visible, the skill-creator
-**extracts answers from the conversation history first** — tools used, sequence of steps,
-corrections you made, input/output formats. You confirm before it proceeds.
+The skill-creator reads the 5+ use cases you provided and derives the full scope
+before writing a single line of instructions. If you arrived mid-conversation with
+a workflow already visible, it extracts steps and formats from the history — but
+will still ask you to supply additional distinct scenarios to ensure generality.
+You confirm the derived scope before it proceeds.
 
 Information gathered:
 
-| Question                                       | Why it matters                                           |
-| ---------------------------------------------- | -------------------------------------------------------- |
-| What should this skill enable the agent to do? | Defines scope                                            |
-| When should it trigger?                        | Drives the `description` field                           |
-| What is the expected output format?            | Shapes the instructions                                  |
-| Should we set up test cases?                   | Yes for verifiable outputs; optional for subjective ones |
+| Question                                                 | Why it matters                                           |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| What are 5+ distinct scenarios this skill must handle?   | Ensures the skill is generic, not a point-solution       |
+| What should this skill enable the agent to do?           | Defines scope in one sentence                            |
+| When should it trigger?                                  | Drives the `description` field                           |
+| What is the expected output format?                      | Shapes the instructions                                  |
+| Should we set up test cases?                             | Yes for verifiable outputs; optional for subjective ones |
 
 ---
 
@@ -312,37 +439,34 @@ Information gathered:
 
 The skill-creator proactively gathers deeper information. Prepare these before your session:
 
-```
-DOMAIN KNOWLEDGE
-  - What specialized knowledge does this skill encode?
-  - What would the agent get wrong without it?
-  - What is genuinely novel vs. what the LLM already knows?
+**Domain knowledge**
+- What specialized knowledge does this skill encode?
+- What would the agent get wrong without it?
+- What is genuinely novel vs. what the LLM already knows?
 
-INPUT / OUTPUT
-  - What does the user typically provide as input?
-  - What format should the output be in?
-  - Common variations in how users phrase requests?
+**Input / output**
+- What does the user typically provide as input?
+- What format should the output be in?
+- Common variations in how users phrase requests?
 
-EDGE CASES
-  - Boundary conditions?
-  - Inputs that look similar but should NOT trigger the skill?
-  - Most common agent mistakes without this skill?
+**Edge cases**
+- Boundary conditions?
+- Inputs that look similar but should NOT trigger the skill?
+- Most common agent mistakes without this skill?
 
-EXAMPLES
-  - 2–3 concrete input/output examples
-  - Any existing code, documents, or workflows to reference
+**Examples**
+- 2–3 concrete input/output examples
+- Any existing code, documents, or workflows to reference
 
-DEPENDENCIES
-  - Required tools, packages, services, environment setup
-  - Authentication or access requirements
-  - Minimum versions or platform constraints
+**Dependencies**
+- Required tools, packages, services, environment setup
+- Authentication or access requirements
+- Minimum versions or platform constraints
 
-SUCCESS CRITERIA
-  - What does a correct output look like?
-  - What does a wrong output look like?
-  - Are outputs objectively verifiable (code runs, file produced)?
-    Or subjective (style, tone)?
-```
+**Success criteria**
+- What does a correct output look like?
+- What does a wrong output look like?
+- Are outputs objectively verifiable (code runs, file produced)? Or subjective (style, tone)?
 
 The skill-creator also checks available MCPs and researches in parallel —
 searching docs, finding similar skills, looking up best practices.
@@ -369,16 +493,29 @@ different users, not just the session examples.
 
 ---
 
-#### Stage 4: Write Test Cases
+#### Stage 4: Write Test Cases and Example Prompts
 
-The skill-creator generates 2–3 realistic test prompts and shows them to you:
+The 5+ scenarios you defined in Stage 1 are now turned into two artifacts in
+parallel — consumer-facing example prompts and machine-readable eval cases:
+
+**`example-prompts/`** — one `.md` file per scenario, written as a ready-to-use
+prompt that a skill consumer can paste or `@`-mention directly in their agent:
 
 ```
-"Here are a few test cases I'd like to try. Do these look right,
-or do you want to add more?"
+my-skill/example-prompts/
+├── 01-<scenario-a-slug>.md
+├── 02-<scenario-b-slug>.md
+├── 03-<scenario-c-slug>.md
+├── 04-<scenario-d-slug>.md
+└── 05-<scenario-e-slug>.md
 ```
 
-Saved to `evals/evals.json` (assertions left empty at this stage):
+Each file contains the full prompt text with any necessary context so the user
+can run it without reading `SKILL.md`. This is done automatically when you
+include the directives in your opening prompt (see above).
+
+**`evals/evals.json`** — the same prompts registered as eval cases (assertions
+left empty at this stage, filled during Stage 6):
 
 ```json
 {
@@ -386,6 +523,7 @@ Saved to `evals/evals.json` (assertions left empty at this stage):
   "evals": [
     {
       "id": 1,
+      "prompt_file": "example-prompts/01-rtsp-person-detection.md",
       "prompt": "Build a Python app that reads an RTSP stream, detects people with YOLOv8, and saves annotated video...",
       "expected_output": "Python application using gvadetect and DL Streamer pipeline patterns",
       "should_trigger": true,
@@ -394,6 +532,15 @@ Saved to `evals/evals.json` (assertions left empty at this stage):
     }
   ]
 }
+```
+
+Note the `prompt_file` field — it links the eval entry back to the corresponding
+file in `example-prompts/` so both stay in sync. The skill-creator shows you all
+generated prompts before saving:
+
+```
+"Here are the 5 example prompts I've written, one per scenario. Do these look right,
+or do you want to adjust any before I save them?"
 ```
 
 ---
@@ -532,185 +679,11 @@ python -m scripts.package_skill .github/skills/my-skill
 
 ---
 
-### Path B: Manual Step-by-Step
 
-#### Step 1: Initialize
-
-```bash
-npx skills init my-skill
-# Creates: my-skill/SKILL.md
-```
-
-#### Step 2: Pre-Writing Checklist
-
-```
-SCOPE
-  [ ] What does this skill enable the agent to do? (one sentence)
-  [ ] What would the agent get wrong without it?
-  [ ] Can I name 3 specific tasks this skill handles?
-  [ ] Can I name 2 tasks this skill should NOT handle?
-
-NOVELTY — answer YES to at least one, or reconsider the skill
-  [ ] Does this encode proprietary API patterns not in public docs?
-  [ ] Does this encode internal conventions or unpublished workflows?
-  [ ] Does this encode domain expertise the LLM demonstrably lacks?
-
-NAME & DESCRIPTION
-  [ ] Is the name lowercase, hyphenated, under 64 chars, matching the dir?
-  [ ] Does the description include USE FOR: and DO NOT USE FOR: sections?
-  [ ] Does the description include specific domain keywords users would type?
-  [ ] Is the description between 150–500 chars? (optimal trigger range)
-
-STRUCTURE
-  [ ] What goes in SKILL.md body? (core instructions, <500 lines)
-  [ ] What goes in references/? (detailed API docs, domain guides)
-  [ ] What goes in assets/? (templates, code models)
-  [ ] What goes in scripts/? (executable helpers the agent runs)
-
-EXAMPLES
-  [ ] Do I have 2–3 concrete input/output examples?
-  [ ] Are my examples realistic (not toy problems)?
-
-SUCCESS CRITERIA
-  [ ] What does a correct output look like?
-  [ ] What does a wrong output look like?
-  [ ] Are outputs objectively verifiable or subjective?
-```
-
-#### Step 3: Write the SKILL.md
-
-```markdown
----
-name: my-skill
-description: >
-  [What it does]. USE FOR: [specific A], [specific B], [specific C].
-  DO NOT USE FOR: [anti-trigger A], [anti-trigger B].
-license: Apache-2.0
-metadata:
-  author: Your Team
-  version: "1.0"
----
-
-# Skill Name
-
-[Context paragraph]
-
-## When to Use
-- [Trigger condition A]
-- [Trigger condition B]
-
-## Instructions
-
-[Step 1 — imperative, explain the why]
-
-[Step 2 — imperative, explain the why]
-
-## Examples
-
-**Example 1:**
-Input: [realistic input]
-Output: [expected output]
-
-## Common Issues
-
-| Problem | Cause | Fix |
-|---|---|---|
-| [symptom] | [root cause] | [resolution] |
-
-## References
-- See [references/api-reference.md](references/api-reference.md) for full API details
-- See [assets/](assets/) for canonical code models
-```
-
-#### Step 4: Add Reference Files
-
-```bash
-mkdir -p my-skill/references
-# Create: references/api-reference.md, references/advanced-patterns.md
-```
-
-Add a ToC at the top of any reference file over 300 lines.
-Reference from `SKILL.md` with relative paths.
-
-#### Step 5: Add Code Models to `assets/`
-
-```bash
-mkdir -p my-skill/assets/basic-example
-# Create: assets/basic-example/model.py, assets/basic-example/README.md
-```
-
-#### Step 6: Write Evals
-
-```json
-{
-  "skill_name": "my-skill",
-  "evals": [
-    {
-      "id": 1,
-      "prompt_file": "basic-use-case.prompt.md",
-      "prompt": "Realistic user request that requires this skill...",
-      "expected_output": "Description of what correct output looks like",
-      "should_trigger": true,
-      "assertions": [
-        { "name": "key-api-present", "type": "contains", "value": "api.method()" },
-        { "name": "wrong-pattern-absent", "type": "not_contains", "value": "wrong.api()" }
-      ]
-    }
-  ]
-}
-```
-
-#### Step 7: Validate
-
-```bash
-skill-validator check --strict --allow-dirs=evals,benchmark my-skill/
-skill-validator analyze content my-skill/
-skill-validator score evaluate my-skill/
-```
-
-#### Step 8: Security Scan
-
-```bash
-skillspector scan my-skill/ --no-llm
-# Fix any HIGH or CRITICAL findings before proceeding
-```
-
-#### Step 9: Run Evals & Iterate
-
-See [Section 9: Evaluations & Benchmarks](#9-evaluations--benchmarks).
 
 ---
 
-### Key Information: What to Have Ready Before Creating Any Skill
-
-```
-REQUIRED
-────────────────────────────────────────────────────────────────────
-Skill name          lowercase-hyphenated, matches directory name
-Scope               One sentence: what does it enable the agent to do?
-Trigger description USE FOR + DO NOT USE FOR + domain keywords
-Novel knowledge     What does the agent get wrong without this skill?
-2–3 examples        Realistic input/output pairs
-
-RECOMMENDED
-────────────────────────────────────────────────────────────────────
-Environment reqs    Packages, Python version, auth, network access
-Reference docs      URLs or files for detailed API documentation
-Code models         Canonical implementations to bundle in assets/
-Edge cases          Boundary conditions and common failure modes
-Success criteria    How to tell if agent output is correct
-
-FOR EVALS (needed before Stage 4 / Step 6)
-────────────────────────────────────────────────────────────────────
-Test prompts        2–3 realistic user requests
-Expected outputs    What correct results look like
-Assertions          Specific verifiable patterns in the output
-Negative prompts    Requests that look similar but should NOT trigger skill
-```
-
----
-
-## 5. Repo Structure
+## 6. Repo Structure
 
 ### Canonical Layout
 
@@ -720,26 +693,46 @@ repo-root/ # this layout can also live in a subfolder within the repository
 ├── .github/
 │   ├── skills/                        ← all skill directories
 │   │   └── my-skill/
-│   │       ├── SKILL.md               ← required
-│   │       ├── references/            ← docs loaded on demand
+│   │       ├── SKILL.md               ← required:  metadata + instructions
+│   │       ├── evals/                 ← required*: automated test cases and assertions (CI quality gate)
+│   │       │   └── evals.json
+│   │       ├── example-prompts/       ← required*: ready-to-use .md prompts for skill consumers
+│   │       │   ├── basic-usage.md
+│   │       │   └── advanced-usage.md
+│   │       ├── BENCHMARK.md           ← required*: human-readable evaluation report
+│   │       ├── references/            ← optional:  docs loaded on demand
 │   │       │   └── api-reference.md
-│   │       ├── assets/                ← templates, code models
+│   │       ├── assets/                ← optional:  templates, code models, data
 │   │       │   └── basic-example/
 │   │       │       ├── model.py
 │   │       │       └── README.md
-│   │       ├── scripts/               ← executable helpers
+│   │       ├── scripts/               ← optional:  executable helpers
 │   │       │   └── validate-output.py
-│   │       ├── evals/                 ← machine-readable test cases
-│   │       │   └── evals.json
-│   │       ├── benchmark/             ← raw grading outputs per iteration
+│   │       ├── benchmark/             ← optional:  raw grading outputs (produced by skill-creator)
 │   │       │   └── iteration-1/
-│   │       ├── BENCHMARK.md           ← human-readable eval report
-│   │       └── skill-card.md          ← disclosure & eval summary
+│   │       └── skill-card.md          ← optional:  disclosure & eval summary
 ```
 
-## 6. Validation
+> **Quality mandate**: `evals/`, `example-prompts/`, and `BENCHMARK.md` are marked
+> `Required*` — optional per the [Agent Skills Specification](https://agentskills.io/specification)
+> but **REQUIRED in this repository** for any skill targeting production use or public distribution.
+>
+> - **`evals/`** contains machine-readable test cases with assertions used by CI to
+>   verify that the skill produces correct outputs. Without it there is no automated
+>   quality gate.
+> - **`example-prompts/`** contains one or more `.md` files that users can `@`-mention
+>   directly in their agent to start using the skill immediately. Publishing a skill
+>   without ready-to-use prompts implies no quality expectations for the consumer
+>   experience.
+> - **`BENCHMARK.md`** summarises eval results so reviewers and consumers can assess
+>   skill quality before installing.
 
-> Tool: [github.com/agent-ecosystem/skill-validator](https://github.com/agent-ecosystem/skill-validator)
+---
+
+## 7. Validation
+
+> Tool: [github.com/agent-ecosystem/skill-validator]
+> (https://github.com/agent-ecosystem/skill-validator)
 
 ### Install
 
@@ -772,8 +765,8 @@ skill-validator check .github/skills/my-skill/
 # Strict mode (warnings = errors) for CI
 skill-validator check --strict .github/skills/my-skill/
 
-# Allow non-standard directories (evals, benchmark)
-skill-validator check --allow-dirs=evals,benchmark .github/skills/my-skill/
+# Allow non-standard directories (evals, benchmark, example-prompts)
+skill-validator check --allow-dirs=evals,benchmark,example-prompts .github/skills/my-skill/
 
 # Check all skills in a directory
 skill-validator check .github/skills/
@@ -864,11 +857,11 @@ jobs:
           skill-validator check \
             --strict \
             --emit-annotations \
-            --allow-dirs=evals,benchmark \
+            --allow-dirs=evals,benchmark,example-prompts \
             .github/skills/
           skill-validator check \
             --strict \
-            --allow-dirs=evals,benchmark \
+            --allow-dirs=evals,benchmark,example-prompts \
             -o markdown \
             .github/skills/ >> "$GITHUB_STEP_SUMMARY"
 
@@ -876,7 +869,7 @@ jobs:
         run: |
           skill-validator check \
             --emit-annotations \
-            --allow-dirs=evals,benchmark \
+            --allow-dirs=evals,benchmark,example-prompts \
             .github/skills/drafts/
 ```
 
@@ -894,7 +887,7 @@ repos:
 
 ---
 
-## 7. Security Scanning
+## 8. Security Scanning
 
 > Tool: [github.com/NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector)
 
@@ -1002,47 +995,10 @@ Skills with executable scripts receive a **1.3× multiplier**.
 
 ---
 
-## 8. Prompts: Showcasing & Evaluating Skills
-
-Prompts demonstrate (a) when the skill should trigger and (b) what “good output” looks like. The `skill-creator` skill (**Stage 4**) generates these automatically; you can also write them manually.
-
-### Via `skill-creator` (Recommended)
-
-The `skill-creator` drafts 2–3 realistic test prompts based on the interview from Stage 2 and presents them for your review before saving:
-
-```
-"Here are a few test cases I'd like to try. Do these look right,
-or do you want to add more?"
-```
-
-Install and invoke:
-
-```bash
-npx skills add anthropics/skills --skill skill-creator -a claude-code
-# or for GitHub Copilot:
-npx skills add anthropics/skills --skill skill-creator -a github-copilot
-```
-
-Then say: `"Create prompts for my skill at path/to/my-skill/"`
-
-The `skill-creator` saves prompts to `evals/evals.json` with `expected_output` descriptions and leaves `assertions` empty for grading in Stage 6.
-
-### Manually
-
-Create `evals/evals.json` in your skill directory with at least:
-
-- 2 should-trigger prompts covering the core use case
-- 1 should-not-trigger near-miss to guard against false activation
-
-For each prompt, include an `expected_output` description and 2–5 concrete `assertions` — prefer `contains`/`not_contains` checks over subjective criteria. See [Section 9](#9-evaluations--benchmarks) for the full schema and grading workflow.
-
----
-
 ## 9. Evaluations & Benchmarks
 
-Evaluations compare agent output with and without the skill loaded to measure quality, token usage, and latency. The `skill-creator` skill automates this across **Stages 5–7**; the steps below describe the manual equivalent.
-
-### Via `skill-creator` (Recommended)
+Evaluations compare agent output with and without the skill loaded to measure quality, token
+usage, and latency. The `skill-creator` skill automates this across **Stages 5–7**:
 
 | Stage | What happens |
 | ----- | ------------ |
@@ -1055,60 +1011,95 @@ npx skills add anthropics/skills --skill skill-creator -a claude-code
 # Then say: "Run evals for my skill at path/to/my-skill/"
 ```
 
-### Manually
+For the full `evals/evals.json` schema, grading output format, and `BENCHMARK.md` structure,
+see [Stage 4](#stage-4-write-test-cases-and-example-prompts) and
+[Stage 6](#stage-6-grade-benchmark-and-review) in Section 5.
 
-**Step 1 — Run with-skill and baseline**
 
-Run your agent on each prompt in `evals/evals.json` twice and save outputs:
+### Cross-Agent Benchmarking
 
-```
-benchmark/
-└── iteration-1/
-    └── <eval-name>/
-        ├── with_skill/
-        │   ├── output.md
-        │   └── timing.json
-        └── without_skill/
-            ├── output.md
-            └── timing.json
-```
+`skill-creator` runs Stages 5–7 within a single agent session — it cannot spawn
+eval runs across Claude Code, Codex, and Copilot simultaneously. Cross-agent
+comparison is done by running the same `evals/evals.json` suite separately in
+each target agent and comparing the resulting `benchmark/` outputs.
 
-**Step 2 — Grade assertions**
+**Two levels of comparison are available:**
 
-Check each assertion against the with-skill output and record results in `benchmark/iteration-1/grading.json`:
+#### 1. LLM-as-Judge Quality Scoring (skill-validator)
 
-```json
-[
-  {
-    "eval_id": 1,
-    "assertions": [
-      { "name": "key-pattern-present",  "passed": true, "evidence": "Found at line 4" },
-      { "name": "wrong-pattern-absent", "passed": true, "evidence": "Not found" }
-    ]
-  }
-]
+Scores the SKILL.md content itself — clarity, novelty, actionability — using
+different underlying LLMs as evaluators. Fast, no task execution required.
+
+```bash
+# Score with Claude as judge
+skill-validator score evaluate --provider claude-cli .github/skills/my-skill/
+
+# Score with OpenAI as judge
+export OPENAI_API_KEY=sk-...
+skill-validator score evaluate --provider openai .github/skills/my-skill/
+
+# Aggregate into a cross-provider comparison table
+skill-validator score report .github/skills/my-skill/
 ```
 
-**Step 3 — Summarize in `BENCHMARK.md`**
+This tells you whether the skill instructions are clear and novel, but does not
+measure actual task execution quality on each agent.
 
-Document pass rate, token delta, and latency per iteration:
+#### 2. Execution Quality Comparison (manual, per-agent)
 
-```markdown
-## Iteration 1
+Measures how well each agent actually performs the skill tasks. The workflow:
 
-| Eval   | With Skill            | Without Skill | Delta |
-| ------ | --------------------- | ------------- | ----- |
-| eval-1 | 2/2 assertions passed | 0/2           | +2    |
-| eval-2 | 1/2 assertions passed | 1/2           | 0     |
+**Step 1** — In each target agent, install skill-creator and run evals:
 
-**Overall pass rate (with skill):** 75%
-**Avg token overhead:** +1,200 tokens
+```bash
+# Repeat for each agent: -a claude-code | -a codex | -a github-copilot
+npx skills add anthropics/skills --skill skill-creator -a <agent>
+# Then say: "Run evals for my skill at path/to/my-skill/"
 ```
 
-**Step 4 — Iterate**
+Save outputs under agent-named subdirectories so runs do not overwrite each other
+(e.g. `benchmark/claude-code/iteration-1/`, `benchmark/codex/iteration-1/`).
 
-Update `SKILL.md` based on failures, increment to `benchmark/iteration-2/`, and re-run.
+**Step 2** — Compare `BENCHMARK.md` outputs across agents. Key metrics to compare:
 
+| Metric | What it reveals |
+|--------|----------------|
+| Assertion pass rate (with skill) | Which agent benefits most from the skill |
+| Assertion pass rate (without skill) | Which agent needs the skill least (already knows the domain) |
+| Token overhead | Cost of loading the skill per agent |
+| Trigger accuracy (Stage 8) | Whether the description fires correctly on each agent |
+
+**Step 3** — Identify the lowest-performing agent and iterate on the SKILL.md to
+close the gap. A skill is portable when pass rates are within 10–15% across agents.
+
+### Ready to Publish?
+
+Run these checks before making the skill public. Each step maps to a section of
+this guide where the tool is documented in full.
+
+```bash
+# 1. Validate structure (Section 7)
+skill-validator check --strict --allow-dirs=evals,benchmark,example-prompts .github/skills/my-skill/
+
+# 2. Check external links still resolve (Section 7)
+skill-validator validate links .github/skills/my-skill/
+
+# 3. LLM quality score — aim for ≥3.5/5 on Novelty (Section 7)
+skill-validator score evaluate .github/skills/my-skill/
+
+# 4. Security scan (Section 8)
+skillspector scan .github/skills/my-skill/ --no-llm
+
+# 5. Run eval suite and update BENCHMARK.md (Stages 5–7 above)
+npx skills add anthropics/skills --skill skill-creator -a claude-code
+# Then say: "Run evals for my skill at path/to/my-skill/"
+```
+
+Publish by making the repo public — both [skills.sh](https://skills.sh) and
+[skillsmp.com](https://skillsmp.com) auto-index public GitHub repos containing
+a valid `SKILL.md`. No manual submission required.
+
+---
 
 ## 10. Managing Skills
 
@@ -1210,52 +1201,45 @@ Install with: `INSTALL_INTERNAL_SKILLS=1 npx skills add owner/repo --list`
 
 ---
 
-## 11. Publishing & Marketplaces
+## 11. Agent-Specific Best Practices
 
-### Pre-Publication Checklist
+Skills are portable across 70+ agents, but each agent has implementation
+differences that affect authoring choices. The table below summarises the key
+differences; for per-agent deep-dives (companion config mechanics, monorepo
+layouts, token budget guidance) see [AGENT_COMPAT.md](AGENT_COMPAT.md).
 
-```bash
-# 1. Validate structure
-skill-validator check --strict --allow-dirs=evals,benchmark .github/skills/my-skill/
+### Summary
 
-# 2. Check external links still resolve
-skill-validator validate links .github/skills/my-skill/
+| Agent          | Project skills path     | `allowed-tools` | Script execution | Always-loaded companion config              |
+| -------------- | ----------------------- | --------------- | ---------------- | ------------------------------------------- |
+| Claude Code    | `.claude/skills/`       | Supported       | bash / Python    | `CLAUDE.md` (repo + parents + `~/.claude/`) |
+| GitHub Copilot | `.agents/skills/`       | Not supported   | Via MCP tools    | `.github/copilot-instructions.md`           |
+| Codex          | `.agents/skills/`       | Not tested      | bash / Python    | —                                           |
+| Cursor         | `.agents/skills/`       | Not supported   | Via terminal     | `.cursor/rules/*.mdc` (`alwaysApply: true`) |
+| Gemini CLI     | `.agents/skills/`       | Not tested      | bash / Python    | —                                           |
 
-# 3. LLM quality score (aim for ≥3.5/5 on Novelty)
-skill-validator score evaluate .github/skills/my-skill/
 
-# 4. Security scan
-skillspector scan .github/skills/my-skill/ --no-llm
+### Cross-Agent Tips
 
-# 5. Run eval suite and update BENCHMARK.md
-# (see Section 9)
-```
-
-### Packaging
-
-```bash
-python -m scripts.package_skill .github/skills/my-skill
-# Produces: my-skill.skill (installable archive)
-```
-
-### skills.sh (Vercel-backed, CLI-first)
-
-**URL**: [skills.sh](https://skills.sh)
-
-- 796,000+ indexed skills; 70+ supported agents
-- CLI: `npx skills add owner/repo`
-- Auto-indexes public GitHub repos containing valid `SKILL.md` files
-- No manual submission — make your repo public and it appears
-- Leaderboard with install counts
-
-### skillsmp.com (Discovery-first, SOC-categorized)
-
-**URL**: [skillsmp.com](https://skillsmp.com)
-
-- 1.7M+ indexed skills
-- Organized by occupation (SOC categories) and creator
-- REST API for search and analytics
-- Browse by category: Tools, Business, Development, Testing & Security, Data & AI
+- **Test trigger accuracy on each target agent early.** A skill that activates
+  correctly in Claude Code may not trigger in GitHub Copilot due to description
+  parsing differences. Use Stage 8 trigger evals to validate across agents before
+  publishing.
+- **Avoid agent-specific syntax in `SKILL.md`.** Do not hardcode Copilot-specific
+  references (e.g., `@workspace`) or Claude-specific tool names in the skill body —
+  skills are meant to be portable.
+- **Use the `compatibility` field for hard agent requirements.** If a skill requires
+  bash tool access or a specific agent capability, declare it:
+  ```yaml
+  compatibility: Requires an agent with bash tool access (Claude Code, Codex, Gemini CLI)
+  ```
+- **Check the install paths table** in [Section 10](#10-managing-skills) for the
+  canonical per-agent skill directory locations.
+- **Benchmark across agents before publishing.** A skill that scores well on
+  Claude Code may underperform on Codex or Copilot. Run the same `evals/evals.json`
+  suite in each target agent and compare pass rates. See the
+  [Cross-Agent Benchmarking](#cross-agent-benchmarking) subsection in Section 9
+  for the recommended workflow and directory layout.
 
 ---
 
@@ -1273,3 +1257,7 @@ python -m scripts.package_skill .github/skills/my-skill
 | SkillSpector                              | https://github.com/NVIDIA/SkillSpector             |
 | skills.sh marketplace                     | https://skills.sh                                  |
 | skillsmp.com marketplace                  | https://skillsmp.com                               |
+| GitHub Copilot plugins marketplace        | https://awesome-copilot.github.com/plugins/        |
+| Claude plugins marketplace                | https://claude.com/plugins                         |
+| Model Context Protocol (MCP) spec         | https://modelcontextprotocol.io                     |
+| Agent Compatibility Reference             | [AGENT_COMPAT.md](AGENT_COMPAT.md)                 |

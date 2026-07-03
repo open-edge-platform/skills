@@ -6,9 +6,9 @@ on:
       - "main"
     paths:
       - "skills-config.json"
-  # Run every 4 hours
+  # Run every day at midnight
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 0 * * *"
   # Allow manual trigger
   workflow_dispatch:
     inputs:
