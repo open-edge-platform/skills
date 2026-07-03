@@ -5,7 +5,7 @@
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
-      "computedHash": "1119e929cd13e786a556735e373f7189f5373e55d4ced0d17499e05ffcf5dbd1"
+      "computedHash": "6fdb9b38d4d57134d481966ce2de6e99a99549523f3bcd20602462ee46e61fcd"
     },
     "scenescape-setup": {
       "source": "open-edge-platform/scenescape",
