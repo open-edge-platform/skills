@@ -35,7 +35,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          persist-credentials: false
+          persist-credentials: true # FIXME use false once repo make public
           fetch-depth: 0
 
       - name: Run SkillSpector scan
@@ -55,7 +55,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          persist-credentials: false
+          persist-credentials: true # FIXME use false once repo make public
           fetch-depth: 0
 
       - name: Run skill-validator
