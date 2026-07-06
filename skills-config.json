@@ -32,6 +32,44 @@
       ]
     },
     {
+      "product": "Physical AI Train",
+      "repo": "open-edge-platform/physical-ai-studio",
+      "ref": "main",
+      "path": "skills/library",
+      "skill": [
+        {"name": "physicalai-train-adding-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-benchmarking-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-exporting-and-validating", "prompts_url": ""},
+        {"name": "physicalai-train-training-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-working-with-datasets", "prompts_url": ""}
+      ]
+    },
+    {
+      "product": "Physical AI Runtime",
+      "repo": "openvinotoolkit/physicalai",
+      "ref": "main",
+      "path": "skills/runtime",
+      "skill": [
+        {"name": "physicalai-runtime-adding-a-robot-integration", "prompts_url": ""},
+        {"name": "physicalai-runtime-running-policy-on-robot", "prompts_url": ""},
+        {
+          "name": "physicalai-runtime-configuring-inference-pipeline",
+          "path": "skills/inference",
+          "prompts_url": ""
+        },
+        {
+          "name": "physicalai-runtime-loading-exported-policies",
+          "path": "skills/inference",
+          "prompts_url": ""
+        },
+        {
+          "name": "physicalai-runtime-adding-a-camera-backend",
+          "path": "skills/capture",
+          "prompts_url": ""
+        }
+      ]
+    },
+    {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
       "ref": "feature/sscape-app-skill",
