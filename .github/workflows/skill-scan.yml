@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       severity:
-        description: "Severity level for PR failure (CRITICAL, HIGH, MEDIUM, LOW)"
+        description: "SkillSpector severity level (CRITICAL, HIGH, MEDIUM, LOW)"
         required: false
         default: "LOW"
         type: choice
@@ -25,8 +25,8 @@ on:
 permissions: {}
 
 jobs:
-  skill-scan:
-    name: SkillSpector Security Scan
+  SkillSpector-scan:
+    name: SkillSpector security scan
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -45,7 +45,18 @@ jobs:
           severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || github.event.inputs.severity || 'LOW' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
 
- 
+  skill-validator-scan:
+    name: skill-validator scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
 
       - name: Run skill-validator
         uses: open-edge-platform/geti-ci/actions/skill-validator@ac8d35f5bb94a135ec778498cf5082bc70babffe # skill-validator/v0.1.0
@@ -53,4 +64,3 @@ jobs:
           skills-path: .agents/skills/
           strict: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
-
