@@ -7,6 +7,12 @@
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
       "computedHash": "6fdb9b38d4d57134d481966ce2de6e99a99549523f3bcd20602462ee46e61fcd"
     },
+    "model-download-user": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "sourceType": "github",
+      "skillPath": "microservices/model-download/.github/skills/model-download-user/SKILL.md",
+      "computedHash": "4f5a08422aef90267f1cb3be5097d9cacbbf647431c3899d09a4c931493646ee"
+    },
     "scenescape-setup": {
       "source": "open-edge-platform/scenescape",
       "ref": "feature/sscape-app-skill",
