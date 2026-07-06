@@ -23,6 +23,15 @@
       ]
     },
     {
+      "product": "Model Download",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "microservices/model-download/.github/skills",
+      "skill": [
+        {"name": "model-download-user", "prompts_url": ""}
+      ]
+    },
+    {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
       "ref": "feature/sscape-app-skill",
