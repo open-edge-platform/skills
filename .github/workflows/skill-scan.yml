@@ -25,7 +25,7 @@ on:
 permissions: {}
 
 jobs:
-  SkillSpector-scan:
+  skillspector-scan:
     name: SkillSpector security scan
     runs-on: ubuntu-latest
     timeout-minutes: 90
