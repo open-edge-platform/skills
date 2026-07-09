@@ -10,7 +10,7 @@
 Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
 skills-config.json is the single source of truth.  The script:
-  1. Reads skills-config.json and runs `npx skills add/update` for each entry,
+  1. Reads skills-config.json and runs `npx skills add/update` for each product,
      targeting only .agents/skills/ (via --agent universal --copy). New skills
      are added from explicit GitHub tree URLs built from repo/ref/path/name so
      product repos can use different skill layouts.
@@ -48,21 +48,21 @@ SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
 
 def load_skills_config(config_path: Path) -> list[dict]:
     """
-    Read skills-config.json.  Each entry must have:
+    Read skills-config.json.  Each product must have:
       repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skill  — skill folder name     (becomes .agents/skills/<skill>)
+      skills — skill folder names    (become .agents/skills/<skill>)
     """
     if not config_path.exists():
         sys.exit(f"Error: skills-config.json not found at {config_path}")
     with config_path.open(encoding="utf-8") as f:
         data = json.load(f)
-    entries = data.get("skills", [])
+    entries = data.get("products", [])
     valid = []
     for entry in entries:
-        if "repo" in entry and "skill" in entry:
+        if "repo" in entry and "skills" in entry:
             valid.append(entry)
         else:
-            print(f"  [warn] skipping malformed entry (needs repo+skill): {entry}", file=sys.stderr)
+            print(f"  [warn] skipping malformed entry (needs repo+skills): {entry}", file=sys.stderr)
     return valid
 
 
@@ -125,7 +125,7 @@ def _build_skill_source(entry: dict, skill: str | dict) -> str:
         return _build_repo_source(entry)
 
     repo = entry["repo"]
-    ref = (entry.get("ref") or "main").strip() or "main"
+    ref = entry["ref"].strip()
     return f"https://github.com/{repo}/tree/{ref}/{source_path}/{_skill_name(skill)}"
 
 
@@ -148,7 +148,7 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
     has_error = False
 
     for entry in config_entries:
-        skills = entry["skill"] if isinstance(entry["skill"], list) else [entry["skill"]]
+        skills = entry["skills"]
         for skill in skills:
             skill_name = _skill_name(skill)
             if skill_name in installed:
@@ -230,7 +230,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     # Each value stores the parent entry plus the skill-level prompts_url (if any).
     config_by_skill: dict = {}
     for e in config_entries:
-        skills = e["skill"] if isinstance(e["skill"], list) else [e["skill"]]
+        skills = e["skills"]
         for s in skills:
             skill_name = s["name"] if isinstance(s, dict) else s
             skill_prompts_url = s.get("prompts_url") if isinstance(s, dict) else None

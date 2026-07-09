@@ -6,9 +6,10 @@ on:
       - "main"
     paths:
       - "skills-config.json"
-  # Run every 4 hours
+      - "skills-config.schema.json"
+  # Run every day at midnight
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 0 * * *"
   # Allow manual trigger
   workflow_dispatch:
     inputs:
@@ -44,10 +45,16 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install JSON schema validator
+        run: python3 -m pip install check-jsonschema==0.34.0
+
       - name: Checkout skills repo
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+
+      - name: Validate skills config
+        run: check-jsonschema --schemafile skills-config.schema.json skills-config.json
 
       - name: Sync skills and update README index
         env:
