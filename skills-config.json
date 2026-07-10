@@ -1,11 +1,11 @@
 {
-  "skills": [
+  "products": [
     {
       "product": "DL Streamer",
       "repo": "open-edge-platform/dlstreamer",
       "ref": "main",
       "path": ".github/skills",
-      "skill": [
+      "skills": [
         {
           "name": "dlstreamer-coding-agent",
           "prompts_url": "https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples"
@@ -17,7 +17,7 @@
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
-      "skill": [
+      "skills": [
         {"name": "vss-search", "prompts_url": ""},
         {"name": "vss-summarize", "prompts_url": ""}
       ]
@@ -27,8 +27,46 @@
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/model-download/.github/skills",
-      "skill": [
+      "skills": [
         {"name": "model-download-user", "prompts_url": ""}
+      ]
+    },
+    {
+      "product": "Physical AI Train",
+      "repo": "open-edge-platform/physical-ai-studio",
+      "ref": "main",
+      "path": "skills/library",
+      "skills": [
+        {"name": "physicalai-train-adding-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-benchmarking-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-exporting-and-validating", "prompts_url": ""},
+        {"name": "physicalai-train-training-a-policy", "prompts_url": ""},
+        {"name": "physicalai-train-working-with-datasets", "prompts_url": ""}
+      ]
+    },
+    {
+      "product": "Physical AI Runtime",
+      "repo": "openvinotoolkit/physicalai",
+      "ref": "main",
+      "path": "skills/runtime",
+      "skills": [
+        {"name": "physicalai-runtime-adding-a-robot-integration", "prompts_url": ""},
+        {"name": "physicalai-runtime-running-policy-on-robot", "prompts_url": ""},
+        {
+          "name": "physicalai-runtime-configuring-inference-pipeline",
+          "path": "skills/inference",
+          "prompts_url": ""
+        },
+        {
+          "name": "physicalai-runtime-loading-exported-policies",
+          "path": "skills/inference",
+          "prompts_url": ""
+        },
+        {
+          "name": "physicalai-runtime-adding-a-camera-backend",
+          "path": "skills/capture",
+          "prompts_url": ""
+        }
       ]
     },
     {
@@ -36,7 +74,7 @@
       "repo": "open-edge-platform/scenescape",
       "ref": "feature/sscape-app-skill",
       "path": ".github/skills",
-      "skill": [
+      "skills": [
         {"name": "scenescape-setup", "prompts_url": ""}
       ]
     }

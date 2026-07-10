@@ -10,8 +10,10 @@
 Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
 skills-config.json is the single source of truth.  The script:
-  1. Reads skills-config.json and runs `npx skills add/update` for each entry,
-     targeting only .agents/skills/ (via --agent universal --copy).
+  1. Reads skills-config.json and runs `npx skills add/update` for each product,
+     targeting only .agents/skills/ (via --agent universal --copy). New skills
+     are added from explicit GitHub tree URLs built from repo/ref/path/name so
+     product repos can use different skill layouts.
   2. Reads the installed SKILL.md files from .agents/skills/ directly to
      parse frontmatter, and reads skills-lock.json for upstream repo/path
      metadata to build GitHub links.
@@ -46,21 +48,21 @@ SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
 
 def load_skills_config(config_path: Path) -> list[dict]:
     """
-    Read skills-config.json.  Each entry must have:
+    Read skills-config.json.  Each product must have:
       repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skill  — skill folder name     (becomes .agents/skills/<skill>)
+      skills — skill folder names    (become .agents/skills/<skill>)
     """
     if not config_path.exists():
         sys.exit(f"Error: skills-config.json not found at {config_path}")
     with config_path.open(encoding="utf-8") as f:
         data = json.load(f)
-    entries = data.get("skills", [])
+    entries = data.get("products", [])
     valid = []
     for entry in entries:
-        if "repo" in entry and "skill" in entry:
+        if "repo" in entry and "skills" in entry:
             valid.append(entry)
         else:
-            print(f"  [warn] skipping malformed entry (needs repo+skill): {entry}", file=sys.stderr)
+            print(f"  [warn] skipping malformed entry (needs repo+skills): {entry}", file=sys.stderr)
     return valid
 
 
@@ -84,7 +86,7 @@ def _run(cmd: list[str], cwd: Path) -> int:
     return subprocess.run(cmd, cwd=str(cwd)).returncode
 
 
-def _build_source(entry: dict) -> str:
+def _build_repo_source(entry: dict) -> str:
     """
     Build the npx skills add source argument from a config entry.
 
@@ -101,6 +103,32 @@ def _build_source(entry: dict) -> str:
     return f"{repo}#{ref}"
 
 
+def _skill_name(skill: str | dict) -> str:
+    return skill["name"] if isinstance(skill, dict) else skill
+
+
+def _skill_path(entry: dict, skill: str | dict) -> str:
+    if isinstance(skill, dict) and skill.get("path"):
+        return skill["path"].strip().strip("/")
+    return entry.get("path", "").strip().strip("/")
+
+
+def _build_skill_source(entry: dict, skill: str | dict) -> str:
+    """Build the npx skills add source for one skill.
+
+    When a source path is configured, use a direct GitHub tree URL so discovery
+    does not depend on the product repo's overall layout. Without a path, fall
+    back to the repo shorthand supported by the skills CLI.
+    """
+    source_path = _skill_path(entry, skill)
+    if not source_path:
+        return _build_repo_source(entry)
+
+    repo = entry["repo"]
+    ref = entry["ref"].strip()
+    return f"https://github.com/{repo}/tree/{ref}/{source_path}/{_skill_name(skill)}"
+
+
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     For each entry in skills-config.json:
@@ -108,8 +136,8 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
       - `npx skills add <source> --skill <name>
            --agent universal --copy --yes`                      otherwise
 
-    <source> is derived from repo + ref via _build_source(): plain "org/repo"
-    for the default (main) branch, or "org/repo#ref" for a non-main branch or tag.
+    <source> is a direct GitHub tree URL when path is configured, otherwise it
+    falls back to the skills CLI's repo shorthand ("org/repo" or "org/repo#ref").
 
     --agent universal  → installs only into .agents/skills/
     --copy             → copies files (no symlinks; fully committable)
@@ -120,13 +148,13 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
     has_error = False
 
     for entry in config_entries:
-        source = _build_source(entry)
-        skills = entry["skill"] if isinstance(entry["skill"], list) else [entry["skill"]]
+        skills = entry["skills"]
         for skill in skills:
-            skill_name = skill["name"] if isinstance(skill, dict) else skill
+            skill_name = _skill_name(skill)
             if skill_name in installed:
                 cmd = ["npx", "skills", "update", skill_name, "--yes"]
             else:
+                source = _build_skill_source(entry, skill)
                 cmd = ["npx", "skills", "add", source,
                        "--skill", skill_name, "--agent", "universal", "--copy", "--yes"]
 
@@ -202,7 +230,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     # Each value stores the parent entry plus the skill-level prompts_url (if any).
     config_by_skill: dict = {}
     for e in config_entries:
-        skills = e["skill"] if isinstance(e["skill"], list) else [e["skill"]]
+        skills = e["skills"]
         for s in skills:
             skill_name = s["name"] if isinstance(s, dict) else s
             skill_prompts_url = s.get("prompts_url") if isinstance(s, dict) else None

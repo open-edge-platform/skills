@@ -85,6 +85,10 @@ npx skills add open-edge-platform/skills --skill dlstreamer-coding-agent --agent
 
 # Install directly from the skill's source repo
 npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent --copy --yes
+
+# Install directly from a skill directory when the product repo uses a custom layout
+npx skills add https://github.com/openvinotoolkit/physicalai/tree/main/skills/inference/physicalai-runtime-loading-exported-policies \
+  --skill physicalai-runtime-loading-exported-policies --copy --yes
 ```
 
 ### List installed skills
