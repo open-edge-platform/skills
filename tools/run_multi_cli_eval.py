@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
 """
 run_multi_cli_eval.py — skill-creator style eval runner across multiple CLI agents.
 
@@ -78,6 +76,8 @@ Prerequisites:
 from __future__ import annotations
 
 import argparse
+import collections
+import datetime
 import glob
 import json
 import os
@@ -437,11 +437,14 @@ def eval_dir_name(ev: dict) -> str:
 
 
 def run_one(cli: str, binary: str, ev: dict, config: str, skill_path: str, timeout: int,
-            model: str | None = None) -> tuple[str, dict, RunResult]:
+            model: str | None = None) -> tuple[str, dict, str, RunResult]:
     prompt = build_prompt(ev["prompt"], skill_path if config == "with_skill" else None)
     scratch = Path(tempfile.mkdtemp(prefix=f"skilleval-{cli}-{ev['id']}-{config}-"))
-    runner = CLI_RUNNERS[cli]
-    result = runner(binary, prompt, scratch, timeout, model)
+    try:
+        runner = CLI_RUNNERS[cli]
+        result = runner(binary, prompt, scratch, timeout, model)
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
     return cli, ev, config, result
 
 
@@ -787,8 +790,7 @@ def detect_cli_model(workspace: Path, cli: str) -> str:
     run_claude / run_codex). Returns the most common non-empty value across
     all of that CLI's runs, or a fallback label if nothing was recorded
     (e.g. an older run predating this field)."""
-    from collections import Counter
-    counts: Counter[str] = Counter()
+    counts: collections.Counter[str] = collections.Counter()
     for timing_path in (workspace / cli).glob("eval-*/*/run-*/timing.json"):
         try:
             data = json.loads(timing_path.read_text())
@@ -866,7 +868,7 @@ def build_cross_cli_benchmark(workspace: Path, clis: list[str], skill_name: str,
             "skill_path": "<see per-cli benchmark.json for skill_path>",
             "executor_model": ", ".join(f"{cli}={cli_models[cli]}" for cli in clis),
             "analyzer_model": "run_multi_cli_eval.py (cross-CLI aggregation)",
-            "timestamp": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "evals_run": sorted({r["eval_id"] for r in runs}),
             "runs_per_configuration": 1,
         },
@@ -898,9 +900,9 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=4, help="Max concurrent subprocess runs")
     parser.add_argument("--timeout", type=int, default=300, help="Per-run timeout in seconds")
     parser.add_argument("--eval-ids", default="", help="Comma-separated eval IDs to restrict to (default: all)")
-    parser.add_argument("--copilot-bin", default=None)
-    parser.add_argument("--claude-bin", default=None)
-    parser.add_argument("--codex-bin", default=None)
+    parser.add_argument("--copilot-bin", default=None, help="Explicit path to the copilot binary (default: auto-detect on PATH)")
+    parser.add_argument("--claude-bin", default=None, help="Explicit path to the claude binary (default: auto-detect on PATH)")
+    parser.add_argument("--codex-bin", default=None, help="Explicit path to the codex binary (default: auto-detect on PATH / nvm fallback)")
     parser.add_argument("--copilot-model", default=None,
                          help="Model to pass to copilot via --model (default: let Copilot CLI choose its own default)")
     parser.add_argument("--claude-model", default=None,

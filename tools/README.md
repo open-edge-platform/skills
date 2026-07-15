@@ -40,11 +40,17 @@ For every `(cli, eval, configuration)` combination it:
   - GitHub Copilot CLI (`copilot`) — `npm install -g @github/copilot-cli` (or your org's install method), then `copilot` once interactively to authenticate.
   - Claude Code CLI (`claude`) — see [claude.ai/code](https://claude.ai/code), then `claude` once to authenticate.
   - OpenAI Codex CLI (`codex`) — `npm install -g @openai/codex`, requires Node >= 16; run `codex login` once to authenticate.
-- The [skill-creator](https://github.com/anthropics/skill-creator) skill
-  installed locally (used for its `scripts/aggregate_benchmark.py` and
-  `agents/grader.md`). By default this script looks for it at
-  `~/.agents/skills/skill-creator`; override with the `SKILL_CREATOR_DIR`
-  environment variable if yours lives elsewhere:
+- The [skill-creator](https://github.com/anthropics/skills) skill
+  installed globally (used for its `scripts/aggregate_benchmark.py` and
+  `agents/grader.md`). Install it once for all three agents with:
+
+  ```bash
+  npx skills add anthropics/skills --skill skill-creator -a github-copilot -a claude-code -a codex -g
+  ```
+
+  This installs skill-creator to `~/.agents/skills/skill-creator` (Copilot/Codex)
+  and `~/.claude/skills/skill-creator` (Claude Code), which are the default paths
+  this script looks for. If your install lives elsewhere, override with:
 
   ```bash
   export SKILL_CREATOR_DIR=/path/to/skill-creator
@@ -161,16 +167,30 @@ different `--grader-cli`).
 
 ### Point at a specific CLI binary
 
-If a CLI isn't on `PATH` (e.g. Codex installed under an `nvm` Node version),
-pass its path explicitly:
+If a CLI isn't on `PATH`, pass its path explicitly with the corresponding
+`--*-bin` flag. For Copilot and Claude this is uncommon; for Codex it
+happens when Codex is installed under an `nvm`-managed Node version that
+isn't the system default:
 
 ```bash
+# Codex installed under a non-default nvm Node version
 python3 tools/run_multi_cli_eval.py \
   --evals-json /path/to/my-skill/evals/evals.json \
   --skill-path /path/to/my-skill \
   --workspace /tmp/my-skill-eval-run \
   --codex-bin ~/.nvm/versions/node/v24.18.0/bin/codex
+
+# Copilot and/or Claude at non-standard paths
+python3 tools/run_multi_cli_eval.py \
+  --evals-json /path/to/my-skill/evals/evals.json \
+  --skill-path /path/to/my-skill \
+  --workspace /tmp/my-skill-eval-run \
+  --copilot-bin /usr/local/bin/copilot \
+  --claude-bin /opt/claude/bin/claude
 ```
+
+If `--codex-bin` is not provided, the script first checks `PATH` then
+falls back to any `~/.nvm/versions/node/*/bin/codex` binary it finds.
 
 ### Pin a specific model per CLI
 
@@ -212,9 +232,9 @@ python3 tools/run_multi_cli_eval.py \
 | `--workers` | no | `4` | Max concurrent subprocess runs |
 | `--timeout` | no | `300` | Per-run timeout in seconds |
 | `--eval-ids` | no | *(all)* | Comma-separated eval IDs to restrict to |
-| `--copilot-bin` | no | *(auto-detect)* | Explicit path to the `copilot` binary |
-| `--claude-bin` | no | *(auto-detect)* | Explicit path to the `claude` binary |
-| `--codex-bin` | no | *(auto-detect)* | Explicit path to the `codex` binary |
+| `--copilot-bin` | no | *(auto-detect on PATH)* | Explicit path to the `copilot` binary |
+| `--claude-bin` | no | *(auto-detect on PATH)* | Explicit path to the `claude` binary |
+| `--codex-bin` | no | *(auto-detect on PATH / nvm fallback)* | Explicit path to the `codex` binary |
 | `--copilot-model` | no | *(Copilot CLI default)* | Model to pass to `copilot` via `--model` |
 | `--claude-model` | no | *(Claude Code CLI default)* | Model to pass to `claude` via `--model` |
 | `--codex-model` | no | *(Codex CLI default)* | Model to pass to `codex` via `-m`/`--model` |
