@@ -72,7 +72,7 @@
     {
       "product": "Geti",
       "repo": "open-edge-platform/geti",
-      "ref": "main",
+      "ref": "develop",
       "path": "skills/application",
       "skills": [
         {"name": "geti-using-the-pipeline", "prompts_url": ""},
