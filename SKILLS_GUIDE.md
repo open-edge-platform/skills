@@ -361,8 +361,6 @@ Please:
 - Design the SKILL.md description to trigger on all of them
 - Save each scenario as a self-contained .md file under example-prompts/ (named
   01-<slug>.md, 02-<slug>.md, … so consumers can run them directly)
-- Register each scenario in evals/evals.json with a prompt_file field pointing to
-  the corresponding example-prompts/ file
 - Show me the derived scope and all 5 example prompts for review before proceeding
   to write the SKILL.md body
 ```
@@ -386,7 +384,6 @@ Please:
 - Design the description field to trigger on all five classes of request
 - Save each scenario as a self-contained .md prompt under example-prompts/
   (01-rtsp-person-detection.md, 02-multi-model-pipeline.md, etc.)
-- Register all five in evals/evals.json with prompt_file pointing back to example-prompts/
 - Show me the derived scope statement and all 5 example-prompts for review before
   writing the SKILL.md body
 ```
