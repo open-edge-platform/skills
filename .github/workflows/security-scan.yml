@@ -2,7 +2,7 @@
 # and Bandit (static analysis tool for Python), comments PR 
 # and outputs results into GitHub security tab
 
-name: Zizmor scan
+name: Security scan
 
 on:
   push:
