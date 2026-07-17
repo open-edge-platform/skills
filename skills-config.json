@@ -70,6 +70,48 @@
       ]
     },
     {
+      "product": "Geti",
+      "repo": "open-edge-platform/geti",
+      "ref": "main",
+      "path": "skills/application",
+      "skills": [
+        {"name": "geti-using-the-pipeline", "prompts_url": ""},
+        {"name": "geti-runtime-configuring-inference-pipeline", "prompts_url": ""},
+        {"name": "geti-runtime-loading-exported-models", "prompts_url": ""},
+        {"name": "geti-runtime-running-live-inference", "prompts_url": ""},
+        {
+          "name": "getitune-discovering-models",
+          "path": "skills/library",
+          "prompts_url": ""
+        },
+        {
+          "name": "getitune-preparing-datasets",
+          "path": "skills/library",
+          "prompts_url": ""
+        },
+        {
+          "name": "getitune-training-a-model",
+          "path": "skills/library",
+          "prompts_url": ""
+        },
+        {
+          "name": "getitune-running-inference",
+          "path": "skills/library",
+          "prompts_url": ""
+        },
+        {
+          "name": "getitune-exporting-a-model",
+          "path": "skills/library",
+          "prompts_url": ""
+        },
+        {
+          "name": "getitune-optimizing-a-model",
+          "path": "skills/library",
+          "prompts_url": ""
+        }
+      ]
+    },
+    {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
       "ref": "feature/sscape-app-skill",
