@@ -688,10 +688,7 @@ python -m scripts.package_skill .github/skills/my-skill
 ### Canonical Layout
 
 ```
-repo-root/ # this layout can also live in a subfolder within the repository
-│
-├── .github/
-│   ├── skills/                        ← all skill directories
+│   ├── skills/                        ← all skill directories - valid paths: .github/skills, .agents/skills, skills/, skills/**/skills
 │   │   └── my-skill/
 │   │       ├── SKILL.md               ← required:  metadata + instructions
 │   │       ├── evals/                 ← required*: automated test cases and assertions (CI quality gate)
