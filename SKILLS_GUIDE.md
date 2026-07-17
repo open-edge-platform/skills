@@ -688,26 +688,26 @@ python -m scripts.package_skill .github/skills/my-skill
 ### Canonical Layout
 
 ```
-│   ├── skills/                        ← all skill directories - valid paths: .github/skills, .agents/skills, skills/, skills/**/skills
+├── skills/                        ← all skill directories - valid paths: .github/skills, .agents/skills, skills/, skills/**/skills
 │   │   └── my-skill/
-│   │       ├── SKILL.md               ← required:  metadata + instructions
-│   │       ├── evals/                 ← required*: automated test cases and assertions (CI quality gate)
-│   │       │   └── evals.json
-│   │       ├── example-prompts/       ← required*: ready-to-use .md prompts for skill consumers
-│   │       │   ├── basic-usage.md
-│   │       │   └── advanced-usage.md
-│   │       ├── BENCHMARK.md           ← required*: human-readable evaluation report
-│   │       ├── references/            ← optional:  docs loaded on demand
-│   │       │   └── api-reference.md
-│   │       ├── assets/                ← optional:  templates, code models, data
-│   │       │   └── basic-example/
-│   │       │       ├── model.py
-│   │       │       └── README.md
-│   │       ├── scripts/               ← optional:  executable helpers
-│   │       │   └── validate-output.py
-│   │       ├── benchmark/             ← optional:  raw grading outputs (produced by skill-creator)
-│   │       │   └── iteration-1/
-│   │       └── skill-card.md          ← optional:  disclosure & eval summary
+│       ├── SKILL.md               ← required:  metadata + instructions
+│       ├── evals/                 ← required*: automated test cases and assertions (CI quality gate)
+│       │   └── evals.json
+│       ├── example-prompts/       ← required*: ready-to-use .md prompts for skill consumers
+│       │   ├── basic-usage.md
+│       │   └── advanced-usage.md
+│       ├── BENCHMARK.md           ← required*: human-readable evaluation report
+│       ├── references/            ← optional:  docs loaded on demand
+│       │   └── api-reference.md
+|       ├── assets/                ← optional:  templates, code models, data
+│       │   └── basic-example/
+│       │       ├── model.py
+│       │       └── README.md
+│       ├── scripts/               ← optional:  executable helpers
+|       │   └── validate-output.py
+│       ├── benchmark/             ← optional:  raw grading outputs (produced by skill-creator)
+│       │   └── iteration-1/
+│       └── skill-card.md          ← optional:  disclosure & eval summary
 ```
 
 > **Quality mandate**: `evals/`, `example-prompts/`, and `BENCHMARK.md` are marked
