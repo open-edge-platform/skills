@@ -76,9 +76,6 @@
       "path": "skills/application",
       "skills": [
         {"name": "geti-using-the-pipeline", "prompts_url": ""},
-        {"name": "geti-runtime-configuring-inference-pipeline", "prompts_url": ""},
-        {"name": "geti-runtime-loading-exported-models", "prompts_url": ""},
-        {"name": "geti-runtime-running-live-inference", "prompts_url": ""},
         {
           "name": "getitune-discovering-models",
           "path": "skills/library",
