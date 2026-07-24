@@ -5,7 +5,56 @@
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
-      "computedHash": "6fdb9b38d4d57134d481966ce2de6e99a99549523f3bcd20602462ee46e61fcd"
+      "computedHash": "b3d6f9dbd29e2b5ca7a79e025a3f97cfc193dedfab88c3ade9d9747fd764beca"
+    },
+    "geti-using-the-pipeline": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/application/geti-using-the-pipeline/SKILL.md",
+      "computedHash": "f060036a4e380a636d9b565ea17c55a97db5fe626a088ea6ad8aa9b84ed16351"
+    },
+    "getitune-discovering-models": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-discovering-models/SKILL.md",
+      "computedHash": "8bf3d4062aedca239b3f67801982cc21b884b6b5bc17e0709f6090954f3581d5"
+    },
+    "getitune-exporting-a-model": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-exporting-a-model/SKILL.md",
+      "computedHash": "c09e8fd254d52142c9485d37ba66465ec86181402554ed8cf2db87efd80b4e1d"
+    },
+    "getitune-optimizing-a-model": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-optimizing-a-model/SKILL.md",
+      "computedHash": "8a7bce8b6ab8b9e7156260839e82072f3ae25ed01d2326021f550000c138e003"
+    },
+    "getitune-preparing-datasets": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-preparing-datasets/SKILL.md",
+      "computedHash": "9f3825d4296066b20c65334d2a509336fe457d4928c65d4c925d9e3b6fc1ba91"
+    },
+    "getitune-running-inference": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-running-inference/SKILL.md",
+      "computedHash": "de1bdb3955bb6f9948c6d9db99c4effdfeace4fdb6674cc9b03e897aa5d94173"
+    },
+    "getitune-training-a-model": {
+      "source": "open-edge-platform/geti",
+      "ref": "develop",
+      "sourceType": "github",
+      "skillPath": "skills/library/getitune-training-a-model/SKILL.md",
+      "computedHash": "3f5b1caeacf29d433a1978ded93ff8485f38618635a1e7a9933f32aad3522944"
     },
     "model-download-user": {
       "source": "open-edge-platform/edge-ai-libraries",
@@ -25,7 +74,7 @@
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/runtime/physicalai-runtime-adding-a-robot-integration/SKILL.md",
-      "computedHash": "04f083760bfa39a9a8d2bbfce635d2f144e2c5acdae4560e2bc90ec536829031"
+      "computedHash": "2bf5874ea613619d2d6dcc303ad553418f9842e5dea6fab0bac03b429464fcd0"
     },
     "physicalai-runtime-configuring-inference-pipeline": {
       "source": "openvinotoolkit/physicalai",
@@ -88,7 +137,7 @@
       "ref": "feature/sscape-app-skill",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "f3f67a98d05ec83e9123e4821008a9ee85c64dd2e03332d96bcaecf75f92348f"
+      "computedHash": "d2e73ccd252a8665366e8d255ad50a63f89f207a5cb8690e2b66aa7b2838ed17"
     },
     "vss-search": {
       "source": "open-edge-platform/edge-ai-libraries",
