@@ -1,0 +1,52 @@
+name: Check Skills Config
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "skills-config.json"
+      - "skills-config.schema.json"
+      - "scripts/update_skills_index.py"
+      - ".github/workflows/check-skills-config.yml"
+
+permissions: {}
+
+jobs:
+  check-skills:
+    name: Check configured skills
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout skills repo
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install JSON schema validator
+        run: python3 -m pip install check-jsonschema==0.34.0
+
+      - name: Validate skills config
+        run: check-jsonschema --schemafile skills-config.schema.json skills-config.json
+
+      - name: Read base skills config
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git show "${BASE_SHA}:skills-config.json" > "${RUNNER_TEMP}/skills-config.base.json"
+
+      - name: Check added skills exist
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/update_skills_index.py
+          --check-only
+          --base-config "${RUNNER_TEMP}/skills-config.base.json"

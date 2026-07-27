@@ -361,8 +361,6 @@ Please:
 - Design the SKILL.md description to trigger on all of them
 - Save each scenario as a self-contained .md file under example-prompts/ (named
   01-<slug>.md, 02-<slug>.md, … so consumers can run them directly)
-- Register each scenario in evals/evals.json with a prompt_file field pointing to
-  the corresponding example-prompts/ file
 - Show me the derived scope and all 5 example prompts for review before proceeding
   to write the SKILL.md body
 ```
@@ -386,7 +384,6 @@ Please:
 - Design the description field to trigger on all five classes of request
 - Save each scenario as a self-contained .md prompt under example-prompts/
   (01-rtsp-person-detection.md, 02-multi-model-pipeline.md, etc.)
-- Register all five in evals/evals.json with prompt_file pointing back to example-prompts/
 - Show me the derived scope statement and all 5 example-prompts for review before
   writing the SKILL.md body
 ```
@@ -691,7 +688,7 @@ python -m scripts.package_skill .github/skills/my-skill
 repo-root/ # this layout can also live in a subfolder within the repository
 │
 ├── .github/
-│   ├── skills/                        ← all skill directories
+│   ├── skills/                        ← all skill directories  - valid paths: repo root -> skills/,  .github/skills, .agents/skills. nested root -> **/skills, **/.github/skills, **/.agents/skills 
 │   │   └── my-skill/
 │   │       ├── SKILL.md               ← required:  metadata + instructions
 │   │       ├── evals/                 ← required*: automated test cases and assertions (CI quality gate)
@@ -835,55 +832,11 @@ skill-validator check -o markdown .github/skills/ >> $GITHUB_STEP_SUMMARY
 
 ### CI Integration
 
-```yaml
-# .github/workflows/validate-skills.yml
-name: Validate Skills
-on:
-  pull_request:
-    paths:
-      - ".github/skills/**"
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install skill-validator
-        run: brew install agent-ecosystem/tap/skill-validator
-
-      - name: Validate published skills (strict)
-        run: |
-          skill-validator check \
-            --strict \
-            --emit-annotations \
-            --allow-dirs=evals,benchmark,example-prompts \
-            .github/skills/
-          skill-validator check \
-            --strict \
-            --allow-dirs=evals,benchmark,example-prompts \
-            -o markdown \
-            .github/skills/ >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Validate draft skills (non-blocking)
-        run: |
-          skill-validator check \
-            --emit-annotations \
-            --allow-dirs=evals,benchmark,example-prompts \
-            .github/skills/drafts/
-```
-
-### Pre-commit Hook
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: https://github.com/agent-ecosystem/skill-validator
-    rev: v1.5.6
-    hooks:
-      - id: skill-validator-claude      # Claude Code (.claude/skills/)
-      - id: skill-validator-copilot     # GitHub Copilot (.agents/skills/)
-```
+This repository runs skill validation through the `skill-validator-scan` job in
+[`.github/workflows/skill-scan.yml`](.github/workflows/skill-scan.yml). The job
+uses a pinned Open Edge Platform action to scan `.agents/skills/`; for pull
+requests, it enables strict validation and fails the check when findings are
+reported.
 
 ---
 
@@ -976,22 +929,13 @@ skillspector scan .github/skills/my-skill/
 Score weights: CRITICAL +50, HIGH +25, MEDIUM +10, LOW +5.
 Skills with executable scripts receive a **1.3× multiplier**.
 
-### CI Integration (SARIF)
+### CI Integration
 
-```yaml
-- name: Security scan skills
-  run: |
-    skillspector scan \
-      .github/skills/ \
-      --no-llm \
-      --format sarif \
-      --output security-report.sarif
-
-- name: Upload SARIF results
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: security-report.sarif
-```
+This repository runs security scanning through the `skillspector-scan` job in
+[`.github/workflows/skill-scan.yml`](.github/workflows/skill-scan.yml). The job
+uses a pinned Open Edge Platform action to scan `.agents/skills/`. On pull
+requests, it applies a `HIGH` severity threshold and fails the check when
+findings meet that threshold; scans triggered by other events are non-blocking.
 
 ---
 
