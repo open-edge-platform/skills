@@ -295,7 +295,7 @@ register all in evals/evals.json with prompt_file back-references.
 
 Use the `skill-creator` skill to build a new skill from scratch. It guides you
 through 9 structured stages and produces all required artifacts automatically:
-`SKILL.md`, `example-prompts/`, `evals/`, and `BENCHMARK.md`.
+`SKILL.md`, `example-prompts/`, `evals/`, and `benchmark.md`.
 
 **Start here:** gather the inputs below before opening a skill-creator session.
 
@@ -405,7 +405,7 @@ The skill-creator guides you through 9 stages:
 | 3 | Write the SKILL.md | Drafts and self-reviews the skill body |
 | 4 | Example Prompts & Evals | Saves scenarios to `example-prompts/` and `evals/evals.json` |
 | 5 | Run Test Cases | Parallel with-skill vs. baseline execution |
-| 6 | Grade & Review | Grades assertions, produces `BENCHMARK.md`, browser eval viewer |
+| 6 | Grade & Review | Grades assertions, produces `benchmark.md`, browser eval viewer |
 | 7 | Improve | Applies feedback, reruns; repeats until pass rate is satisfactory |
 | 8 | Optimize Trigger | Tunes the `description` field for activation accuracy |
 | 9 | Package | Bundles skill into installable `.skill` archive |
@@ -696,7 +696,7 @@ repo-root/ # this layout can also live in a subfolder within the repository
 │   │       ├── example-prompts/       ← required*: ready-to-use .md prompts for skill consumers
 │   │       │   ├── basic-usage.md
 │   │       │   └── advanced-usage.md
-│   │       ├── BENCHMARK.md           ← required*: human-readable evaluation report
+│   │       ├── benchmark.md           ← required*: human-readable evaluation report
 │   │       ├── references/            ← optional:  docs loaded on demand
 │   │       │   └── api-reference.md
 │   │       ├── assets/                ← optional:  templates, code models, data
@@ -710,7 +710,7 @@ repo-root/ # this layout can also live in a subfolder within the repository
 │   │       └── skill-card.md          ← optional:  disclosure & eval summary
 ```
 
-> **Quality mandate**: `evals/`, `example-prompts/`, and `BENCHMARK.md` are marked
+> **Quality mandate**: `evals/`, `example-prompts/`, and `benchmark.md` are marked
 > `Required*` — optional per the [Agent Skills Specification](https://agentskills.io/specification)
 > but **REQUIRED in this repository** for any skill targeting production use or public distribution.
 >
@@ -721,7 +721,7 @@ repo-root/ # this layout can also live in a subfolder within the repository
 >   directly in their agent to start using the skill immediately. Publishing a skill
 >   without ready-to-use prompts implies no quality expectations for the consumer
 >   experience.
-> - **`BENCHMARK.md`** summarises eval results so reviewers and consumers can assess
+> - **`benchmark.md`** summarises eval results so reviewers and consumers can assess
 >   skill quality before installing.
 
 ---
@@ -947,7 +947,7 @@ usage, and latency. The `skill-creator` skill automates this across **Stages 5�
 | Stage | What happens |
 | ----- | ------------ |
 | **Stage 5 — Run** | Spawns with-skill and baseline runs in parallel; saves `timing.json` per run under `benchmark/iteration-N/` |
-| **Stage 6 — Grade** | Evaluates assertions, produces `grading.json`, `benchmark.json`, and `BENCHMARK.md`; launches a browser eval viewer for side-by-side review |
+| **Stage 6 — Grade** | Evaluates assertions, produces `grading.json`, `benchmark.json`, and `benchmark.md`; launches a browser eval viewer for side-by-side review |
 | **Stage 7 — Improve** | Applies your feedback to `SKILL.md`, re-runs into a new `benchmark/iteration-N+1/` folder, repeats until satisfied |
 
 ```bash
@@ -955,7 +955,7 @@ npx skills add anthropics/skills --skill skill-creator -a claude-code
 # Then say: "Run evals for my skill at path/to/my-skill/"
 ```
 
-For the full `evals/evals.json` schema, grading output format, and `BENCHMARK.md` structure,
+For the full `evals/evals.json` schema, grading output format, and `benchmark.md` structure,
 see [Stage 4](#stage-4-write-test-cases-and-example-prompts) and
 [Stage 6](#stage-6-grade-benchmark-and-review) in Section 5.
 
@@ -1004,7 +1004,7 @@ npx skills add anthropics/skills --skill skill-creator -a <agent>
 Save outputs under agent-named subdirectories so runs do not overwrite each other
 (e.g. `benchmark/claude-code/iteration-1/`, `benchmark/codex/iteration-1/`).
 
-**Step 2** — Compare `BENCHMARK.md` outputs across agents. Key metrics to compare:
+**Step 2** — Compare `benchmark.md` outputs across agents. Key metrics to compare:
 
 | Metric | What it reveals |
 |--------|----------------|
@@ -1034,7 +1034,7 @@ skill-validator score evaluate .github/skills/my-skill/
 # 4. Security scan (Section 8)
 skillspector scan .github/skills/my-skill/ --no-llm
 
-# 5. Run eval suite and update BENCHMARK.md (Stages 5–7 above)
+# 5. Run eval suite and update benchmark.md (Stages 5–7 above)
 npx skills add anthropics/skills --skill skill-creator -a claude-code
 # Then say: "Run evals for my skill at path/to/my-skill/"
 ```
@@ -1194,7 +1194,7 @@ layouts, token budget guidance) see [AGENT_COMPAT.md](AGENT_COMPAT.md).
 | Agent Skills Specification                | https://agentskills.io/specification               |
 | Anthropic skills (skill-creator, evals)   | https://github.com/anthropics/skills               |
 | Microsoft skills (prompts, agents, tests) | https://github.com/microsoft/skills                |
-| NVIDIA skills (BENCHMARK.md, skill-card)  | https://github.com/NVIDIA/skills                   |
+| NVIDIA skills (benchmark.md, skill-card)  | https://github.com/NVIDIA/skills                   |
 | Google skills                             | https://github.com/google/skills                   |
 | Skills CLI                                | https://github.com/vercel-labs/skills              |
 | skill-validator                           | https://github.com/agent-ecosystem/skill-validator |
