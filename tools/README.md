@@ -93,10 +93,30 @@ This produces:
 │               ├── grading.json
 │               └── outputs/
 │                   ├── response.md
-│                   └── metrics.json
+│                   ├── metrics.json
+│                   └── diagnostics.json          # exit code plus bounded stdout/stderr
 ├── claude/  ... (same layout)
 └── codex/   ... (same layout)
 ```
+
+## Troubleshooting failed CLI runs
+
+The runner prints each resolved CLI binary before starting. When a process
+fails, exits without a captured assistant response, or cannot be started, the
+console reports an actionable cause and points to that run's
+`outputs/diagnostics.json`. The diagnostic file records the exit code and the
+last 8,000 characters of stdout and stderr, which commonly exposes:
+
+- Missing or expired authentication, with the appropriate `copilot`, `claude`,
+  or `codex login` command to run.
+- Rate limits, exhausted quota, and account usage limits.
+- Invalid, unsupported, or inaccessible model selections.
+- Incorrect binary paths, missing executable permissions, and runtime failures.
+- Successful process exits that emitted no parseable assistant response.
+
+Raw output is deliberately bounded to keep benchmark workspaces manageable.
+If a failure remains unclear, run the resolved binary shown at startup
+interactively to confirm its authentication and configuration.
 
 ### Only run a subset of CLIs or configs
 

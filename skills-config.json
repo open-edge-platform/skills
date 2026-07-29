@@ -8,7 +8,7 @@
       "skills": [
         {
           "name": "dlstreamer-coding-agent",
-          "prompts_url": "https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/examples"
+          "prompts_url": "https://github.com/open-edge-platform/dlstreamer/blob/main/skills/dlstreamer-coding-agent/example-prompts"
         }
       ]
     },

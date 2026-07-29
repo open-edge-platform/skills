@@ -20,6 +20,7 @@ skills-config.json is the single source of truth.  The script:
 
 Usage:
     python scripts/update_skills_index.py [--dry-run] [--no-install] [--config PATH]
+    python scripts/update_skills_index.py --check-only [--base-config PATH] [--config PATH]
 
 Modes:
     (default)     Sync skills via npx and update README.md skills index.
@@ -27,15 +28,21 @@ Modes:
                   already-installed skills in .agents/skills/ and skills-lock.json.
     --dry-run     Print the npx commands that would run and the generated skills
                   table block to stdout without installing anything or writing files.
+    --check-only  Check that added or relocated skills exist at their configured
+                  GitHub source without installing or writing files.
 """
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlencode
+from urllib.request import Request, urlopen
 
 
 SKILLS_INDEX_BEGIN = "<!-- BEGIN SKILLS INDEX -->"
@@ -127,6 +134,59 @@ def _build_skill_source(entry: dict, skill: str | dict) -> str:
     repo = entry["repo"]
     ref = entry["ref"].strip()
     return f"https://github.com/{repo}/tree/{ref}/{source_path}/{_skill_name(skill)}"
+
+
+def check_skills_exist(
+    config_entries: list[dict], github_token: str = "", base_entries: list[dict] | None = None
+) -> bool:
+    """Check that added or relocated skills contain a SKILL.md at their source."""
+    has_error = False
+    checked = 0
+    headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+
+    base_sources = set()
+    for entry in base_entries or []:
+        for skill in entry["skills"]:
+            base_sources.add((entry["repo"], entry["ref"].strip(), _skill_path(entry, skill), _skill_name(skill)))
+
+    for entry in config_entries:
+        for skill in entry["skills"]:
+            skill_name = _skill_name(skill)
+            repo = entry["repo"]
+            ref = entry["ref"].strip()
+            source_path = _skill_path(entry, skill)
+            if (repo, ref, source_path, skill_name) in base_sources:
+                continue
+
+            checked += 1
+            skill_path = "/".join(filter(None, (source_path, skill_name, "SKILL.md")))
+            url = (
+                f"https://api.github.com/repos/{repo}/contents/{quote(skill_path, safe='/')}?"
+                f"{urlencode({'ref': ref})}"
+            )
+            detail = "unexpected response"
+            try:
+                with urlopen(Request(url, headers=headers), timeout=30) as response:  # nosec B310
+                    exists = response.status == 200
+            except HTTPError as error:
+                exists = False
+                detail = f"HTTP {error.code}"
+            except URLError as error:
+                exists = False
+                detail = str(error.reason)
+
+            if exists:
+                print(f"  ✓ {repo}@{ref}:{skill_path}", file=sys.stderr)
+            else:
+                print(f"  [error] {repo}@{ref}:{skill_path} ({detail})", file=sys.stderr)
+                has_error = True
+
+    if checked == 0:
+        print("No added or relocated skills to check.", file=sys.stderr)
+
+    return not has_error
 
 
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
@@ -261,7 +321,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
             "product": product,
             "repo_url": f"https://github.com/{canonical_repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/{canonical_repo}/blob/{ref}/{skill_path}",
+            "skill_url": f"https://github.com/open-edge-platform/skills/tree/main/.agents/skills/{skill_name}",
             "description": fm.get("description", ""),
             "prompts_url": prompts_url,
         })
@@ -335,12 +395,22 @@ def main():
                         help="Sync skills via npx skills add/update, then rebuild README.md (default).")
     parser.add_argument("--no-install", dest="install", action="store_false",
                         help="Skip npx sync; only rebuild the README.md skills index from already-installed skills.")
+    parser.add_argument("--check-only", action="store_true",
+                        help="Check that configured skills contain a SKILL.md on GitHub, then exit.")
+    parser.add_argument("--base-config",
+                        help="With --check-only, only check skills added or relocated relative to this config.")
     parser.add_argument("--config", default=str(repo_root / "skills-config.json"),
                         help="Path to skills-config.json.")
     args = parser.parse_args()
 
-    # Step 1 — install / update skills via npx skills
     entries = load_skills_config(Path(args.config))
+    if args.check_only:
+        base_entries = load_skills_config(Path(args.base_config)) if args.base_config else None
+        if not check_skills_exist(entries, os.environ.get("GITHUB_TOKEN", ""), base_entries):
+            sys.exit(1)
+        return
+
+    # Step 1 — install / update skills via npx skills
     if args.install:
         print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
         success = install_skills(entries, repo_root, dry_run=args.dry_run)

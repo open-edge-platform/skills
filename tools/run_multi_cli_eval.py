@@ -131,6 +131,71 @@ class RunResult:
     raw_stdout: str = ""
     raw_stderr: str = ""
     model: str | None = None
+    exit_code: int | None = None
+
+
+_AUTH_PATTERNS = re.compile(
+    r"not logged in|not authenticated|unauthenticated|authentication required|"
+    r"please log in|login required|invalid api key|missing api key|unauthorized|"
+    r"no credentials|credential.*(?:missing|not found|expired)",
+    re.IGNORECASE,
+)
+_RATE_LIMIT_PATTERNS = re.compile(
+    r"rate.?limit|too many requests|quota|usage limit|credit balance",
+    re.IGNORECASE,
+)
+_MODEL_PATTERNS = re.compile(
+    r"model.*(?:not found|invalid|unavailable|unsupported|access)|"
+    r"(?:not found|invalid|unavailable|unsupported).*model",
+    re.IGNORECASE,
+)
+_LOGIN_GUIDANCE = {
+    "copilot": "Run `copilot` interactively and complete GitHub authentication, then retry.",
+    "claude": "Run `claude` interactively and complete authentication (or run `/login`), then retry.",
+    "codex": "Run `codex login`, verify the login succeeds, then retry.",
+}
+
+
+def _text(value: str | bytes | None) -> str:
+    """Normalize subprocess output, including TimeoutExpired byte strings."""
+    if isinstance(value, bytes):
+        return value.decode(errors="replace")
+    return value or ""
+
+
+def _diagnostic_excerpt(text: str, limit: int = 1200) -> str:
+    """Collapse process output into a bounded, readable console diagnostic."""
+    collapsed = " ".join(text.split())
+    return collapsed if len(collapsed) <= limit else collapsed[:limit] + "..."
+
+
+def finalize_process_result(cli: str, result: RunResult, returncode: int) -> None:
+    """Turn process status/output into a useful, actionable error message."""
+    result.exit_code = returncode
+    combined = "\n".join(part for part in (result.raw_stderr, result.raw_stdout) if part)
+    excerpt = _diagnostic_excerpt(combined)
+
+    reasons: list[str] = []
+    if returncode != 0:
+        reasons.append(f"{cli} exited with code {returncode}")
+    if not result.response_text.strip():
+        reasons.append("no assistant response was captured")
+    if not reasons:
+        return
+
+    if _AUTH_PATTERNS.search(combined):
+        hint = _LOGIN_GUIDANCE[cli]
+    elif _RATE_LIMIT_PATTERNS.search(combined):
+        hint = "The CLI reported a rate limit or quota problem; check account usage and retry later."
+    elif _MODEL_PATTERNS.search(combined):
+        hint = "The requested model may be invalid or unavailable; verify the corresponding --*-model value and account access."
+    elif not combined.strip():
+        hint = "The CLI produced no stdout or stderr; run the displayed binary interactively to verify its installation and login state."
+    else:
+        hint = "Review the captured CLI output below; also verify authentication, model access, configuration, and network connectivity."
+
+    details = f" CLI output: {excerpt}" if excerpt else ""
+    result.error = f"{'; '.join(reasons)}. {hint}{details}"
 
 
 # --------------------------------------------------------------------------
@@ -237,7 +302,8 @@ def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | 
             )
         except subprocess.TimeoutExpired as e:
             result.error = f"Timed out after {timeout}s"
-            result.raw_stdout = (e.stdout or "")
+            result.raw_stdout = _text(e.stdout)
+            result.raw_stderr = _text(e.stderr)
             result.duration_seconds = time.monotonic() - start
             return result
         result.duration_seconds = time.monotonic() - start
@@ -273,11 +339,10 @@ def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | 
         elif etype in ("error", "session.error"):
             result.errors_encountered += 1
 
-    if not last_message and proc.returncode != 0:
-        result.error = f"copilot exited with code {proc.returncode}: {proc.stderr[:500]}"
     result.response_text = last_message
     if not result.model:
         result.model = model  # fall back to what we requested, if anything
+    finalize_process_result("copilot", result, proc.returncode)
     return result
 
 
@@ -295,7 +360,8 @@ def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | N
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=cwd)
     except subprocess.TimeoutExpired as e:
         result.error = f"Timed out after {timeout}s"
-        result.raw_stdout = (e.stdout or "")
+        result.raw_stdout = _text(e.stdout)
+        result.raw_stderr = _text(e.stderr)
         result.duration_seconds = time.monotonic() - start
         return result
     result.duration_seconds = time.monotonic() - start
@@ -332,8 +398,7 @@ def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | N
     if not result.model:
         result.model = model
 
-    if not result.response_text and proc.returncode != 0:
-        result.error = f"claude exited with code {proc.returncode}: {proc.stderr[:500]}"
+    finalize_process_result("claude", result, proc.returncode)
     return result
 
 
@@ -357,7 +422,8 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
         )
     except subprocess.TimeoutExpired as e:
         result.error = f"Timed out after {timeout}s"
-        result.raw_stdout = (e.stdout or "")
+        result.raw_stdout = _text(e.stdout)
+        result.raw_stderr = _text(e.stderr)
         result.duration_seconds = time.monotonic() - start
         return result
     result.duration_seconds = time.monotonic() - start
@@ -394,14 +460,13 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
         elif etype in ("error", "turn.failed"):
             result.errors_encountered += 1
 
-    if not last_message and proc.returncode != 0:
-        result.error = f"codex exited with code {proc.returncode}: {proc.stderr[:500]}"
     result.response_text = last_message
     # Codex's JSON stream doesn't expose which model actually served the
     # request, so the best we can record is what was explicitly requested (or
     # "unspecified" — meaning whatever ~/.codex/config.toml / the CLI's own
     # built-in default resolves to, which is opaque to us).
     result.model = model or "unspecified (codex CLI default)"
+    finalize_process_result("codex", result, proc.returncode)
     return result
 
 
@@ -442,7 +507,16 @@ def run_one(cli: str, binary: str, ev: dict, config: str, skill_path: str, timeo
     scratch = Path(tempfile.mkdtemp(prefix=f"skilleval-{cli}-{ev['id']}-{config}-"))
     try:
         runner = CLI_RUNNERS[cli]
-        result = runner(binary, prompt, scratch, timeout, model)
+        try:
+            result = runner(binary, prompt, scratch, timeout, model)
+        except OSError as error:
+            result = RunResult(
+                error=(
+                    f"Could not start {cli} binary `{binary}`: {error}. "
+                    "Verify the path, executable permissions, and runtime dependencies."
+                ),
+                raw_stderr=str(error),
+            )
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
     return cli, ev, config, result
@@ -480,6 +554,17 @@ def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult
         "transcript_chars": sum(len(line) for line in result.transcript_lines),
     }
     (outputs_dir / "metrics.json").write_text(json.dumps(metrics, indent=2))
+
+    # Keep enough raw process output to diagnose authentication, quota, model,
+    # configuration, and CLI parsing failures without creating unbounded logs.
+    diagnostics = {
+        "error": result.error,
+        "exit_code": result.exit_code,
+        "stderr": result.raw_stderr[-8000:],
+        "stdout": result.raw_stdout[-8000:],
+        "output_truncated": len(result.raw_stderr) > 8000 or len(result.raw_stdout) > 8000,
+    }
+    (outputs_dir / "diagnostics.json").write_text(json.dumps(diagnostics, indent=2))
 
     # transcript.md
     transcript_lines = [
@@ -961,6 +1046,9 @@ def main() -> int:
     print(f"Skill:      {skill_path}")
     print(f"Evals:      {[e['id'] for e in evals]}")
     print(f"CLIs:       {list(binaries.keys())}")
+    print("Binaries:")
+    for cli, binary in binaries.items():
+        print(f"  {cli}: {binary}")
     print(f"Models:     {{{model_summary}}}")
     print(f"Configs:    {configs}")
     print(f"Workspace:  {workspace}")
@@ -985,13 +1073,18 @@ def main() -> int:
                 print(f"FAILED  {cli} / eval {ev['id']} / {config}: {e}", file=sys.stderr)
                 continue
             run_dir = save_run(workspace, cli, ev, config, result)
-            status = "OK" if not result.error else f"ERROR: {result.error[:80]}"
+            status = "OK" if not result.error else "ERROR (details below)"
             print(f"{'DONE':6} {cli:8} eval-{ev['id']:<2} {config:14} {result.duration_seconds:6.1f}s  -> {run_dir}  [{status}]")
+            if result.error:
+                print(f"       {result.error}")
+                print(f"       Diagnostic log: {run_dir / 'outputs' / 'diagnostics.json'}")
             results_summary.append({
                 "cli": cli, "eval_id": ev["id"], "config": config,
                 "duration_seconds": result.duration_seconds,
                 "tokens": result.total_tokens, "error": result.error,
                 "model": result.model,
+                "exit_code": result.exit_code,
+                "diagnostics": str(run_dir / "outputs" / "diagnostics.json"),
             })
 
     summary_path = workspace / "run_summary.json"
