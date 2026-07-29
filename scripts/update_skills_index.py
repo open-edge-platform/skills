@@ -321,7 +321,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
             "product": product,
             "repo_url": f"https://github.com/{canonical_repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/open-edge-platform/skills/{skill_name}",
+            "skill_url": f"https://github.com/open-edge-platform/skills/tree/main/.agents/skills/{skill_name}",
             "description": fm.get("description", ""),
             "prompts_url": prompts_url,
         })

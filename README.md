@@ -160,29 +160,70 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 To add a skill to the org index:
 
-1. Create a `SKILL.md` in your repo. Supported locations (in order of convention):
+1. Create a `SKILL.md` in your repo with all the required artifacts. Supported locations (in order of convention):
 
    | Scenario | Path |
    |----------|------|
-   | Standard (GitHub Copilot / VS Code) | `.github/skills/<skill-name>/SKILL.md` |
-   | Agent-agnostic | `.agents/skills/<skill-name>/SKILL.md` |
-   | Mono-repo — product subfolder | `<product-folder>/.github/skills/<skill-name>/SKILL.md` |
-   | Mono-repo — product subfolder (agent-agnostic) | `<product-folder>/.agents/skills/<skill-name>/SKILL.md` |
-   | Mono-repo — repo root, named skill folder | `skills/<skill-name>/SKILL.md` |
+   | Standard (GitHub Copilot / VS Code) | `**/.github/skills/<skill-name>/SKILL.md` |
+   | Agent-agnostic | `**/.agents/skills/<skill-name>/SKILL.md` |
+   | Skills folder | `**/skills/<skill-name>/SKILL.md` |
    | Repo root, single skill | `SKILL.md` |
 
    Go through some of the guidelines documented at [SKILLS_GUIDE.md](./SKILLS_GUIDE.md) for defining, creating, validating and
    managing skills.
-2. Include a YAML frontmatter block with at minimum `name` and `description`
-3. Add an entry to `skills-config.json` in this repo, open a PR, and after it is merged, trigger the
-   `update-skills-index` workflow to install it and update this README
 
-### SKILL.md frontmatter format
+2. Evaluate and benchmark your skill using `tools/run_multi_cli_eval.py`. This
+   runs your skill's `evals/evals.json` across GitHub Copilot CLI, Claude Code
+   CLI, and OpenAI Codex CLI in one pass, grades each run with an LLM judge,
+   and produces per-CLI and cross-CLI benchmark reports:
 
-```yaml
----
-name: your-skill-name
-description: "One-sentence description of when and why to use this skill"
-argument-hint: "Optional hint shown to users about what argument to provide"
----
-```
+   ```bash
+   python3 tools/run_multi_cli_eval.py \
+     --evals-json /path/to/your-skill/evals/evals.json \
+     --skill-path /path/to/your-skill \
+     --workspace /tmp/your-skill-eval-run \
+     --clis copilot,claude,codex \
+     --configs with_skill,without_skill \
+     --grader-cli copilot
+   ```
+
+   **Prerequisites** — at least one CLI must be installed and authenticated:
+   - GitHub Copilot CLI: `npm install -g @github/copilot-cli`
+   - Claude Code CLI: see [claude.ai/code](https://claude.ai/code)
+   - OpenAI Codex CLI: `npm install -g @openai/codex`
+
+   Also install skill-creator globally (used for grading and aggregation):
+
+   ```bash
+   npx skills add anthropics/skills --skill skill-creator \
+     -a github-copilot -a claude-code -a codex -g
+   ```
+
+   Results are written to the workspace directory you specify:
+
+   | File | What it contains |
+   |------|-----------------|
+   | `benchmark.md` | Cross-CLI comparison — which agent benefits most from the skill |
+   | `<cli>/benchmark.md` | Per-CLI `with_skill` vs. `without_skill` pass rate, time, tokens |
+   | `<cli>/eval-*/` | Per-eval transcripts, grading, and timing |
+
+   See [`tools/README.md`](tools/README.md) for the full option reference,
+   including how to run a subset of CLIs, pin specific models, skip grading,
+   or point at non-default CLI binary paths.
+
+3. Add an entry to `skills-config.json` in this repo and open a PR against `main`.
+
+   **On every PR that touches `skills-config.json`**, the
+   [`Check Skills Config`](.github/workflows/check-skills-config.yml) workflow
+   runs automatically. It validates the config against its JSON schema and
+   verifies that every newly added skill actually exists at the declared path in
+   its source repository. **This check is a required status check — the PR
+   cannot be merged until it passes.**
+
+   Once the PR is merged, the
+   [`Update Skills Index`](.github/workflows/update-skills-index.yml) workflow
+   triggers automatically on the push to `main`. It installs or updates each
+   skill via `npx skills add/update` and rebuilds the skills table in this
+   README. The workflow also runs on a daily schedule to pick up upstream skill
+   changes, and can be triggered manually via `workflow_dispatch` for on-demand
+   syncs or dry-run previews.
