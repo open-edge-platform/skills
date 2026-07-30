@@ -13,13 +13,43 @@
       ]
     },
     {
+      "product": "Chat Question and Answer",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "sample-applications/chat-question-and-answer-core/.github/skills",
+      "skills": [
+        {"name": "chatqna-docker-deploy", "prompts_url": ""},
+        {"name": "chatqna-helm-deploy", "prompts_url": ""}
+      ]
+    },
+    {
       "product": "Video Search and Summarization",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
       "skills": [
-        {"name": "vss-search", "prompts_url": ""},
-        {"name": "vss-summarize", "prompts_url": ""}
+        {"name": "vss-deploy", "prompts_url": ""},
+        {"name": "vss-deploy-helm", "prompts_url": ""},
+        {"name": "vss-search-index", "prompts_url": ""},
+        {"name": "vss-summarize-video", "prompts_url": ""}
+      ]
+    },
+    {
+      "product": "Multimodal Embedding Serving Microservice",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "microservices/multimodal-embedding-serving/.github/skills",
+      "skills": [
+        {"name": "multimodal-embedding-serving-user", "prompts_url": ""}
+      ]
+    },
+    {
+      "product": "DataPrep microservice",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "microservices/visual-data-preparation-for-retrieval/vdms/.github/skills",
+      "skills": [
+        {"name": "vdms-dataprep-user", "prompts_url": ""}
       ]
     },
     {
