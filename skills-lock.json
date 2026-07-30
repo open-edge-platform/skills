@@ -1,6 +1,20 @@
 {
   "version": 1,
   "skills": {
+    "chatqna-docker-deploy": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/chat-question-and-answer-core/.github/skills/chatqna-docker-deploy/SKILL.md",
+      "computedHash": "83b716d2fba73f647c7780d6964214621773302fa92f8515687e797e61915235"
+    },
+    "chatqna-helm-deploy": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/chat-question-and-answer-core/.github/skills/chatqna-helm-deploy/SKILL.md",
+      "computedHash": "58623bef501d4ceb8825beb65dd30e2fea281a883591240fea118a94e75ac060"
+    },
     "dlstreamer-coding-agent": {
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
@@ -61,6 +75,13 @@
       "sourceType": "github",
       "skillPath": "microservices/model-download/.github/skills/model-download-user/SKILL.md",
       "computedHash": "4f5a08422aef90267f1cb3be5097d9cacbbf647431c3899d09a4c931493646ee"
+    },
+    "multimodal-embedding-serving-user": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "microservices/multimodal-embedding-serving/.github/skills/multimodal-embedding-serving-user/SKILL.md",
+      "computedHash": "98c36b880615d3093d9ab50c0021cd0b6680d5e9773e540b9916b12f26f8f623"
     },
     "physicalai-runtime-adding-a-camera-backend": {
       "source": "openvinotoolkit/physicalai",
@@ -137,7 +158,28 @@
       "ref": "feature/sscape-app-skill",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "d2e73ccd252a8665366e8d255ad50a63f89f207a5cb8690e2b66aa7b2838ed17"
+      "computedHash": "fae49721972c38b19699d5d9a5b79b3055c8a18399558d9ece452b47e08430bb"
+    },
+    "vdms-dataprep-user": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "microservices/visual-data-preparation-for-retrieval/vdms/.github/skills/vdms-dataprep-user/SKILL.md",
+      "computedHash": "8218459d348a801b9131d9f40347955ba210e98232830fcfda8dd6e554d82185"
+    },
+    "vss-deploy": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy/SKILL.md",
+      "computedHash": "d7482c88a5b24d69e92bb6ee4dd4b1d64f9265705a6b686f882eddb9182145a9"
+    },
+    "vss-deploy-helm": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy-helm/SKILL.md",
+      "computedHash": "65d1d3d3ab38cc81bcbdb2f276b3890ce4819f24fb3fe59a63aca8b028aa2def"
     },
     "vss-search": {
       "source": "open-edge-platform/edge-ai-libraries",
@@ -145,11 +187,25 @@
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search/SKILL.md",
       "computedHash": "58852f58fc8c998c0bf6b199caac51a1061f9a7003b31c49d0f2c5f0b9e79028"
     },
+    "vss-search-index": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search-index/SKILL.md",
+      "computedHash": "9227eb02e77c268897ebc377ff52bed9035097d8dd8a3a9b780c0976854e2b0d"
+    },
     "vss-summarize": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-summarize/SKILL.md",
       "computedHash": "63c944e82498de75c6c9cc0e730c32c3cda4e430a1250b4a6f9df841b986b4fb"
+    },
+    "vss-summarize-video": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-summarize-video/SKILL.md",
+      "computedHash": "7932ab88508808eb51f49bc0ec26a39b14fe1e288bbe3cf377b9f171c9d74846"
     }
   }
 }

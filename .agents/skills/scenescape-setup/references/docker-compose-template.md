@@ -19,14 +19,10 @@ secrets:
     file: ${SECRETSDIR}/certs/scenescape-web.crt
   web-key:
     file: ${SECRETSDIR}/certs/scenescape-web.key
-  vdms-client-cert:
-    file: ${SECRETSDIR}/certs/scenescape-vdms-c.crt
-  vdms-client-key:
-    file: ${SECRETSDIR}/certs/scenescape-vdms-c.key
-  vdms-server-cert:
-    file: ${SECRETSDIR}/certs/scenescape-vdms.crt
-  vdms-server-key:
-    file: ${SECRETSDIR}/certs/scenescape-vdms.key
+  reid-client-cert:
+    file: ${SECRETSDIR}/certs/scenescape-reid.crt
+  reid-client-key:
+    file: ${SECRETSDIR}/certs/scenescape-reid.key
   django:
     file: ${SECRETSDIR}/django/secrets.py
   controller.auth:
@@ -132,7 +128,13 @@ services:
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem
     healthcheck:
-      test: 'curl --insecure -s https://localhost:443/api/v1/health | python3 -c ''import json,sys; data=json.load(sys.stdin); raise SystemExit(0 if data.get("ready") is True else 1)'''
+      # Trust the deployment CA (mounted secret) and use the compose network alias so
+      # the certificate hostname matches.
+      test:
+        [
+          "CMD-SHELL",
+          "curl --cacert /run/secrets/certs/scenescape-ca.pem -fsS https://web.scenescape.intel.com:443/api/v1/health | grep -Eq '\"ready\"[[:space:]]*:[[:space:]]*true'",
+        ]
       interval: 10s
       timeout: 120s
       retries: 10
@@ -160,10 +162,6 @@ services:
       - browser.auth
       - calibration.auth
       - controller.auth
-      - source: vdms-client-cert
-        target: certs/scenescape-vdms-c.crt
-      - source: vdms-client-key
-        target: certs/scenescape-vdms-c.key
     restart: always
 
   scene:
@@ -198,18 +196,20 @@ services:
       - source: django
         target: django/secrets.py
       - controller.auth
-      - source: vdms-client-key
-        target: certs/scenescape-vdms-c.key
-      - source: vdms-client-cert
-        target: certs/scenescape-vdms-c.crt
+      - source: reid-client-key
+        target: certs/scenescape-reid.key
+      - source: reid-client-cert
+        target: certs/scenescape-reid.crt
     restart: always
 
   video-analytics:
-    image: intel/dlstreamer-pipeline-server:latest
+    image: intel/dlstreamer-pipeline-server:2026.2.0-20260728-weekly-ubuntu24
     networks:
       scenescape:
     depends_on:
       broker:
+        condition: service_started
+      ntpserv:
         condition: service_started
     environment:
       MQTT_HOST: broker.scenescape.intel.com
@@ -222,7 +222,12 @@ services:
     volumes:
       - ./dlstreamer-pipeline-server/pipeline-config.json:/home/pipeline-server/config.json:ro
       - vol-models:/home/pipeline-server/models:ro
-      - ./dlstreamer-pipeline-server/user_scripts:/home/pipeline-server/user_scripts:ro
+      # Native GST plugins (sscape_timestamp_capture / sscape_post_inference_data_publish)
+      # must live on the GStreamer python plugin path — not under /home/pipeline-server/user_scripts.
+      - ./dlstreamer-pipeline-server/user_scripts/gstplugins/sscape_post_decode_timestamp_capture.py:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0/python/sscape_post_decode_timestamp_capture.py
+      - ./dlstreamer-pipeline-server/user_scripts/gstplugins/sscape_post_inference_data_publish.py:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0/python/sscape_post_inference_data_publish.py
+      - ./dlstreamer-pipeline-server/user_scripts/gstplugins/sscape_policies.py:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0/python/sscape_policies.py
+      - ./dlstreamer-pipeline-server/user_scripts/gstplugins/sscape_3d_detector.py:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0/python/sscape_3d_detector.py
       - ./dlstreamer-pipeline-server/model-proc-files:/home/pipeline-server/model-proc-files:ro
     secrets:
       - source: root-cert
@@ -285,7 +290,14 @@ services:
         target: certs/scenescape-ca.pem
     healthcheck:
       test:
-        ["CMD", "curl", "-k", "-I", "-s", "https://localhost:8444/v1/health"]
+        [
+          "CMD",
+          "curl",
+          "--cacert",
+          "/run/secrets/certs/scenescape-ca.pem",
+          "-fsSI",
+          "https://mapping.scenescape.intel.com:8444/v1/health",
+        ]
       interval: 15s
       timeout: 60s
       retries: 20
