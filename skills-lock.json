@@ -19,7 +19,7 @@
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
-      "computedHash": "b3d6f9dbd29e2b5ca7a79e025a3f97cfc193dedfab88c3ade9d9747fd764beca"
+      "computedHash": "0c3032c8357412068da29c0282260c55d5cf18f32b829298f35f511e667276a9"
     },
     "geti-using-the-pipeline": {
       "source": "open-edge-platform/geti",
@@ -123,7 +123,7 @@
       "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-adding-a-policy/SKILL.md",
-      "computedHash": "ee8eae0a14645544eebf2a81f2a3556af7d475d2d34e286b3f90b153ab8f22c5"
+      "computedHash": "4818952bf47074d839a103f5623ff668f94e1a9cc242dea50730e57028504114"
     },
     "physicalai-train-benchmarking-a-policy": {
       "source": "open-edge-platform/physical-ai-studio",
