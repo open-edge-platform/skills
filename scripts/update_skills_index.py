@@ -206,9 +206,9 @@ def check_skills_exist(
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     Reconcile installed skills with skills-config.json:
-      - remove skills that are no longer configured
-            - update installed skills whose configured source is unchanged
-            - add new skills and remove/re-add skills whose source changed
+        - remove skills that are no longer configured
+        - update installed skills whose configured source is unchanged
+        - add new skills and remove/re-add skills whose source changed
 
     <source> is a direct GitHub tree URL when path is configured, otherwise it
     falls back to the skills CLI's repo shorthand ("org/repo" or "org/repo#ref").
@@ -234,11 +234,9 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
         ]
         if dry_run:
             print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
-        else:
-            rc = _run(cmd, repo_root)
-            if rc != 0:
-                print(f"  [error] exited {rc} while removing stale skills", file=sys.stderr)
-                has_error = True
+        elif _run(cmd, repo_root) != 0:
+            print("  [error] failed to remove stale skills", file=sys.stderr)
+            has_error = True
 
     for entry in config_entries:
         skills = entry["skills"]
@@ -344,6 +342,10 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
+        if skill_name not in config_by_skill:
+            print(f"  [skip] {skill_name} — not present in skills-config.json", file=sys.stderr)
+            continue
+
         repo = lock_meta.get("source", "")
         skill_path = lock_meta.get("skillPath", "")
         if not repo or not skill_path:
