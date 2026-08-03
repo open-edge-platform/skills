@@ -158,7 +158,7 @@
       "ref": "feature/sscape-app-skill",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "fae49721972c38b19699d5d9a5b79b3055c8a18399558d9ece452b47e08430bb"
+      "computedHash": "4ce2efde093947b38ce0bf32d5a8d586f49821e22f65bca3ed6cf289bfcf1604"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
