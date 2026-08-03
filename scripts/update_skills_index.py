@@ -206,9 +206,9 @@ def check_skills_exist(
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     Reconcile installed skills with skills-config.json:
-        - remove skills that are no longer configured
-        - update installed skills whose configured source is unchanged
-        - add new skills and remove/re-add skills whose source changed
+      - remove skills that are no longer configured
+      - update installed skills whose configured source is unchanged
+      - add new skills and remove/re-add skills whose source changed
 
     <source> is a direct GitHub tree URL when path is configured, otherwise it
     falls back to the skills CLI's repo shorthand ("org/repo" or "org/repo#ref").
