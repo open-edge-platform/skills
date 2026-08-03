@@ -10,9 +10,9 @@
 Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
 skills-config.json is the single source of truth.  The script:
-    1. Reads skills-config.json, removes unconfigured skills, updates existing
-         skills, and adds new or relocated skills. Explicit GitHub tree URLs built
-         from repo/ref/path/name let product repos use different skill layouts.
+  1. Reads skills-config.json, removes unconfigured skills, updates existing
+     skills, and adds new or relocated skills. Explicit GitHub tree URLs built
+     from repo/ref/path/name let product repos use different skill layouts.
   2. Reads the installed SKILL.md files from .agents/skills/ directly to
      parse frontmatter, and reads skills-lock.json for upstream repo/path
      metadata to build GitHub links.
