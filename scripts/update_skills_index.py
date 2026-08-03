@@ -10,10 +10,9 @@
 Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
 skills-config.json is the single source of truth.  The script:
-  1. Reads skills-config.json and runs `npx skills add/update` for each product,
-     targeting only .agents/skills/ (via --agent universal --copy). New skills
-     are added from explicit GitHub tree URLs built from repo/ref/path/name so
-     product repos can use different skill layouts.
+    1. Reads skills-config.json, removes unconfigured skills, updates existing
+         skills, and adds new or relocated skills. Explicit GitHub tree URLs built
+         from repo/ref/path/name let product repos use different skill layouts.
   2. Reads the installed SKILL.md files from .agents/skills/ directly to
      parse frontmatter, and reads skills-lock.json for upstream repo/path
      metadata to build GitHub links.
@@ -136,6 +135,21 @@ def _build_skill_source(entry: dict, skill: str | dict) -> str:
     return f"https://github.com/{repo}/tree/{ref}/{source_path}/{_skill_name(skill)}"
 
 
+def _lock_source_matches(lock_meta: dict, entry: dict, skill: str | dict) -> bool:
+    """Return whether an installed skill still has its configured source."""
+    if lock_meta.get("source") != entry["repo"]:
+        return False
+    if (lock_meta.get("ref") or "main") != entry["ref"].strip():
+        return False
+
+    source_path = _skill_path(entry, skill)
+    if not source_path:
+        return True
+
+    expected_path = f"{source_path}/{_skill_name(skill)}/SKILL.md"
+    return lock_meta.get("skillPath") == expected_path
+
+
 def check_skills_exist(
     config_entries: list[dict], github_token: str = "", base_entries: list[dict] | None = None
 ) -> bool:
@@ -191,10 +205,10 @@ def check_skills_exist(
 
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
-    For each entry in skills-config.json:
-      - `npx skills update <name> --yes`                        if already in skills-lock.json
-      - `npx skills add <source> --skill <name>
-           --agent universal --copy --yes`                      otherwise
+        Reconcile installed skills with skills-config.json:
+            - remove skills that are no longer configured
+            - update installed skills whose configured source is unchanged
+            - add new skills and remove/re-add skills whose source changed
 
     <source> is a direct GitHub tree URL when path is configured, otherwise it
     falls back to the skills CLI's repo shorthand ("org/repo" or "org/repo#ref").
@@ -204,16 +218,46 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
 
     Returns True if all skills synced successfully, False if any failed.
     """
-    installed = set(load_skills_lock(repo_root / "skills-lock.json").keys())
+    installed = load_skills_lock(repo_root / "skills-lock.json")
+    configured = {
+        _skill_name(skill)
+        for entry in config_entries
+        for skill in entry["skills"]
+    }
     has_error = False
+
+    stale_skills = sorted(set(installed) - configured)
+    if stale_skills:
+        cmd = [
+            "npx", "skills", "remove", *stale_skills,
+            "--agent", "universal", "--yes",
+        ]
+        if dry_run:
+            print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
+        elif _run(cmd, repo_root) != 0:
+            print("  [error] failed to remove stale skills", file=sys.stderr)
+            has_error = True
 
     for entry in config_entries:
         skills = entry["skills"]
         for skill in skills:
             skill_name = _skill_name(skill)
-            if skill_name in installed:
+            lock_meta = installed.get(skill_name)
+            if lock_meta and _lock_source_matches(lock_meta, entry, skill):
                 cmd = ["npx", "skills", "update", skill_name, "--yes"]
             else:
+                if lock_meta:
+                    remove_cmd = [
+                        "npx", "skills", "remove", skill_name,
+                        "--agent", "universal", "--yes",
+                    ]
+                    if dry_run:
+                        print(f"  [dry-run] {' '.join(remove_cmd)}", file=sys.stderr)
+                    elif _run(remove_cmd, repo_root) != 0:
+                        print(f"  [error] failed to remove relocated skill '{skill_name}'", file=sys.stderr)
+                        has_error = True
+                        continue
+
                 source = _build_skill_source(entry, skill)
                 cmd = ["npx", "skills", "add", source,
                        "--skill", skill_name, "--agent", "universal", "--copy", "--yes"]
@@ -298,6 +342,10 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
+        if skill_name not in config_by_skill:
+            print(f"  [skip] {skill_name} — not present in skills-config.json", file=sys.stderr)
+            continue
+
         repo = lock_meta.get("source", "")
         skill_path = lock_meta.get("skillPath", "")
         if not repo or not skill_path:
@@ -392,7 +440,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true",
                         help="Print npx commands and the generated skills table to stdout without installing or writing any files.")
     parser.add_argument("--install", dest="install", action="store_true", default=True,
-                        help="Sync skills via npx skills add/update, then rebuild README.md (default).")
+                        help="Sync skills via npx skills remove/update/add, then rebuild README.md (default).")
     parser.add_argument("--no-install", dest="install", action="store_false",
                         help="Skip npx sync; only rebuild the README.md skills index from already-installed skills.")
     parser.add_argument("--check-only", action="store_true",
@@ -410,7 +458,7 @@ def main():
             sys.exit(1)
         return
 
-    # Step 1 — install / update skills via npx skills
+    # Step 1 — reconcile skills via npx skills
     if args.install:
         print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
         success = install_skills(entries, repo_root, dry_run=args.dry_run)
