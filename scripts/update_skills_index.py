@@ -159,7 +159,8 @@ def _lock_source_matches(lock_meta: dict, entry: dict, skill: str | dict) -> boo
     """Return whether an installed skill still has its configured source."""
     if lock_meta.get("source") != entry["repo"]:
         return False
-    if lock_meta.get("ref") != entry["ref"].strip():
+    expected_ref = entry.get("ref", "main").strip() or "main"
+    if (lock_meta.get("ref") or "main") != expected_ref:
         return False
 
     source_path = _skill_path(entry, skill)
