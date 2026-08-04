@@ -141,7 +141,7 @@
     {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
-      "ref": "feature/sscape-app-skill",
+      "ref": "main",
       "path": ".github/skills",
       "skills": [
         {"name": "scenescape-setup", "prompts_url": ""}

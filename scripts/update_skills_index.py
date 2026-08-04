@@ -33,10 +33,12 @@ Modes:
 
 import argparse
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -46,6 +48,8 @@ from urllib.request import Request, urlopen
 
 SKILLS_INDEX_BEGIN = "<!-- BEGIN SKILLS INDEX -->"
 SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -83,13 +87,45 @@ def load_skills_lock(lock_path: Path) -> dict:
         return json.load(f).get("skills", {})
 
 
+def remove_skills_from_lock(lock_path: Path, skill_names: list[str]) -> None:
+    """Remove project skills from the lock file after the CLI removes them."""
+    with lock_path.open(encoding="utf-8") as f:
+        data = json.load(f)
+
+    skills = data.get("skills", {})
+    for skill_name in skill_names:
+        if skills.pop(skill_name, None) is not None:
+            logger.info("skills-lock.json: removed entry for '%s'", skill_name)
+
+    lock_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    logger.debug("skills-lock.json written to %s", lock_path)
+
+
 # ---------------------------------------------------------------------------
 # Installation via `npx skills`
 # ---------------------------------------------------------------------------
 
-def _run(cmd: list[str], cwd: Path) -> int:
-    print(f"  $ {' '.join(cmd)}", file=sys.stderr)
-    return subprocess.run(cmd, cwd=str(cwd)).returncode
+def _run(cmd: list[str], cwd: Path, retries: int = 2, retry_delay: float = 5.0) -> int:
+    """Run an npx skills command, retrying on failure.
+
+    `npx skills` clones its source repo from scratch on every add/update/remove.
+    Large source repos (e.g. multi-gigabyte monorepos) occasionally hit
+    transient network errors ("Recv failure: Connection reset by peer") during
+    that clone, so failures are retried a few times before being reported.
+    """
+    attempts = retries + 1
+    for attempt in range(1, attempts + 1):
+        suffix = f" (attempt {attempt}/{attempts})" if attempts > 1 else ""
+        logger.info("$ %s%s", " ".join(cmd), suffix)
+        rc = subprocess.run(cmd, cwd=str(cwd)).returncode
+        if rc == 0:
+            return rc
+        if attempt < attempts:
+            logger.warning("Command exited %d — retrying in %.0fs: %s", rc, retry_delay, " ".join(cmd))
+            time.sleep(retry_delay)
+        else:
+            logger.error("Command exited %d after %d attempt(s): %s", rc, attempts, " ".join(cmd))
+    return rc
 
 
 def _build_repo_source(entry: dict) -> str:
@@ -119,27 +155,12 @@ def _skill_path(entry: dict, skill: str | dict) -> str:
     return entry.get("path", "").strip().strip("/")
 
 
-def _build_skill_source(entry: dict, skill: str | dict) -> str:
-    """Build the npx skills add source for one skill.
-
-    When a source path is configured, use a direct GitHub tree URL so discovery
-    does not depend on the product repo's overall layout. Without a path, fall
-    back to the repo shorthand supported by the skills CLI.
-    """
-    source_path = _skill_path(entry, skill)
-    if not source_path:
-        return _build_repo_source(entry)
-
-    repo = entry["repo"]
-    ref = entry["ref"].strip()
-    return f"https://github.com/{repo}/tree/{ref}/{source_path}/{_skill_name(skill)}"
-
-
 def _lock_source_matches(lock_meta: dict, entry: dict, skill: str | dict) -> bool:
     """Return whether an installed skill still has its configured source."""
     if lock_meta.get("source") != entry["repo"]:
         return False
-    if (lock_meta.get("ref") or "main") != entry["ref"].strip():
+    expected_ref = entry.get("ref", "main").strip() or "main"
+    if (lock_meta.get("ref") or "main") != expected_ref:
         return False
 
     source_path = _skill_path(entry, skill)
@@ -206,72 +227,105 @@ def check_skills_exist(
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
     Reconcile installed skills with skills-config.json:
-      - remove skills that are no longer configured
-      - update installed skills whose configured source is unchanged
-      - add new skills and remove/re-add skills whose source changed
-
-    <source> is a direct GitHub tree URL when path is configured, otherwise it
-    falls back to the skills CLI's repo shorthand ("org/repo" or "org/repo#ref").
+      - remove skills that are no longer configured, plus any whose
+        configured source (repo/ref/path) changed
+      - (re)add every configured skill, batched per (repo, ref) so each
+        source repo is cloned only once per run no matter how many skills —
+        or product entries — pull from it (e.g. edge-ai-libraries spans 5
+        entries / 8 skills but is cloned exactly once)
 
     --agent universal  → installs only into .agents/skills/
     --copy             → copies files (no symlinks; fully committable)
+    --full-depth       → needed since adds now target the repo root instead
+                         of a skill-scoped GitHub tree URL
 
     Returns True if all skills synced successfully, False if any failed.
     """
-    installed = load_skills_lock(repo_root / "skills-lock.json")
+    lock_path = repo_root / "skills-lock.json"
+    installed = load_skills_lock(lock_path)
     configured = {
-        _skill_name(skill)
+        _skill_name(skill): (entry, skill)
         for entry in config_entries
         for skill in entry["skills"]
     }
     has_error = False
 
-    stale_skills = sorted(set(installed) - configured)
-    if stale_skills:
-        cmd = [
-            "npx", "skills", "remove", *stale_skills,
-            "--agent", "universal", "--yes",
-        ]
+    stale_skills = sorted(set(installed) - set(configured))
+    relocated_skills = sorted(
+        name
+        for name, (entry, skill) in configured.items()
+        if name in installed and not _lock_source_matches(installed[name], entry, skill)
+    )
+    to_remove = sorted(set(stale_skills) | set(relocated_skills))
+
+    if to_remove:
+        logger.info(
+            "Removing %d skill(s) before (re)install (%d stale, %d relocated): %s",
+            len(to_remove), len(stale_skills), len(relocated_skills), ", ".join(to_remove),
+        )
+        cmd = ["npx", "skills", "remove", *to_remove, "--agent", "universal", "--yes"]
         if dry_run:
-            print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
+            logger.info("[dry-run] %s", " ".join(cmd))
         elif _run(cmd, repo_root) != 0:
-            print("  [error] failed to remove stale skills", file=sys.stderr)
+            logger.error("Failed to remove skill(s): %s", ", ".join(to_remove))
             has_error = True
+        elif stale_skills:
+            # skills CLI 1.5.11 removes project files but only prunes its
+            # global lock, so reconcile the project lock explicitly.
+            # Relocated skills keep their (stale) lock entry until the add
+            # below overwrites it with the corrected one.
+            remove_skills_from_lock(lock_path, stale_skills)
 
+    # Group every configured skill by (repo, ref) across ALL config entries,
+    # so one product repo referenced from several entries (e.g.
+    # edge-ai-libraries) still results in a single clone.
+    groups: dict[tuple[str, str], list[tuple[dict, str | dict]]] = {}
     for entry in config_entries:
-        skills = entry["skills"]
-        for skill in skills:
-            skill_name = _skill_name(skill)
-            lock_meta = installed.get(skill_name)
-            if lock_meta and _lock_source_matches(lock_meta, entry, skill):
-                cmd = ["npx", "skills", "update", skill_name, "--yes"]
-            else:
-                if lock_meta:
-                    remove_cmd = [
-                        "npx", "skills", "remove", skill_name,
-                        "--agent", "universal", "--yes",
-                    ]
-                    if dry_run:
-                        print(f"  [dry-run] {' '.join(remove_cmd)}", file=sys.stderr)
-                    elif _run(remove_cmd, repo_root) != 0:
-                        print(f"  [error] failed to remove relocated skill '{skill_name}'", file=sys.stderr)
-                        has_error = True
-                        continue
+        key = (entry["repo"], entry["ref"].strip())
+        for skill in entry["skills"]:
+            groups.setdefault(key, []).append((entry, skill))
 
-                source = _build_skill_source(entry, skill)
-                cmd = ["npx", "skills", "add", source,
-                       "--skill", skill_name, "--agent", "universal", "--copy", "--yes"]
+    for (repo, ref), members in groups.items():
+        skill_names = [_skill_name(skill) for _, skill in members]
+        source = _build_repo_source({"repo": repo, "ref": ref})
+        cmd = [
+            "npx", "skills", "add", source,
+            "--skill", *skill_names,
+            "--agent", "universal", "--copy", "--full-depth", "--yes",
+        ]
 
-            if dry_run:
-                print(f"  [dry-run] {' '.join(cmd)}", file=sys.stderr)
-                continue
+        if dry_run:
+            logger.info("[dry-run] %s", " ".join(cmd))
+            continue
 
-            rc = _run(cmd, repo_root)
-            if rc != 0:
-                print(f"  [error] exited {rc} for '{skill_name}'", file=sys.stderr)
+        logger.info("Syncing %d skill(s) from %s%s: %s",
+                    len(skill_names), repo, f"#{ref}" if ref and ref != "main" else "", ", ".join(skill_names))
+        rc = _run(cmd, repo_root)
+        if rc != 0:
+            logger.error("npx skills exited %d for %s (%s)", rc, source, ", ".join(skill_names))
+            has_error = True
+            continue
+
+        logger.info("✓ Synced %s: %s", source, ", ".join(skill_names))
+
+        # Verify each skill landed at its expected path — catches a name
+        # collision between subtrees resolving to the wrong SKILL.md.
+        current_lock = load_skills_lock(lock_path)
+        for entry, skill in members:
+            name = _skill_name(skill)
+            lock_meta = current_lock.get(name)
+            if not lock_meta:
+                logger.error("Skill '%s' missing from skills-lock.json after add", name)
                 has_error = True
-            else:
-                print(f"  ✓ {skill_name}", file=sys.stderr)
+                continue
+            source_path = _skill_path(entry, skill)
+            expected_path = f"{source_path}/{name}/SKILL.md" if source_path else None
+            actual_path = lock_meta.get("skillPath")
+            if expected_path and actual_path != expected_path:
+                logger.warning(
+                    "Skill '%s' installed from unexpected path %r (expected %r) — possible name collision",
+                    name, actual_path, expected_path,
+                )
 
     return not has_error
 
@@ -433,6 +487,8 @@ def update_readme(readme_path: Path, skills_lock: dict, local_skills_dir: Path, 
 # ---------------------------------------------------------------------------
 
 def main():
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s", stream=sys.stderr)
+
     repo_root = Path(__file__).resolve().parent.parent
     local_skills_dir = repo_root / ".agents" / "skills"
 
@@ -460,7 +516,7 @@ def main():
 
     # Step 1 — reconcile skills via npx skills
     if args.install:
-        print(f"Syncing {len(entries)} skill(s) via npx skills …", file=sys.stderr)
+        logger.info("Syncing %d product(s) via npx skills …", len(entries))
         success = install_skills(entries, repo_root, dry_run=args.dry_run)
         if not success:
             sys.exit(1)
