@@ -3,14 +3,12 @@
   "skills": {
     "chatqna-docker-deploy": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/chat-question-and-answer-core/.github/skills/chatqna-docker-deploy/SKILL.md",
       "computedHash": "83b716d2fba73f647c7780d6964214621773302fa92f8515687e797e61915235"
     },
     "chatqna-helm-deploy": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/chat-question-and-answer-core/.github/skills/chatqna-helm-deploy/SKILL.md",
       "computedHash": "58623bef501d4ceb8825beb65dd30e2fea281a883591240fea118a94e75ac060"
@@ -74,91 +72,79 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "microservices/model-download/.github/skills/model-download-user/SKILL.md",
-      "computedHash": "4f5a08422aef90267f1cb3be5097d9cacbbf647431c3899d09a4c931493646ee"
+      "computedHash": "ca16461dc332dcb6b85843acc13d58da156ab17f96c477e5aea6e99aef07bc0c"
     },
     "multimodal-embedding-serving-user": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "microservices/multimodal-embedding-serving/.github/skills/multimodal-embedding-serving-user/SKILL.md",
       "computedHash": "98c36b880615d3093d9ab50c0021cd0b6680d5e9773e540b9916b12f26f8f623"
     },
     "physicalai-runtime-adding-a-camera-backend": {
       "source": "openvinotoolkit/physicalai",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/capture/physicalai-runtime-adding-a-camera-backend/SKILL.md",
       "computedHash": "6ec1821841a89c39ea54ea708ad6952e1b6de83dc6d824eba18900d914b94a9b"
     },
     "physicalai-runtime-adding-a-robot-integration": {
       "source": "openvinotoolkit/physicalai",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/runtime/physicalai-runtime-adding-a-robot-integration/SKILL.md",
       "computedHash": "2bf5874ea613619d2d6dcc303ad553418f9842e5dea6fab0bac03b429464fcd0"
     },
     "physicalai-runtime-configuring-inference-pipeline": {
       "source": "openvinotoolkit/physicalai",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/inference/physicalai-runtime-configuring-inference-pipeline/SKILL.md",
       "computedHash": "cab813bab81ea1c1fc02ccf07b727dcc151f4cab9dab6ba74112d3e00bde878f"
     },
     "physicalai-runtime-loading-exported-policies": {
       "source": "openvinotoolkit/physicalai",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/inference/physicalai-runtime-loading-exported-policies/SKILL.md",
       "computedHash": "7a2ef6b7ce6db70d0e70f6229fa1ab25e54d0ea193f4ff1c965ff6db8c07aa76"
     },
     "physicalai-runtime-running-policy-on-robot": {
       "source": "openvinotoolkit/physicalai",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/runtime/physicalai-runtime-running-policy-on-robot/SKILL.md",
       "computedHash": "003ad3a491332cb6d60b0c3db026ddf99edf17fb48cf15a75aa6ee05744a6bda"
     },
     "physicalai-train-adding-a-policy": {
       "source": "open-edge-platform/physical-ai-studio",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-adding-a-policy/SKILL.md",
       "computedHash": "4818952bf47074d839a103f5623ff668f94e1a9cc242dea50730e57028504114"
     },
     "physicalai-train-benchmarking-a-policy": {
       "source": "open-edge-platform/physical-ai-studio",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-benchmarking-a-policy/SKILL.md",
       "computedHash": "636238750b7d021abe9946b12d7834c6c8cd1a30d8a3372f51b5368a228bbe20"
     },
     "physicalai-train-exporting-and-validating": {
       "source": "open-edge-platform/physical-ai-studio",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-exporting-and-validating/SKILL.md",
       "computedHash": "a410f920a85091095cf5578f00a792c36a2bf00b9ec8e6133233985154eb9d16"
     },
     "physicalai-train-training-a-policy": {
       "source": "open-edge-platform/physical-ai-studio",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-training-a-policy/SKILL.md",
       "computedHash": "18c4e26889d3885562ca6c586c90aa8d59a04835c398c0ec4d35d063fddcf9a1"
     },
     "physicalai-train-working-with-datasets": {
       "source": "open-edge-platform/physical-ai-studio",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-working-with-datasets/SKILL.md",
       "computedHash": "bd35e5933f550b53f23689dc58454e04dad7637bf63884f558ff496f839a083c"
     },
     "scenescape-setup": {
       "source": "open-edge-platform/scenescape",
-      "ref": "feature/sscape-app-skill",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "4ce2efde093947b38ce0bf32d5a8d586f49821e22f65bca3ed6cf289bfcf1604"
+      "computedHash": "b4e8881d14f5e5a6166b4f6a0ce6c8c231e02cbe8eee3c0b542a38fad7672899"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
@@ -169,40 +155,24 @@
     },
     "vss-deploy": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy/SKILL.md",
-      "computedHash": "d7482c88a5b24d69e92bb6ee4dd4b1d64f9265705a6b686f882eddb9182145a9"
+      "computedHash": "15237450e6f9e9d50ecdcd4eccb30d502385790071d9a5828e616c7617316cdb"
     },
     "vss-deploy-helm": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy-helm/SKILL.md",
-      "computedHash": "65d1d3d3ab38cc81bcbdb2f276b3890ce4819f24fb3fe59a63aca8b028aa2def"
-    },
-    "vss-search": {
-      "source": "open-edge-platform/edge-ai-libraries",
-      "sourceType": "github",
-      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search/SKILL.md",
-      "computedHash": "58852f58fc8c998c0bf6b199caac51a1061f9a7003b31c49d0f2c5f0b9e79028"
+      "computedHash": "e9d5608d20dbe796fe699f7d3cd17ecfcf714f4c3869aeb3bff39aef1cc67215"
     },
     "vss-search-index": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search-index/SKILL.md",
       "computedHash": "9227eb02e77c268897ebc377ff52bed9035097d8dd8a3a9b780c0976854e2b0d"
     },
-    "vss-summarize": {
-      "source": "open-edge-platform/edge-ai-libraries",
-      "sourceType": "github",
-      "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-summarize/SKILL.md",
-      "computedHash": "63c944e82498de75c6c9cc0e730c32c3cda4e430a1250b4a6f9df841b986b4fb"
-    },
     "vss-summarize-video": {
       "source": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-summarize-video/SKILL.md",
       "computedHash": "7932ab88508808eb51f49bc0ec26a39b14fe1e288bbe3cf377b9f171c9d74846"
