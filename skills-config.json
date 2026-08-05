@@ -144,7 +144,7 @@
       "ref": "main",
       "path": ".github/skills",
       "skills": [
-        {"name": "scenescape-setup", "prompts_url": ""}
+        {"name": "scenescape-setup", "prompts_url": "https://github.com/open-edge-platform/scenescape/tree/main/.github/skills/scenescape-setup/example-prompts"}
       ]
     }
   ]
