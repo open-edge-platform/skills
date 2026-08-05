@@ -144,7 +144,7 @@
       "source": "open-edge-platform/scenescape",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "b4e8881d14f5e5a6166b4f6a0ce6c8c231e02cbe8eee3c0b542a38fad7672899"
+      "computedHash": "c4c641e1c3ce4c41345ee29658f98f09807155dc9699e549b3b53f5bd782637d"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
@@ -157,19 +157,19 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy/SKILL.md",
-      "computedHash": "15237450e6f9e9d50ecdcd4eccb30d502385790071d9a5828e616c7617316cdb"
+      "computedHash": "2d582493fc9edc30d3487d47110b9b5d01b799d8095fce3c2177c5d211e723dd"
     },
     "vss-deploy-helm": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy-helm/SKILL.md",
-      "computedHash": "e9d5608d20dbe796fe699f7d3cd17ecfcf714f4c3869aeb3bff39aef1cc67215"
+      "computedHash": "d310226313e1eac901cf244a89938aeb886792ce00129cf72d715a5fdce63363"
     },
     "vss-search-index": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-search-index/SKILL.md",
-      "computedHash": "9227eb02e77c268897ebc377ff52bed9035097d8dd8a3a9b780c0976854e2b0d"
+      "computedHash": "eb6626e519f542b4f814c6ec718e2d5aa0b821c8dd98cbff8e16c7c41db38fb4"
     },
     "vss-summarize-video": {
       "source": "open-edge-platform/edge-ai-libraries",
