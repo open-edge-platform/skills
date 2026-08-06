@@ -126,6 +126,8 @@ class RunResult:
     total_steps: int = 0
     errors_encountered: int = 0
     total_tokens: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
     duration_seconds: float = 0.0
     error: str | None = None
     raw_stdout: str = ""
@@ -243,21 +245,74 @@ def find_binary(name: str, override: str | None) -> str | None:
     return None
 
 
-def _sum_copilot_otel_tokens(otel_path: Path) -> int | None:
-    """Sum gen_ai.usage.{input,output}_tokens across all 'chat <model>' spans
-    in a Copilot CLI OTel file-exporter JSONL dump.
+def _codex_default_model() -> str:
+    """Best-effort detection of the Codex default model.
 
-    Copilot's --output-format json event stream doesn't expose token usage
-    (the `result` event's `usage` object only has premium-request/duration
-    fields). Setting COPILOT_OTEL_FILE_EXPORTER_PATH makes the CLI also emit
-    OTel spans/metrics as JSON lines; each LLM call produces a "chat <model>"
-    span with accurate gen_ai.usage.* attributes (per the OTel GenAI semantic
-    conventions). Summing across all chat spans covers multi-turn/tool-calling
-    runs where more than one LLM call happens.
+    Tries three sources in order of reliability:
+    1. ~/.codex/state_5.sqlite — most recent model actually used (most accurate).
+    2. ~/.codex/config.toml / config.yaml — user-configured default.
+    3. ~/.codex/models_cache.json — lowest-priority listed model as last resort.
+    """
+    import sqlite3
+
+    # Source 1: most-recently-used model from the Codex SQLite state DB.
+    for db_name in ("state_5.sqlite", "state_4.sqlite", "state.sqlite"):
+        db_path = Path.home() / ".codex" / db_name
+        if db_path.exists():
+            try:
+                conn = sqlite3.connect(str(db_path))
+                try:
+                    cur = conn.cursor()
+                    cur.execute(
+                        "SELECT model FROM threads WHERE model IS NOT NULL "
+                        "ORDER BY rowid DESC LIMIT 1"
+                    )
+                    row = cur.fetchone()
+                    if row and row[0]:
+                        return row[0]
+                finally:
+                    conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+    # Source 2: explicit default in the user config file.
+    for config_name in ("config.toml", "config.yaml", "config.yml"):
+        config_path = Path.home() / ".codex" / config_name
+        if config_path.exists():
+            try:
+                text = config_path.read_text()
+                # Simple regex extraction — avoids a toml/yaml dependency.
+                m = re.search(r"""(?m)^\s*model\s*[=:]\s*["']?([^\s"'\n]+)["']?""", text)
+                if m:
+                    return m.group(1)
+            except OSError:
+                pass
+
+    # Source 3: models_cache.json — lowest priority (= highest priority number means default).
+    cache = Path.home() / ".codex" / "models_cache.json"
+    try:
+        data = json.loads(cache.read_text())
+        models = [
+            m for m in data.get("models", [])
+            if isinstance(m, dict) and m.get("visibility") == "list"
+        ]
+        models.sort(key=lambda m: m.get("priority", 999))
+        if models:
+            return models[0]["slug"]
+    except (OSError, json.JSONDecodeError, KeyError):
+        pass
+
+    return "unknown (codex CLI default)"
+
+
+def _read_copilot_otel_tokens(otel_path: Path) -> tuple[int | None, int | None, int | None]:
+    """Read gen_ai.usage.{input,output}_tokens from all 'chat <model>' OTel spans.
+
+    Returns (total, input_tokens, output_tokens); all None if no spans found.
     """
     if not otel_path.exists():
-        return None
-    total = 0
+        return None, None, None
+    total_in = total_out = 0
     found = False
     for line in otel_path.read_text(errors="ignore").splitlines():
         line = line.strip()
@@ -274,9 +329,12 @@ def _sum_copilot_otel_tokens(otel_path: Path) -> int | None:
         out_tok = attrs.get("gen_ai.usage.output_tokens")
         if in_tok is None and out_tok is None:
             continue
-        total += (in_tok or 0) + (out_tok or 0)
+        total_in += in_tok or 0
+        total_out += out_tok or 0
         found = True
-    return total if found else None
+    if not found:
+        return None, None, None
+    return total_in + total_out, total_in, total_out
 
 
 def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None) -> RunResult:
@@ -309,7 +367,10 @@ def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | 
         result.duration_seconds = time.monotonic() - start
         result.raw_stdout = proc.stdout
         result.raw_stderr = proc.stderr
-        result.total_tokens = _sum_copilot_otel_tokens(otel_path)
+        total, inp, out = _read_copilot_otel_tokens(otel_path)
+        result.total_tokens = total
+        result.input_tokens = inp
+        result.output_tokens = out
     finally:
         otel_path.unlink(missing_ok=True)
 
@@ -381,6 +442,8 @@ def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | N
     cache_read = usage.get("cache_read_input_tokens", 0) or 0
     cache_creation = usage.get("cache_creation_input_tokens", 0) or 0
     result.total_tokens = input_tokens + output_tokens + cache_read + cache_creation
+    result.input_tokens = input_tokens + cache_read + cache_creation
+    result.output_tokens = output_tokens
     if data.get("is_error"):
         result.errors_encountered += 1
         result.error = data.get("result") or "claude reported is_error=true"
@@ -456,16 +519,16 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
                 result.total_steps += 1
         elif etype == "turn.completed":
             usage = evt.get("usage", {})
-            result.total_tokens = (usage.get("input_tokens", 0) or 0) + (usage.get("output_tokens", 0) or 0)
+            result.input_tokens = usage.get("input_tokens", 0) or 0
+            result.output_tokens = usage.get("output_tokens", 0) or 0
+            result.total_tokens = result.input_tokens + result.output_tokens
         elif etype in ("error", "turn.failed"):
             result.errors_encountered += 1
 
     result.response_text = last_message
-    # Codex's JSON stream doesn't expose which model actually served the
-    # request, so the best we can record is what was explicitly requested (or
-    # "unspecified" — meaning whatever ~/.codex/config.toml / the CLI's own
-    # built-in default resolves to, which is opaque to us).
-    result.model = model or "unspecified (codex CLI default)"
+    # Codex's JSON stream doesn't expose which model actually served the request;
+    # fall back to the explicit --codex-model arg or read the default from the cache.
+    result.model = model or _codex_default_model()
     finalize_process_result("codex", result, proc.returncode)
     return result
 
@@ -579,6 +642,8 @@ def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult
     # timing.json
     timing = {
         "total_tokens": result.total_tokens,
+        "input_tokens": result.input_tokens,
+        "output_tokens": result.output_tokens,
         "duration_ms": int(result.duration_seconds * 1000),
         "total_duration_seconds": round(result.duration_seconds, 1),
         "model": result.model,
@@ -627,8 +692,8 @@ Use the file-write tools available to you to actually create this file — do no
 print the JSON in your final response."""
 
 
-def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict, timeout: int) -> bool:
-    """Invoke the grader CLI to write grading.json into run_dir. Returns True on success."""
+def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict, timeout: int) -> tuple[bool, str | None]:
+    """Invoke the grader CLI to write grading.json into run_dir. Returns (success, grader_model)."""
     transcript_path = run_dir / "transcript.md"
     outputs_dir = run_dir / "outputs"
     prompt = build_grader_prompt(eval_meta, transcript_path, outputs_dir)
@@ -641,7 +706,7 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     if grading_path.exists():
         try:
             json.loads(grading_path.read_text())
-            return True
+            return True, result.model
         except json.JSONDecodeError:
             pass
 
@@ -653,18 +718,17 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
         try:
             parsed = json.loads(match.group(0))
             grading_path.write_text(json.dumps(parsed, indent=2))
-            return True
+            return True, result.model
         except json.JSONDecodeError:
             pass
 
     print(f"WARNING: grader did not produce valid grading.json for {run_dir}", file=sys.stderr)
-    return False
+    return False, result.model
 
 
 def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: str,
-                    workers: int, timeout: int) -> None:
-    """Find every with_skill/without_skill run-*/ dir under workspace/<cli> that
-    has a transcript but no grading.json yet, and grade it."""
+                    workers: int, timeout: int) -> str | None:
+    """Grade all ungraded runs under workspace/<cli>. Returns the grader model if detected."""
     cli_dir = workspace / cli
     run_dirs = []
     for meta_path in cli_dir.glob("eval-*/*/eval_metadata.json"):
@@ -676,9 +740,10 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
 
     if not run_dirs:
         print(f"  [{cli}] nothing to grade (all runs already graded or no transcripts found)")
-        return
+        return None
 
     print(f"  [{cli}] grading {len(run_dirs)} runs using '{grader_cli}' as judge...")
+    detected_model: str | None = None
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
             pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout): run_dir
@@ -687,11 +752,14 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
         for future in as_completed(futures):
             run_dir = futures[future]
             try:
-                ok = future.result()
+                ok, model = future.result()
             except Exception as e:  # noqa: BLE001
                 print(f"    GRADE FAILED {run_dir}: {e}", file=sys.stderr)
                 continue
+            if model and detected_model is None:
+                detected_model = model
             print(f"    graded {run_dir} [{'OK' if ok else 'FALLBACK-FAILED'}]")
+    return detected_model
 
 
 # --------------------------------------------------------------------------
@@ -975,6 +1043,203 @@ def build_cross_cli_benchmark(workspace: Path, clis: list[str], skill_name: str,
     return benchmark
 
 
+def _prompt_cell(ev: dict) -> str:
+    """First 80 chars of the eval prompt, plain text."""
+    p = ev["prompt"]
+    return (p[:80] + "...") if len(p) > 80 else p
+
+
+def generate_consolidated_benchmark_md(
+    workspace: Path,
+    clis: list[str],
+    skill_name: str,
+    evals: list[dict],
+    grader_model: str | None,
+) -> str:
+    """Consolidated cross-CLI benchmark.md replacing generate_cross_cli_markdown().
+
+    Writes 4 summary mini-tables (evals passed, pass rate, time, tokens) plus a
+    per-eval detail table with a Mean ±σ footer row. Generated for 1–3 CLIs.
+    """
+    if calculate_stats is None:
+        return f"# Skill Benchmark: {skill_name}\n\nAggregation skipped (skill-creator not found).\n"
+
+    configs = ["with_skill", "without_skill"]
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cli_models = {cli: detect_cli_model(workspace, cli) for cli in clis}
+
+    # Collect per-config per-CLI aggregates
+    agg: dict[str, dict[str, dict]] = {
+        c: {cli: {"pass_rates": [], "time_total": 0.0, "tokens_total": 0,
+                  "evals_passed": 0, "evals_total": 0}
+            for cli in clis}
+        for c in configs
+    }
+    # per_eval[ev_id][config][cli] = (passed, total) or None
+    per_eval: dict = {ev["id"]: {c: {} for c in configs} for ev in evals}
+
+    for cli in clis:
+        for ev in evals:
+            ev_id = ev["id"]
+            base = workspace / cli / eval_dir_name(ev)
+            for config in configs:
+                cell = agg[config][cli]
+                cell["evals_total"] += 1
+                grading_path = base / config / "run-1" / "grading.json"
+                timing_path = base / config / "run-1" / "timing.json"
+                per_eval[ev_id][config][cli] = None
+                if grading_path.exists():
+                    try:
+                        g = json.loads(grading_path.read_text())
+                        s = g.get("summary", {})
+                        pr = s.get("pass_rate", 0.0)
+                        cell["pass_rates"].append(pr)
+                        if pr >= 1.0:
+                            cell["evals_passed"] += 1
+                        per_eval[ev_id][config][cli] = (s.get("passed", 0), s.get("total", 0))
+                    except (json.JSONDecodeError, OSError):
+                        pass
+                if timing_path.exists():
+                    try:
+                        t = json.loads(timing_path.read_text())
+                        cell["time_total"] += t.get("total_duration_seconds", 0.0) or 0.0
+                        cell["tokens_total"] += t.get("total_tokens", 0) or 0
+                    except (json.JSONDecodeError, OSError):
+                        pass
+
+    pr_stats: dict[str, dict[str, dict]] = {
+        c: {cli: calculate_stats(agg[c][cli]["pass_rates"]) for cli in clis}
+        for c in configs
+    }
+
+    def _agent_label(cli: str) -> str:
+        return f"{cli.title()} (`{cli_models[cli]}`)"
+
+    def _evals_cell(config: str, cli: str) -> str:
+        d = agg[config][cli]
+        return f"{d['evals_passed']} / {d['evals_total']}"
+
+    def _lift_evals(cli: str) -> str:
+        diff = agg["with_skill"][cli]["evals_passed"] - agg["without_skill"][cli]["evals_passed"]
+        sign = "+" if diff >= 0 else ""
+        arrow = " \u2191" if diff > 0 else (" \u2193" if diff < 0 else "")
+        return f"**{sign}{diff}{arrow}**"
+
+    def _pass_rate_cell(config: str, cli: str) -> str:
+        s = pr_stats[config][cli]
+        return f"{s['mean']*100:.0f}% \u00b1{s['stddev']*100:.0f}%"
+
+    def _lift_pass_rate(cli: str) -> str:
+        diff_pp = (pr_stats["with_skill"][cli]["mean"] - pr_stats["without_skill"][cli]["mean"]) * 100
+        sign = "+" if diff_pp >= 0 else ""
+        arrow = " \u2191" if diff_pp > 0 else ""
+        return f"**{sign}{diff_pp:.0f}pp{arrow}**"
+
+    def _time_cell(config: str, cli: str) -> str:
+        return f"{agg[config][cli]['time_total']:.0f} s"
+
+    def _delta_time(cli: str) -> str:
+        diff = agg["with_skill"][cli]["time_total"] - agg["without_skill"][cli]["time_total"]
+        sign = "+" if diff >= 0 else ""
+        return f"{sign}{diff:.0f} s \u2193"
+
+    def _tokens_cell(config: str, cli: str) -> str:
+        return _fmt_tokens(agg[config][cli]["tokens_total"])
+
+    def _delta_tokens(cli: str) -> str:
+        diff = agg["with_skill"][cli]["tokens_total"] - agg["without_skill"][cli]["tokens_total"]
+        sign = "+" if diff >= 0 else ""
+        return f"{sign}{_fmt_tokens(diff)} \u2193"
+
+    def _mini_table(title: str, wos_fn, ws_fn, lift_fn) -> list[str]:
+        rows = [f"### {title}", "", "| Agent | w/o skill | w/ skill | Lift |", "|---|---|---|---|"]
+        for cli in clis:
+            rows.append(f"| {_agent_label(cli)} | {wos_fn(cli)} | {ws_fn(cli)} | {lift_fn(cli)} |")
+        return rows
+
+    def _result_cell(ev_id: int, config: str, cli: str) -> str:
+        val = per_eval.get(ev_id, {}).get(config, {}).get(cli)
+        if val is None or val[1] == 0:
+            return "n/a"
+        passed, total = val
+        return f"{'PASS' if passed == total else 'FAIL'} ({passed}/{total})"
+
+    agents_line = ", ".join(_agent_label(cli) for cli in clis)
+    grader_line = grader_model or "n/a (grading skipped)"
+    eval_ids_str = ", ".join(str(ev["id"]) for ev in evals)
+
+    lines: list[str] = [
+        "<!--",
+        "SPDX-FileCopyrightText: (C) 2026 Intel Corporation",
+        "SPDX-License-Identifier: Apache-2.0",
+        "-->",
+        "",
+        f"# Skill Benchmark: {skill_name}",
+        "",
+        f"**Agents**: {agents_line}",
+        f"**Grader**: {grader_line}",
+        f"**Date**: {timestamp}",
+        f"**Evals**: {eval_ids_str} (1 run per configuration)",
+        "",
+        "## Summary",
+        "",
+        "> Skill lift = with skill \u2212 without skill. \u2191 = better, \u2193 = higher cost (expected).",
+        "",
+    ]
+    lines += _mini_table("Evals passed",
+                         lambda c: _evals_cell("without_skill", c),
+                         lambda c: _evals_cell("with_skill", c),
+                         _lift_evals) + [""]
+    lines += _mini_table("Pass rate (avg \u00b1 \u03c3 across evals)",
+                         lambda c: _pass_rate_cell("without_skill", c),
+                         lambda c: _pass_rate_cell("with_skill", c),
+                         _lift_pass_rate) + [""]
+    lines += _mini_table("Time (total across all evals)",
+                         lambda c: _time_cell("without_skill", c),
+                         lambda c: _time_cell("with_skill", c),
+                         _delta_time) + [""]
+    lines += _mini_table("Tokens (total across all evals)",
+                         lambda c: _tokens_cell("without_skill", c),
+                         lambda c: _tokens_cell("with_skill", c),
+                         _delta_tokens) + [""]
+
+    w_hdrs = " | ".join(f"{cli.title()} (w/)" for cli in clis)
+    wo_hdrs = " | ".join(f"{cli.title()} (w/o)" for cli in clis)
+    sep_cols = "|".join(["---"] * (2 + len(clis) * 2))
+    lines += [
+        "## Notes",
+        "",
+        "### Per-eval detail",
+        "",
+        f"| Eval | Prompt | {w_hdrs} | {wo_hdrs} |",
+        f"|---|---|{sep_cols}|",
+    ]
+
+    footer_prs: dict[str, list[float]] = {f"{cli}_{s}": [] for cli in clis for s in ("w", "wo")}
+    for ev in evals:
+        ev_id = ev["id"]
+        w_cells = " | ".join(_result_cell(ev_id, "with_skill", cli) for cli in clis)
+        wo_cells = " | ".join(_result_cell(ev_id, "without_skill", cli) for cli in clis)
+        lines.append(f"| {ev_id} | {_prompt_cell(ev)} | {w_cells} | {wo_cells} |")
+        for cli in clis:
+            for config, suffix in (("with_skill", "w"), ("without_skill", "wo")):
+                val = per_eval.get(ev_id, {}).get(config, {}).get(cli)
+                if val is not None and val[1] > 0:
+                    footer_prs[f"{cli}_{suffix}"].append(val[0] / val[1])
+
+    def _sigma_cell(key: str) -> str:
+        prs = footer_prs[key]
+        if not prs:
+            return "n/a"
+        s = calculate_stats(prs)
+        return f"**{s['mean']*100:.0f}% \u00b1{s['stddev']*100:.0f}%**"
+
+    w_sigma = " | ".join(_sigma_cell(f"{cli}_w") for cli in clis)
+    wo_sigma = " | ".join(_sigma_cell(f"{cli}_wo") for cli in clis)
+    lines.append(f"| | **Mean \u00b1\u03c3** | {w_sigma} | {wo_sigma} |")
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--evals-json", required=True, help="Path to the skill's evals/evals.json")
@@ -1094,6 +1359,7 @@ def main() -> int:
     # ----------------------------------------------------------------------
     # Grading
     # ----------------------------------------------------------------------
+    grader_model: str | None = None
     if not args.skip_grading:
         grader_cli = args.grader_cli
         grader_binary = None
@@ -1114,7 +1380,9 @@ def main() -> int:
         else:
             print(f"\n=== Grading (judge: {grader_cli}) ===")
             for cli in binaries:
-                grade_all_runs(workspace, cli, grader_cli, grader_binary, args.grader_workers, args.grader_timeout)
+                detected = grade_all_runs(workspace, cli, grader_cli, grader_binary, args.grader_workers, args.grader_timeout)
+                if detected and grader_model is None:
+                    grader_model = detected
 
     # ----------------------------------------------------------------------
     # Aggregation
@@ -1145,16 +1413,14 @@ def main() -> int:
                 parts = [f"{c}={summary[c]['pass_rate']['mean']*100:.0f}%" for c in configs_seen]
                 print(f"  [{cli}] {cli_dir / 'benchmark.json'}  ({', '.join(parts)})")
 
+            print("\n=== Consolidated benchmark (all agents) ===")
             if len(binaries) >= 2:
-                print("\n=== Cross-CLI benchmark (all configs, compared across coding agents) ===")
                 cross = build_cross_cli_benchmark(workspace, list(binaries.keys()), skill_name, configs=configs)
                 (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
-                (workspace / "benchmark.md").write_text(generate_cross_cli_markdown(cross))
-                for config in configs:
-                    for cli in binaries:
-                        pr = cross["run_summary"].get(config, {}).get(cli, {}).get("pass_rate", {}).get("mean", 0.0)
-                        print(f"  {cli} ({config}): {pr*100:.1f}% pass rate")
-                print(f"  Written to: {workspace / 'benchmark.json'} / {workspace / 'benchmark.md'}")
+            (workspace / "benchmark.md").write_text(
+                generate_consolidated_benchmark_md(workspace, list(binaries.keys()), skill_name, evals, grader_model)
+            )
+            print(f"  Written: {workspace / 'benchmark.md'}")
 
     print("\nOptional next step — open a review in your browser:")
     for cli in binaries:
