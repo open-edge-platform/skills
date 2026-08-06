@@ -13,11 +13,17 @@
       "skillPath": "sample-applications/chat-question-and-answer-core/.github/skills/chatqna-helm-deploy/SKILL.md",
       "computedHash": "58623bef501d4ceb8825beb65dd30e2fea281a883591240fea118a94e75ac060"
     },
+    "dlsps-user": {
+      "source": "open-edge-platform/edge-ai-libraries",
+      "sourceType": "github",
+      "skillPath": "microservices/dlstreamer-pipeline-server/.github/skills/dlsps-user/SKILL.md",
+      "computedHash": "94f4acbf04b64fd02753a1d0745cf958fce10d6f0a29d576282d42a292d97850"
+    },
     "dlstreamer-coding-agent": {
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
-      "computedHash": "0c3032c8357412068da29c0282260c55d5cf18f32b829298f35f511e667276a9"
+      "computedHash": "e2054f95b8071399d5cbf78cfc66fdf18d8706299883f7f36f66ed770d840803"
     },
     "geti-using-the-pipeline": {
       "source": "open-edge-platform/geti",
