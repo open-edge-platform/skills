@@ -151,6 +151,23 @@ _MODEL_PATTERNS = re.compile(
     r"(?:not found|invalid|unavailable|unsupported).*model",
     re.IGNORECASE,
 )
+# Codex's default `workspace-write` sandbox shells out through bubblewrap,
+# which creates an isolated network namespace even though network access is
+# already denied by policy. When run.py's own process is itself inside a
+# nested/rootless container (as it is here), that namespace/interface setup
+# can fail outright — codex then can't run *any* shell command (including a
+# plain file read of SKILL.md), but still exits 0 and produces a fluent
+# "I couldn't read the file" assistant message. That message is non-empty and
+# exit_code is 0, so it sails past the existing error checks and gets graded
+# as a normal (very low) pass rate instead of being flagged as an infra
+# failure — which is exactly what happened to every codex with_skill run in
+# /tmp/model-download-user-eval-run.
+_CODEX_SANDBOX_INIT_PATTERNS = re.compile(
+    r"bwrap:|RTM_NEWADDR|sandbox initialization error|"
+    r"failed to (?:create|set up) (?:the )?(?:network )?namespace|"
+    r"clone\(CLONE_NEWNET",
+    re.IGNORECASE,
+)
 _LOGIN_GUIDANCE = {
     "copilot": "Run `copilot` interactively and complete GitHub authentication, then retry.",
     "claude": "Run `claude` interactively and complete authentication (or run `/login`), then retry.",
@@ -182,10 +199,27 @@ def finalize_process_result(cli: str, result: RunResult, returncode: int) -> Non
         reasons.append(f"{cli} exited with code {returncode}")
     if not result.response_text.strip():
         reasons.append("no assistant response was captured")
+    # Codex can exit 0 with a non-empty, fluent-sounding response that is
+    # actually just it explaining that its sandbox failed to initialize
+    # before it could run any tool (see _CODEX_SANDBOX_INIT_PATTERNS above).
+    # That's not a real answer to the eval — flag it even though the other
+    # two checks above would otherwise consider this run "successful".
+    sandbox_init_failed = cli == "codex" and bool(_CODEX_SANDBOX_INIT_PATTERNS.search(combined))
+    if sandbox_init_failed and not reasons:
+        reasons.append("codex's sandbox failed to initialize before it could execute any tool")
     if not reasons:
         return
 
-    if _AUTH_PATTERNS.search(combined):
+    if sandbox_init_failed:
+        hint = (
+            "Codex's `workspace-write` sandbox uses bubblewrap, which sets up an isolated "
+            "network namespace even though network access is denied by policy; that setup can "
+            "fail when codex itself is run inside a nested/rootless container (this environment). "
+            "This run was already retried once with --sandbox danger-full-access; if it still "
+            "fails, that retry isn't working around the nesting issue either — investigate the "
+            "host's container/namespace permissions, or run this script outside the outer sandbox."
+        )
+    elif _AUTH_PATTERNS.search(combined):
         hint = _LOGIN_GUIDANCE[cli]
     elif _RATE_LIMIT_PATTERNS.search(combined):
         hint = "The CLI reported a rate limit or quota problem; check account usage and retry later."
@@ -465,11 +499,12 @@ def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | N
     return result
 
 
-def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None) -> RunResult:
+def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None,
+              sandbox: str = "workspace-write", _is_retry: bool = False) -> RunResult:
     cmd = [
         binary, "exec", prompt,
         "--json",
-        "--sandbox", "workspace-write",
+        "--sandbox", sandbox,
         "--skip-git-repo-check",
         "-C", str(cwd),
     ]
@@ -526,6 +561,34 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
             result.errors_encountered += 1
 
     result.response_text = last_message
+
+    # See _CODEX_SANDBOX_INIT_PATTERNS: bubblewrap's network-namespace setup for
+    # `workspace-write` can fail when codex itself runs inside a nested/rootless
+    # container, silently turning every tool call into a failure that codex then
+    # narrates as a normal (if useless) assistant message. Retry once with
+    # `danger-full-access`, which skips bubblewrap sandboxing entirely — the same
+    # trust model already used for claude (--dangerously-skip-permissions) and
+    # copilot (--allow-all-tools --allow-all-paths) in this script, and safe here
+    # because every eval prompt already instructs the agent not to perform real
+    # network calls, downloads, or start real services.
+    combined_for_retry_check = "\n".join(part for part in (result.raw_stderr, result.raw_stdout) if part)
+    if (
+        not _is_retry
+        and sandbox == "workspace-write"
+        and _CODEX_SANDBOX_INIT_PATTERNS.search(combined_for_retry_check)
+    ):
+        retry_result = run_codex(
+            binary, prompt, cwd, timeout, model,
+            sandbox="danger-full-access", _is_retry=True,
+        )
+        retry_result.transcript_lines.insert(
+            0,
+            "_Note: the initial attempt used `--sandbox workspace-write`, but codex's bubblewrap "
+            "sandbox failed to initialize a network namespace in this environment; this run was "
+            "automatically retried with `--sandbox danger-full-access`._",
+        )
+        return retry_result
+
     # Codex's JSON stream doesn't expose which model actually served the request;
     # fall back to the explicit --codex-model arg or read the default from the cache.
     result.model = model or _codex_default_model()
@@ -702,10 +765,20 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     # read the transcript/outputs and write grading.json alongside them.
     result = runner(grader_binary, prompt, run_dir, timeout)
 
+    graded_by = {"cli": grader_cli, "model": result.model}
     grading_path = run_dir / "grading.json"
     if grading_path.exists():
         try:
-            json.loads(grading_path.read_text())
+            parsed = json.loads(grading_path.read_text())
+            # Record who graded this run — grading.json is otherwise the only
+            # persisted trace of the grading step, and on a rerun where every
+            # run is already graded, grade_all_runs() has nothing left to grade
+            # and so can't report a model; without this, the aggregated report
+            # falls back to "n/a (grading skipped)" even though real grading
+            # data (just from an earlier session) is right there on disk.
+            if isinstance(parsed, dict):
+                parsed["graded_by"] = graded_by
+                grading_path.write_text(json.dumps(parsed, indent=2))
             return True, result.model
         except json.JSONDecodeError:
             pass
@@ -717,6 +790,8 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     if match:
         try:
             parsed = json.loads(match.group(0))
+            if isinstance(parsed, dict):
+                parsed["graded_by"] = graded_by
             grading_path.write_text(json.dumps(parsed, indent=2))
             return True, result.model
         except json.JSONDecodeError:
@@ -763,22 +838,8 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
 
 
 # --------------------------------------------------------------------------
-# Markdown helpers shared by per-CLI and cross-CLI reports
+# Markdown helpers shared by cross-CLI reports
 # --------------------------------------------------------------------------
-
-def _consistency_label(mean: float, stddev: float) -> str:
-    """Classify spread as consistent/variable/unreliable using the coefficient
-    of variation (stddev / mean). Returned as a parenthetical hint so readers
-    understand at a glance whether the average is trustworthy."""
-    if mean == 0:
-        return "unreliable" if stddev > 0 else "n/a"
-    cv = stddev / mean
-    if cv < 0.15:
-        return "consistent"
-    if cv <= 0.50:
-        return "variable"
-    return "unreliable"
-
 
 def _fmt_tokens(value: float) -> str:
     """Abbreviate large token counts to k-notation for readability."""
@@ -787,154 +848,33 @@ def _fmt_tokens(value: float) -> str:
     return f"{value:.0f}"
 
 
-_HOW_TO_READ = (
-    "> **How to read this table** \u2014 "
-    "**Avg** is the mean score across all evals; "
-    "**Std Dev** (the \u00b1 spread) measures how much individual evals varied around that average "
-    "\u2014 small spread means the agent behaved consistently, large spread means results were erratic; "
-    "**Skill Lift** is the gain from loading the skill (with\u2009\u2212\u2009without)."
-)
-
-
-def generate_per_cli_markdown(benchmark: dict) -> str:
-    """Human-readable benchmark.md for a single CLI, replacing skill-creator's
-    generate_markdown(). Reads run_summary[\"with_skill\"], [\"without_skill\"],
-    and [\"delta\"] from the benchmark produced by generate_benchmark()."""
-    metadata = benchmark["metadata"]
-    run_summary = benchmark["run_summary"]
-    ws = run_summary.get("with_skill", {})
-    wos = run_summary.get("without_skill", {})
-    delta = run_summary.get("delta", {})
-
-    def _cell(stats: dict, key: str, fmt_fn) -> str:
-        m = stats.get(key, {}).get("mean", 0)
-        s = stats.get(key, {}).get("stddev", 0)
-        label = _consistency_label(m, s)
-        return f"{fmt_fn(m)} avg, \u00b1{fmt_fn(s)} spread ({label})"
-
-    def _delta_cell(raw, key: str) -> str:
-        """Re-format delta values from skill-creator's string representation.
-        Pass rate delta is converted from decimal (+0.78) to percentage points (+78pp)."""
-        try:
-            val = float(raw)
-        except (TypeError, ValueError):
-            return str(raw)
-        if key == "pass_rate":
-            return f"{val*100:+.0f}pp"
-        if key == "tokens":
-            sign = "+" if val >= 0 else ""
-            return f"{sign}{_fmt_tokens(val)}"
-        if key == "time_seconds":
-            return f"{val:+.1f}s"
-        return f"{val:+g}"
-
-    lines = [
-        f"# Skill Benchmark: {metadata['skill_name']}",
-        "",
-        f"**Model**: {metadata.get('executor_model', 'n/a')}",
-        f"**Date**: {metadata.get('timestamp', 'n/a')}",
-        f"**Evals**: {', '.join(map(str, metadata.get('evals_run', [])))} "
-        f"({metadata.get('runs_per_configuration', 1)} run(s) each per configuration)",
-        "",
-        "## Summary",
-        "",
-        _HOW_TO_READ,
-        "",
-        "| Metric | Avg \u00b1 Std Dev (With Skill) | Avg \u00b1 Std Dev (Without Skill) | Skill Lift (\u0394) |",
-        "|--------|---------------------------|-------------------------------|----------------|",
-        f"| Pass Rate (% correct) "
-        f"| {_cell(ws, 'pass_rate', lambda v: f'{v*100:.0f}%')} "
-        f"| {_cell(wos, 'pass_rate', lambda v: f'{v*100:.0f}%')} "
-        f"| {_delta_cell(delta.get('pass_rate', '0'), 'pass_rate')} |",
-        f"| Time (s / question) "
-        f"| {_cell(ws, 'time_seconds', lambda v: f'{v:.1f}s')} "
-        f"| {_cell(wos, 'time_seconds', lambda v: f'{v:.1f}s')} "
-        f"| {_delta_cell(delta.get('time_seconds', '0'), 'time_seconds')} |",
-        f"| Tokens (context cost) "
-        f"| {_cell(ws, 'tokens', _fmt_tokens)} "
-        f"| {_cell(wos, 'tokens', _fmt_tokens)} "
-        f"| {_delta_cell(delta.get('tokens', '0'), 'tokens')} |",
-    ]
-
-    if benchmark.get("notes"):
-        lines.extend(["", "## Notes", ""])
-        for note in benchmark["notes"]:
-            lines.append(f"- {note}")
-
-    return "\n".join(lines)
-
-
 # --------------------------------------------------------------------------
 # Cross-CLI aggregation
 # --------------------------------------------------------------------------
 
-def generate_cross_cli_markdown(benchmark: dict) -> str:
-    """Cross-CLI markdown table showing all configs (with_skill / without_skill)
-    and all CLIs side-by-side. run_summary is expected in the nested format
-    run_summary[config][cli] produced by build_cross_cli_benchmark; the old flat
-    format run_summary[cli] is also accepted for backward compatibility."""
-    metadata = benchmark["metadata"]
-    run_summary = benchmark["run_summary"]
 
-    # Detect nested (new) vs flat (old) format.
-    first_val = next(iter(run_summary.values()), {})
-    nested = isinstance(first_val, dict) and not any(k in first_val for k in ("mean", "stddev"))
+def detect_grader_identity(workspace: Path, clis: list[str]) -> tuple[str | None, str | None]:
+    """Recover (grader_cli, grader_model) from grading.json's "graded_by" field.
 
-    if nested:
-        configs = list(run_summary.keys())
-        clis = list(next(iter(run_summary.values()), {}).keys())
-    else:
-        configs = ["with_skill"]
-        clis = [k for k in run_summary if k != "delta"]
-
-    def get_stats(config: str, cli: str, key: str) -> dict:
-        if nested:
-            return run_summary.get(config, {}).get(cli, {}).get(key, {})
-        return run_summary.get(cli, {}).get(key, {})
-
-    def _cell_cross(config: str, cli: str, key: str, fmt_fn) -> str:
-        stats = get_stats(config, cli, key)
-        m = stats.get("mean", 0)
-        s = stats.get("stddev", 0)
-        label = _consistency_label(m, s)
-        return f"{fmt_fn(m)} avg, \u00b1{fmt_fn(s)} spread ({label})"
-
-    col_headers = " | ".join(f"{c.title()} (Avg \u00b1 Std Dev)" for c in clis)
-    sep = "|".join(["---"] * len(clis))
-
-    lines = [
-        f"# Skill Benchmark: {metadata['skill_name']}",
-        "",
-        f"**Model**: {metadata['executor_model']}",
-        f"**Date**: {metadata['timestamp']}",
-        f"**Evals**: {', '.join(map(str, metadata['evals_run']))} "
-        f"({metadata['runs_per_configuration']} run(s) each per configuration)",
-        "",
-        "## Summary",
-        "",
-        _HOW_TO_READ,
-        "",
-        f"| Metric | Config | {col_headers} |",
-        f"|--------|--------|{sep}|",
-    ]
-
-    metrics = [
-        ("Pass Rate (% correct)", "pass_rate", lambda v: f"{v*100:.0f}%"),
-        ("Time (s / question)",   "time_seconds", lambda v: f"{v:.1f}s"),
-        ("Tokens (context cost)", "tokens", _fmt_tokens),
-    ]
-    for metric_label, key, fmt_fn in metrics:
-        for i, config in enumerate(configs):
-            row_label = metric_label if i == 0 else ""
-            cells = [_cell_cross(config, cli, key, fmt_fn) for cli in clis]
-            lines.append(f"| {row_label} | {config} | {' | '.join(cells)} |")
-
-    if benchmark.get("notes"):
-        lines.extend(["", "## Notes", ""])
-        for note in benchmark["notes"]:
-            lines.append(f"- {note}")
-
-    return "\n".join(lines)
+    Used as a fallback when the current invocation didn't freshly grade
+    anything (e.g. every run was already graded in an earlier session) — in
+    that case grade_all_runs() has nothing to report a model for, even though
+    real grading data is sitting on disk. Returns the most common (cli, model)
+    pair across all runs, or (None, None) if no run carries the field (e.g.
+    grading.json predates this field being written)."""
+    counts: collections.Counter[tuple[str, str]] = collections.Counter()
+    for cli in clis:
+        for grading_path in (workspace / cli).glob("eval-*/*/run-*/grading.json"):
+            try:
+                data = json.loads(grading_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            graded_by = data.get("graded_by") if isinstance(data, dict) else None
+            if isinstance(graded_by, dict) and graded_by.get("cli") and graded_by.get("model"):
+                counts[(graded_by["cli"], graded_by["model"])] += 1
+    if not counts:
+        return None, None
+    return counts.most_common(1)[0][0]
 
 
 def detect_cli_model(workspace: Path, cli: str) -> str:
@@ -1054,9 +994,10 @@ def generate_consolidated_benchmark_md(
     clis: list[str],
     skill_name: str,
     evals: list[dict],
+    grader_cli: str | None,
     grader_model: str | None,
 ) -> str:
-    """Consolidated cross-CLI benchmark.md replacing generate_cross_cli_markdown().
+    """Consolidated cross-CLI benchmark.md.
 
     Writes 4 summary mini-tables (evals passed, pass rate, time, tokens) plus a
     per-eval detail table with a Mean ±σ footer row. Generated for 1–3 CLIs.
@@ -1165,7 +1106,16 @@ def generate_consolidated_benchmark_md(
         return f"{'PASS' if passed == total else 'FAIL'} ({passed}/{total})"
 
     agents_line = ", ".join(_agent_label(cli) for cli in clis)
-    grader_line = grader_model or "n/a (grading skipped)"
+    # Built straight from grader_cli/grader_model (not _agent_label/cli_models,
+    # which are keyed off the *executor* runs) because the grader CLI is
+    # invoked without the --*-model override, so its model can differ from
+    # whatever that same CLI used as an eval executor.
+    if grader_cli and grader_model:
+        grader_line = f"{grader_cli.title()} (`{grader_model}`)"
+    elif grader_model:
+        grader_line = f"`{grader_model}` (grading agent unknown)"
+    else:
+        grader_line = "n/a (grading skipped)"
     eval_ids_str = ", ".join(str(ev["id"]) for ev in evals)
 
     lines: list[str] = [
@@ -1205,14 +1155,18 @@ def generate_consolidated_benchmark_md(
 
     w_hdrs = " | ".join(f"{cli.title()} (w/)" for cli in clis)
     wo_hdrs = " | ".join(f"{cli.title()} (w/o)" for cli in clis)
+    # "Eval" + "Prompt" + one column per CLI per config — must match the
+    # header cell count exactly, or the table renders with mismatched columns.
     sep_cols = "|".join(["---"] * (2 + len(clis) * 2))
     lines += [
-        "## Notes",
+        "## Per-Eval Detail",
         "",
-        "### Per-eval detail",
+        "> Each cell is PASS/FAIL for that run, with the count of expectations met "
+        "in parentheses (e.g. `PASS (5/5)`); `n/a` means no grading.json was found "
+        "for that (eval, config, agent) combination.",
         "",
         f"| Eval | Prompt | {w_hdrs} | {wo_hdrs} |",
-        f"|---|---|{sep_cols}|",
+        f"|{sep_cols}|",
     ]
 
     footer_prs: dict[str, list[float]] = {f"{cli}_{s}": [] for cli in clis for s in ("w", "wo")}
@@ -1360,6 +1314,7 @@ def main() -> int:
     # Grading
     # ----------------------------------------------------------------------
     grader_model: str | None = None
+    grader_cli: str | None = None
     if not args.skip_grading:
         grader_cli = args.grader_cli
         grader_binary = None
@@ -1384,6 +1339,15 @@ def main() -> int:
                 if detected and grader_model is None:
                     grader_model = detected
 
+    # Fall back to grading.json's persisted "graded_by" field when nothing was
+    # freshly graded this invocation (every run already had a grading.json from
+    # an earlier session) — otherwise the report would claim grading was
+    # skipped even though real grading data is on disk.
+    if grader_model is None:
+        recovered_cli, recovered_model = detect_grader_identity(workspace, [c for c in CLI_RUNNERS if (workspace / c).exists()])
+        if recovered_model:
+            grader_cli, grader_model = recovered_cli, recovered_model
+
     # ----------------------------------------------------------------------
     # Aggregation
     # ----------------------------------------------------------------------
@@ -1407,7 +1371,10 @@ def main() -> int:
                     benchmark["metadata"]["runs_per_configuration"] = max(1, counts_per_config[0] // per_eval)
                 benchmark["metadata"]["executor_model"] = detect_cli_model(workspace, cli)
                 (cli_dir / "benchmark.json").write_text(json.dumps(benchmark, indent=2))
-                (cli_dir / "benchmark.md").write_text(generate_per_cli_markdown(benchmark))
+                # Per-CLI benchmark.md is exactly skill-creator's own
+                # generate_markdown() output — unmodified, so it stays
+                # identical to what skill-creator itself would produce.
+                (cli_dir / "benchmark.md").write_text(generate_markdown(benchmark))
                 summary = benchmark["run_summary"]
                 configs_seen = [k for k in summary if k != "delta"]
                 parts = [f"{c}={summary[c]['pass_rate']['mean']*100:.0f}%" for c in configs_seen]
@@ -1418,7 +1385,9 @@ def main() -> int:
                 cross = build_cross_cli_benchmark(workspace, list(binaries.keys()), skill_name, configs=configs)
                 (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
             (workspace / "benchmark.md").write_text(
-                generate_consolidated_benchmark_md(workspace, list(binaries.keys()), skill_name, evals, grader_model)
+                generate_consolidated_benchmark_md(
+                    workspace, list(binaries.keys()), skill_name, evals, grader_cli, grader_model
+                )
             )
             print(f"  Written: {workspace / 'benchmark.md'}")
 
