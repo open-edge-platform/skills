@@ -64,4 +64,4 @@ jobs:
           skills-path: .agents/skills/
           strict: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
-          allow-dirs: "evals,example-prompts,benchmark,agents"
+          allow-dirs: "evals,example-prompts,examples-prompts,benchmark,BENCHMARK,agents"
