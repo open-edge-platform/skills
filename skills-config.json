@@ -62,6 +62,15 @@
       ]
     },
     {
+      "product": "DL Streamer Pipeline Server",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "microservices/dlstreamer-pipeline-server/.github/skills",
+      "skills": [
+        {"name": "dlsps-user", "prompts_url": "https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server/.github/skills/dlsps-user/example-prompts"}
+      ]
+    },
+    {
       "product": "Physical AI Train",
       "repo": "open-edge-platform/physical-ai-studio",
       "ref": "main",
@@ -144,7 +153,7 @@
       "ref": "main",
       "path": ".github/skills",
       "skills": [
-        {"name": "scenescape-setup", "prompts_url": ""}
+        {"name": "scenescape-setup", "prompts_url": "https://github.com/open-edge-platform/scenescape/tree/main/.github/skills/scenescape-setup/example-prompts"}
       ]
     }
   ]
