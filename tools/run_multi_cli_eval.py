@@ -48,21 +48,25 @@ Usage:
         --evals-json /path/to/skill/evals/evals.json \
         --skill-path /path/to/skill \
         --workspace /path/to/output-workspace \
-        --clis copilot,claude,codex \
+        --clis copilot \
         --configs with_skill,without_skill \
         --workers 4 \
         --timeout 300 \
-        --grader-cli claude
+        --grader-cli copilot
 
 Flags to control the extra stages:
     --skip-grading      Only run evals, skip the LLM-grading step.
     --skip-aggregate    Skip benchmark.json/.md generation (implies grading
                         still runs, but nothing is summarized).
-    --grader-cli        Which CLI to use as the grading judge (default: the
-                        first of claude/copilot/codex found on PATH). The
+    --grader-cli        Which CLI to use as the grading judge (default:
+                        copilot). The
                         grader is always run against a "neutral" copy of the
                         instructions — it doesn't matter which CLI executed
                         the eval, the grader just reads transcript+outputs.
+    --grader-model      Model to use for the grading judge CLI (default:
+                        use --copilot-model when grader CLI is copilot,
+                        otherwise let the selected grader CLI choose its own
+                        default).
 
 Prerequisites:
   - `copilot` and `claude` CLIs on PATH and already authenticated.
@@ -755,7 +759,8 @@ Use the file-write tools available to you to actually create this file — do no
 print the JSON in your final response."""
 
 
-def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict, timeout: int) -> tuple[bool, str | None]:
+def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict,
+               timeout: int, grader_model: str | None = None) -> tuple[bool, str | None]:
     """Invoke the grader CLI to write grading.json into run_dir. Returns (success, grader_model)."""
     transcript_path = run_dir / "transcript.md"
     outputs_dir = run_dir / "outputs"
@@ -763,9 +768,10 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     runner = CLI_RUNNERS[grader_cli]
     # Grader needs read access to the actual run_dir (not a scratch dir) so it can
     # read the transcript/outputs and write grading.json alongside them.
-    result = runner(grader_binary, prompt, run_dir, timeout)
+    result = runner(grader_binary, prompt, run_dir, timeout, grader_model)
 
-    graded_by = {"cli": grader_cli, "model": result.model}
+    effective_model = result.model or grader_model
+    graded_by = {"cli": grader_cli, "model": effective_model}
     grading_path = run_dir / "grading.json"
     if grading_path.exists():
         try:
@@ -779,7 +785,7 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
             if isinstance(parsed, dict):
                 parsed["graded_by"] = graded_by
                 grading_path.write_text(json.dumps(parsed, indent=2))
-            return True, result.model
+            return True, effective_model
         except json.JSONDecodeError:
             pass
 
@@ -793,22 +799,25 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
             if isinstance(parsed, dict):
                 parsed["graded_by"] = graded_by
             grading_path.write_text(json.dumps(parsed, indent=2))
-            return True, result.model
+            return True, effective_model
         except json.JSONDecodeError:
             pass
 
     print(f"WARNING: grader did not produce valid grading.json for {run_dir}", file=sys.stderr)
-    return False, result.model
+    return False, effective_model
 
 
 def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: str,
-                    workers: int, timeout: int) -> str | None:
+                   workers: int, timeout: int, grader_model: str | None = None,
+                   eval_ids: set[int] | None = None) -> str | None:
     """Grade all ungraded runs under workspace/<cli>. Returns the grader model if detected."""
     cli_dir = workspace / cli
     run_dirs = []
     for meta_path in cli_dir.glob("eval-*/*/eval_metadata.json"):
         config_dir = meta_path.parent
         eval_meta = json.loads(meta_path.read_text())
+        if eval_ids and eval_meta.get("eval_id") not in eval_ids:
+            continue
         for run_dir in sorted(config_dir.glob("run-*")):
             if (run_dir / "transcript.md").exists() and not (run_dir / "grading.json").exists():
                 run_dirs.append((run_dir, eval_meta))
@@ -817,11 +826,12 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
         print(f"  [{cli}] nothing to grade (all runs already graded or no transcripts found)")
         return None
 
-    print(f"  [{cli}] grading {len(run_dirs)} runs using '{grader_cli}' as judge...")
+    model_label = grader_model or "(CLI default)"
+    print(f"  [{cli}] grading {len(run_dirs)} runs using '{grader_cli}' as judge (model: {model_label})...")
     detected_model: str | None = None
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout): run_dir
+            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout, grader_model): run_dir
             for run_dir, eval_meta in run_dirs
         }
         for future in as_completed(futures):
@@ -1107,9 +1117,9 @@ def generate_consolidated_benchmark_md(
 
     agents_line = ", ".join(_agent_label(cli) for cli in clis)
     # Built straight from grader_cli/grader_model (not _agent_label/cli_models,
-    # which are keyed off the *executor* runs) because the grader CLI is
-    # invoked without the --*-model override, so its model can differ from
-    # whatever that same CLI used as an eval executor.
+    # which are keyed off the *executor* runs) because the grader CLI may use
+    # a different model than what that same CLI used as an eval executor
+    # (either via --grader-model override or its own default).
     if grader_cli and grader_model:
         grader_line = f"{grader_cli.title()} (`{grader_model}`)"
     elif grader_model:
@@ -1126,9 +1136,9 @@ def generate_consolidated_benchmark_md(
         "",
         f"# Skill Benchmark: {skill_name}",
         "",
-        f"**Agents**: {agents_line}",
-        f"**Grader**: {grader_line}",
-        f"**Date**: {timestamp}",
+        f"**Agents**: {agents_line}  ",
+        f"**Grader**: {grader_line}  ",
+        f"**Date**: {timestamp}  ",
         f"**Evals**: {eval_ids_str} (1 run per configuration)",
         "",
         "## Summary",
@@ -1199,7 +1209,7 @@ def main() -> int:
     parser.add_argument("--evals-json", required=True, help="Path to the skill's evals/evals.json")
     parser.add_argument("--skill-path", required=True, help="Path to the skill directory (contains SKILL.md)")
     parser.add_argument("--workspace", required=True, help="Output workspace directory")
-    parser.add_argument("--clis", default="copilot,claude,codex", help="Comma-separated list of CLIs to run")
+    parser.add_argument("--clis", default="copilot", help="Comma-separated list of CLIs to run")
     parser.add_argument("--configs", default="with_skill,without_skill", help="Comma-separated configs to run")
     parser.add_argument("--workers", type=int, default=4, help="Max concurrent subprocess runs")
     parser.add_argument("--timeout", type=int, default=300, help="Per-run timeout in seconds")
@@ -1214,8 +1224,10 @@ def main() -> int:
     parser.add_argument("--codex-model", default=None,
                          help="Model to pass to codex via -m/--model (default: let Codex CLI choose its own default)")
     parser.add_argument("--skill-name", default=None, help="Skill name for benchmark metadata (default: skill dir name)")
-    parser.add_argument("--grader-cli", default=None,
-                         help="CLI to use as the LLM grading judge (default: first of claude/copilot/codex found)")
+    parser.add_argument("--grader-cli", default="copilot",
+                         help="CLI to use as the LLM grading judge (default: copilot)")
+    parser.add_argument("--grader-model", default=None,
+                         help="Model to pass to the grader CLI (default: use --copilot-model when grader CLI is copilot; otherwise grader CLI default)")
     parser.add_argument("--grader-workers", type=int, default=4, help="Max concurrent grading calls")
     parser.add_argument("--grader-timeout", type=int, default=180, help="Per-grading-call timeout in seconds")
     parser.add_argument("--skip-grading", action="store_true", help="Only run evals, skip LLM grading")
@@ -1323,19 +1335,32 @@ def main() -> int:
                 grader_cli, {"copilot": args.copilot_bin, "claude": args.claude_bin, "codex": args.codex_bin}.get(grader_cli)
             )
         else:
-            # Default preference order: claude, copilot, codex — Claude and
-            # Copilot both have strong instruction-following for structured
-            # JSON output; either works well as judge.
-            for candidate in ("claude", "copilot", "codex"):
+            # Kept as a defensive fallback in case grader_cli becomes empty.
+            for candidate in ("copilot", "claude", "codex"):
                 if candidate in binaries:
                     grader_cli, grader_binary = candidate, binaries[candidate]
                     break
         if not grader_binary:
             print("WARNING: no grader CLI available/found — skipping grading.", file=sys.stderr)
         else:
-            print(f"\n=== Grading (judge: {grader_cli}) ===")
+            effective_grader_model = args.grader_model
+            if not effective_grader_model and grader_cli == "copilot":
+                effective_grader_model = args.copilot_model
+
+            grader_model_label = effective_grader_model or "(CLI default)"
+            print(f"\n=== Grading (judge: {grader_cli}, model: {grader_model_label}) ===")
+            wanted_ids = {int(x) for x in args.eval_ids.split(",") if x.strip()} if args.eval_ids else None
             for cli in binaries:
-                detected = grade_all_runs(workspace, cli, grader_cli, grader_binary, args.grader_workers, args.grader_timeout)
+                detected = grade_all_runs(
+                    workspace,
+                    cli,
+                    grader_cli,
+                    grader_binary,
+                    args.grader_workers,
+                    args.grader_timeout,
+                    effective_grader_model,
+                    wanted_ids,
+                )
                 if detected and grader_model is None:
                     grader_model = detected
 
