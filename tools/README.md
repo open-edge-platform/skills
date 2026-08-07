@@ -63,17 +63,34 @@ For every `(cli, eval, configuration)` combination it:
 
 ## Usage
 
-Run the full pipeline (evals → grading → aggregation) for any skill. By default all three
-CLIs run — omit `--clis` to use the default, or restrict to a subset as needed:
+Run the full pipeline (evals → grading → aggregation) for any skill. By default,
+only Copilot runs. Add other supported CLIs with `--clis` when needed:
+
+By default, the grading judge is `copilot`. The grader model defaults to that CLI's own default
+model unless `--grader-model` is provided. When the grader is Copilot, `--copilot-model`
+is used as the grader model fallback.
 
 ```bash
 python3 tools/run_multi_cli_eval.py \
   --evals-json /path/to/my-skill/evals/evals.json \
   --skill-path /path/to/my-skill \
   --workspace /tmp/my-skill-eval-run \
-  --clis copilot,claude,codex \
   --configs with_skill,without_skill \
-  --grader-cli copilot
+  --grader-cli copilot \
+  --grader-model gpt-5.5
+```
+
+To override the default grader CLI, set `--grader-cli` explicitly (for example,
+using Claude as the judge):
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --evals-json /path/to/my-skill/evals/evals.json \
+  --skill-path /path/to/my-skill \
+  --workspace /tmp/my-skill-eval-run \
+  --configs with_skill,without_skill \
+  --grader-cli claude \
+  --grader-model claude-sonnet-4-6
 ```
 
 This produces:
@@ -118,7 +135,21 @@ Raw output is deliberately bounded to keep benchmark workspaces manageable.
 If a failure remains unclear, run the resolved binary shown at startup
 interactively to confirm its authentication and configuration.
 
-### Only run a subset of CLIs or configs
+### Run additional CLIs or restrict configs
+
+Default execution is Copilot-only. Supported values for `--clis` are `copilot`, `claude`, and `codex`
+(comma-separated, any combination). To run all three for a full cross-agent comparison:
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --evals-json /path/to/my-skill/evals/evals.json \
+  --skill-path /path/to/my-skill \
+  --workspace /tmp/my-skill-eval-run \
+  --clis copilot,claude,codex \
+  --configs with_skill,without_skill
+```
+
+To run only a subset, list only the CLIs you want:
 
 ```bash
 python3 tools/run_multi_cli_eval.py \
@@ -169,8 +200,7 @@ python3 tools/run_multi_cli_eval.py \
 
 ### Choose which CLI acts as the grading judge
 
-By default the script picks the first available CLI in the order
-claude → copilot → codex. Override explicitly:
+By default the script uses copilot as the grading judge. Override explicitly:
 
 ```bash
 python3 tools/run_multi_cli_eval.py \
@@ -184,6 +214,24 @@ If your chosen judge CLI hits a rate limit or quota mid-run, re-running the
 same command is safe — `grade_all_runs` only grades runs that don't already
 have a `grading.json`, so it picks up where it left off (optionally with a
 different `--grader-cli`).
+
+### Choose a specific grading judge model
+
+By default, grading uses this precedence:
+- `--grader-model` (if set)
+- `--copilot-model` (only when `--grader-cli copilot`)
+- selected grader CLI built-in default model
+
+Use `--grader-model` to force a specific model for grading:
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --evals-json /path/to/my-skill/evals/evals.json \
+  --skill-path /path/to/my-skill \
+  --workspace /tmp/my-skill-eval-run \
+  --grader-cli claude \
+  --grader-model claude-sonnet-4-6
+```
 
 ### Point at a specific CLI binary
 
@@ -230,6 +278,19 @@ python3 tools/run_multi_cli_eval.py \
   --codex-model gpt-5.5
 ```
 
+`--copilot-model` also sets the grader model when `--grader-cli copilot` (the default)
+and `--grader-model` is not explicitly set. To use a different model for Copilot eval
+runs without affecting the grader, combine both flags:
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --evals-json /path/to/my-skill/evals/evals.json \
+  --skill-path /path/to/my-skill \
+  --workspace /tmp/my-skill-eval-run \
+  --copilot-model claude-haiku-4-5 \
+  --grader-model gpt-5.5
+```
+
 ### Dry run (see the execution plan without running anything)
 
 ```bash
@@ -247,7 +308,7 @@ python3 tools/run_multi_cli_eval.py \
 | `--evals-json` | **yes** | — | Path to the skill's `evals/evals.json` |
 | `--skill-path` | **yes** | — | Path to the skill directory (contains `SKILL.md`) |
 | `--workspace` | **yes** | — | Output workspace directory |
-| `--clis` | no | `copilot,claude,codex` | Comma-separated list of CLIs to run |
+| `--clis` | no | `copilot` | Comma-separated list of CLIs to run; valid values: `copilot`, `claude`, `codex` |
 | `--configs` | no | `with_skill,without_skill` | Comma-separated configs to run |
 | `--workers` | no | `4` | Max concurrent subprocess runs |
 | `--timeout` | no | `300` | Per-run timeout in seconds |
@@ -255,11 +316,12 @@ python3 tools/run_multi_cli_eval.py \
 | `--copilot-bin` | no | *(auto-detect on PATH)* | Explicit path to the `copilot` binary |
 | `--claude-bin` | no | *(auto-detect on PATH)* | Explicit path to the `claude` binary |
 | `--codex-bin` | no | *(auto-detect on PATH / nvm fallback)* | Explicit path to the `codex` binary |
-| `--copilot-model` | no | *(Copilot CLI default)* | Model to pass to `copilot` via `--model` |
+| `--copilot-model` | no | *(Copilot CLI default)* | Model for `copilot` eval runs; also used as grader model fallback when `--grader-cli copilot` and `--grader-model` is not set |
 | `--claude-model` | no | *(Claude Code CLI default)* | Model to pass to `claude` via `--model` |
 | `--codex-model` | no | *(Codex CLI default)* | Model to pass to `codex` via `-m`/`--model` |
 | `--skill-name` | no | skill directory name | Skill name used in benchmark metadata |
-| `--grader-cli` | no | *(first of claude/copilot/codex found)* | CLI to use as the LLM grading judge |
+| `--grader-cli` | no | `copilot` | CLI to use as the LLM grading judge |
+| `--grader-model` | no | *(`--copilot-model` when grader is copilot, else grader CLI default)* | Model to pass to the grading judge CLI |
 | `--grader-workers` | no | `4` | Max concurrent grading calls |
 | `--grader-timeout` | no | `180` | Per-grading-call timeout in seconds |
 | `--skip-grading` | no | `false` | Only run evals, skip LLM grading |
@@ -335,7 +397,8 @@ has no `model` key), the report will say
 - **Grader quota/rate limits**: LLM grading makes one CLI call per ungraded
   run. If the judge CLI hits a session limit partway through, re-run the
   command (optionally with a different `--grader-cli`) — already-graded runs
-  are skipped automatically.
+  are skipped automatically. To improve consistency across reruns or across
+  environments, pin the grader with `--grader-model`.
 - **Portability**: this script assumes `evals.json` uses the schema
   documented in skill-creator's `references/schemas.md` (an `evals` array of
   objects with `id`, `prompt`, and either `assertions` or `expectations`).
