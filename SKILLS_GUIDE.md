@@ -354,7 +354,7 @@ The skill-creator guides you through 9 stages:
 | 3 | Write the SKILL.md | Drafts and self-reviews the skill body |
 | 4 | Write Test Cases | Creates `evals/evals.json` with prompts and expectations |
 | 5 | Run Test Cases | Parallel with-skill vs. baseline execution |
-| 6 | Grade & Review | Grades expecatations, produces `BENCHMARK.md`, browser eval viewer |
+| 6 | Grade & Review | Grades expecatations, produces `benchmark.md`, browser eval viewer |
 | 7 | Improve | Applies feedback, reruns; repeats until pass rate is satisfactory |
 | 8 | Optimize Trigger | Tunes the `description` field for activation accuracy |
 | 9 | Package | Bundles skill into installable `.skill` archive |
@@ -617,7 +617,8 @@ repo-root/ # this layout can also live in a subfolder within the repository
 │   │       ├── example-prompts/       ← required*: ready-to-use .md prompts for skill consumers
 │   │       │   ├── basic-usage.md
 │   │       │   └── advanced-usage.md
-│   │       ├── benchmark.md           ← required*: human-readable evaluation report
+│   │       ├── benchmark/           
+│   │       │   └── benchmark.md       ← required*: human-readable evaluation report
 │   │       ├── references/            ← optional:  docs loaded on demand
 │   │       │   └── api-reference.md
 │   │       ├── assets/                ← optional:  templates, code models, data
@@ -631,7 +632,7 @@ repo-root/ # this layout can also live in a subfolder within the repository
 │   │       └── skill-card.md          ← optional:  disclosure & eval summary
 ```
 
-> **Quality mandate**: `evals/`, `example-prompts/`, and `benchmark.md` are marked
+> **Quality mandate**: `evals/`, `example-prompts/`, and `benchmark/benchmark.md` are marked
 > `Required*` — optional per the [Agent Skills Specification](https://agentskills.io/specification)
 > but **REQUIRED in this repository** for any skill targeting production use or public distribution.
 >
@@ -868,7 +869,7 @@ usage, and latency. The `skill-creator` skill automates this across **Stages 5�
 | Stage | What happens |
 | ----- | ------------ |
 | **Stage 5 — Run** | Spawns with-skill and baseline runs in parallel; saves `timing.json` per run under `benchmark/iteration-N/` |
-| **Stage 6 — Grade** | Evaluates expectations, produces `grading.json`, `benchmark.json`, and `BENCHMARK.md`; launches a browser eval viewer for side-by-side review |
+| **Stage 6 — Grade** | Evaluates expectations, produces `grading.json`, `benchmark.json`, and `benchmark.md`; launches a browser eval viewer for side-by-side review |
 | **Stage 7 — Improve** | Applies your feedback to `SKILL.md`, re-runs into a new `benchmark/iteration-N+1/` folder, repeats until satisfied |
 
 ```bash
@@ -876,7 +877,7 @@ npx skills add anthropics/skills --skill skill-creator -a claude-code
 # Then say: "Run evals for my skill at path/to/my-skill/"
 ```
 
-For the full `evals/evals.json` schema, grading output format, and `BENCHMARK.md` structure,
+For the full `evals/evals.json` schema, grading output format, and `benchmark.md` structure,
 see [Stage 4](#stage-4-write-test-cases-and-example-prompts) and
 [Stage 6](#stage-6-grade-benchmark-and-review) in Section 5.
 
