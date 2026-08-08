@@ -120,7 +120,7 @@
       "source": "open-edge-platform/physical-ai-studio",
       "sourceType": "github",
       "skillPath": "skills/library/physicalai-train-adding-a-policy/SKILL.md",
-      "computedHash": "4818952bf47074d839a103f5623ff668f94e1a9cc242dea50730e57028504114"
+      "computedHash": "33a28ff18276b9f3129ccfa54e1279c47cd60911b35555351e1ef864b380933f"
     },
     "physicalai-train-benchmarking-a-policy": {
       "source": "open-edge-platform/physical-ai-studio",
@@ -150,7 +150,7 @@
       "source": "open-edge-platform/scenescape",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "c4c641e1c3ce4c41345ee29658f98f09807155dc9699e549b3b53f5bd782637d"
+      "computedHash": "d16f266d754f1ff352d65514e55c065e8d71ecae73b4b5fb8418d3527e491f80"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
