@@ -1,0 +1,278 @@
+name: Generate Skill Compliance Report
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".agents/skills/**"
+      - ".github/workflows/skill-compliance-report.yml"
+      - "scripts/generate_skill_compliance_report.py"
+  pull_request:
+    paths:
+      - ".agents/skills/**"
+      - ".github/workflows/skill-compliance-report.yml"
+      - "scripts/generate_skill_compliance_report.py"
+  schedule:
+    - cron: "0 3 * * *"  # Daily at 3 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-validators:
+    name: Run Skill Validators
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      validator-report: ${{ steps.skill-validator.outputs.report_path }}
+      spector-report: ${{ steps.skill-scan.outputs.report_path }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Run SkillSpector scan
+        id: skill-scan
+        uses: open-edge-platform/geti-ci/actions/skill-scan@0745e2b1612e4c25c3e83eb37bddeba8743a2439 # skill-scan/v0.1.1
+        with:
+          skills-path: .agents/skills/
+          severity-level: LOW
+          fail-on-findings: "false"
+
+      - name: Run skill-validator
+        id: skill-validator
+        uses: open-edge-platform/geti-ci/actions/skill-validator@c64543e05e9f84c7c4ef212666c3ea5fc869e55a # skill-validator/v0.2.0
+        with:
+          skills-path: .agents/skills/
+          strict: "false"
+          fail-on-findings: "false"
+          allow-dirs: "evals,example-prompts,benchmark"
+
+      - name: Upload validator report
+        if: always() && steps.skill-validator.outputs.report_path != ''
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: skill-validator-report
+          path: ${{ steps.skill-validator.outputs.report_path }}
+          retention-days: 30
+
+      - name: Upload spector report
+        if: always() && steps.skill-scan.outputs.report_path != ''
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: skill-spector-report
+          path: ${{ steps.skill-scan.outputs.report_path }}
+          retention-days: 30
+
+      - name: Parse validator report to JSON
+        if: always() && steps.skill-validator.outputs.report_path != ''
+        run: |
+          python3 << 'PYTHON_EOF'
+          import json
+          import re
+          from pathlib import Path
+
+          # Read validator report
+          report_path = "${{ steps.skill-validator.outputs.report_path }}"
+          if not Path(report_path).exists():
+            print("Validator report not found")
+            exit(0)
+
+          with open(report_path, 'r') as f:
+            content = f.read()
+
+          # Parse validator results by skill
+          validator_data = {}
+          current_skill = None
+          errors = 0
+          warnings = 0
+
+          for line in content.split('\n'):
+            if line.startswith('Validating: '):
+              current_skill = line.replace('Validating: ', '').strip()
+              validator_data[current_skill] = {
+                'errors': 0,
+                'warnings': 0,
+                'tokens_used': 0,
+                'findings': []
+              }
+            elif '::error::' in line:
+              errors += 1
+              if current_skill:
+                validator_data[current_skill]['errors'] += 1
+                # Extract finding details
+                finding = line.replace('::error::', '').strip()
+                if finding:
+                  validator_data[current_skill]['findings'].append(('error', finding))
+            elif '::warning::' in line:
+              warnings += 1
+              if current_skill:
+                validator_data[current_skill]['warnings'] += 1
+                # Extract finding details
+                finding = line.replace('::warning::', '').strip()
+                if finding:
+                  validator_data[current_skill]['findings'].append(('warning', finding))
+            # Look for Tokens section
+            elif 'Tokens' in line and current_skill:
+              tokens_match = re.search(r'Tokens[:\s]+(\d+)', line)
+              if tokens_match:
+                validator_data[current_skill]['tokens_used'] = int(tokens_match.group(1))
+
+          # Write JSON output
+          with open('validator_results.json', 'w') as f:
+            json.dump({
+              'total_errors': errors,
+              'total_warnings': warnings,
+              'skills': validator_data
+            }, f, indent=2)
+
+          print(f"Parsed validator results: {errors} errors, {warnings} warnings")
+          PYTHON_EOF
+
+      - name: Parse spector report to JSON
+        if: always() && steps.skill-scan.outputs.report_path != ''
+        run: |
+          python3 << 'PYTHON_EOF'
+          import json
+          import re
+          from pathlib import Path
+
+          # Read spector report
+          report_path = "${{ steps.skill-scan.outputs.report_path }}"
+          if not Path(report_path).exists():
+            print("Spector report not found")
+            exit(0)
+
+          with open(report_path, 'r') as f:
+            content = f.read()
+
+          # Parse spector results by skill
+          spector_data = {}
+          current_skill = None
+          
+          for line in content.split('\n'):
+            # Match skill headers
+            skill_match = re.match(r'^Skill: (.+)$', line)
+            if skill_match:
+              current_skill = skill_match.group(1).strip()
+              spector_data[current_skill] = {
+                'critical': 0,
+                'high': 0,
+                'medium': 0,
+                'low': 0
+              }
+            
+            # Count vulnerabilities by severity
+            if current_skill and spector_data.get(current_skill):
+              if 'CRITICAL' in line:
+                spector_data[current_skill]['critical'] += line.count('CRITICAL')
+              elif 'HIGH' in line:
+                spector_data[current_skill]['high'] += line.count('HIGH')
+              elif 'MEDIUM' in line:
+                spector_data[current_skill]['medium'] += line.count('MEDIUM')
+              elif 'LOW' in line:
+                spector_data[current_skill]['low'] += line.count('LOW')
+
+          # Calculate totals
+          total_critical = sum(s['critical'] for s in spector_data.values())
+          total_high = sum(s['high'] for s in spector_data.values())
+          total_medium = sum(s['medium'] for s in spector_data.values())
+          total_low = sum(s['low'] for s in spector_data.values())
+
+          # Write JSON output
+          with open('spector_results.json', 'w') as f:
+            json.dump({
+              'total_critical': total_critical,
+              'total_high': total_high,
+              'total_medium': total_medium,
+              'total_low': total_low,
+              'skills': spector_data
+            }, f, indent=2)
+
+          print(f"Parsed spector results: {total_critical} critical, {total_high} high, {total_medium} medium, {total_low} low")
+          PYTHON_EOF
+
+      - name: Upload validator JSON
+        if: always()
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: validator-json
+          path: validator_results.json
+          retention-days: 30
+
+      - name: Upload spector JSON
+        if: always()
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: spector-json
+          path: spector_results.json
+          retention-days: 30
+
+  generate-compliance-report:
+    name: Generate Skill Compliance Report
+    needs: run-validators
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Download validator JSON
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        continue-on-error: true
+        with:
+          name: validator-json
+          path: ./
+
+      - name: Download spector JSON
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        continue-on-error: true
+        with:
+          name: spector-json
+          path: ./
+
+      - name: Set up Python
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install markdown pyyaml
+
+      - name: Generate Skill Compliance Report
+        env:
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python scripts/generate_skill_compliance_report.py
+
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        if: always()
+        with:
+          name: skill-compliance-report
+          path: skill_summary_output.html
+          retention-days: 30
+
+      - name: Display Report Summary
+        run: |
+          echo "✅ Skill Compliance Report generated successfully"
+          echo "📄 Location: skill_summary_output.html"
+          echo "📊 Report includes:"
+          echo "  - Component summary"
+          echo "  - Skill evaluation metrics"
+          echo "  - Benchmark data"
+          echo "  - Validator and security scan results"
