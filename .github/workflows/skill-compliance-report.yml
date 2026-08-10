@@ -60,6 +60,7 @@ jobs:
           name: skill-validator-report
           path: ${{ steps.skill-validator.outputs.report_path }}
           retention-days: 30
+          overwrite: true
 
       - name: Upload spector report
         if: always() && steps.skill-scan.outputs.report_path != ''
@@ -68,6 +69,7 @@ jobs:
           name: skill-spector-report
           path: ${{ steps.skill-scan.outputs.report_path }}
           retention-days: 30
+          overwrite: true
 
       - name: Parse validator report to JSON
         if: always() && steps.skill-validator.outputs.report_path != ''
