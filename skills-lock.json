@@ -23,7 +23,7 @@
       "source": "open-edge-platform/dlstreamer",
       "sourceType": "github",
       "skillPath": ".github/skills/dlstreamer-coding-agent/SKILL.md",
-      "computedHash": "e2054f95b8071399d5cbf78cfc66fdf18d8706299883f7f36f66ed770d840803"
+      "computedHash": "5e63fffccc60ecbdaf03c6fe16e6cebd93805380b65ed3a3baff81a54808b8ea"
     },
     "geti-using-the-pipeline": {
       "source": "open-edge-platform/geti",
@@ -78,13 +78,13 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "microservices/model-download/.github/skills/model-download-user/SKILL.md",
-      "computedHash": "ca16461dc332dcb6b85843acc13d58da156ab17f96c477e5aea6e99aef07bc0c"
+      "computedHash": "50aa7a9e7316e59f9ba8ca7726f84f32b28963ad9e88b110b981b9bc086a3232"
     },
     "multimodal-embedding-serving-user": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "microservices/multimodal-embedding-serving/.github/skills/multimodal-embedding-serving-user/SKILL.md",
-      "computedHash": "98c36b880615d3093d9ab50c0021cd0b6680d5e9773e540b9916b12f26f8f623"
+      "computedHash": "2ef5e21aad63eadab185a186cd47801635a9ef0f9ef9e67bc3108fc7c7e93b63"
     },
     "physicalai-runtime-adding-a-camera-backend": {
       "source": "openvinotoolkit/physicalai",
