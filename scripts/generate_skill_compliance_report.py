@@ -527,10 +527,12 @@ class SkillComplianceReportGenerator:
                 status_color = '#27ae60' if validator_status == "Pass" else '#e74c3c'
                 status_span = f'<span style="color: {status_color}; font-weight: 600;">{validator_status}</span>'
                 validator_parts = [status_span]
+                if validator_errors > 0:
+                    validator_parts.append(f"Errors: {validator_errors}")
+                if validator_warnings > 0:
+                    validator_parts.append(f"Warnings: {validator_warnings}")
                 if validator_tokens > 0:
                     validator_parts.append(f"Total Tokens: {validator_tokens}")
-                if validator_status == "Fail":
-                    validator_parts.append(f"Errors: {validator_errors}, Warnings: {validator_warnings}")
                 validator_display = "<br>".join(validator_parts)
                 validator_class = 'metric-good' if validator_status == "Pass" else 'metric-warning'
             
@@ -705,10 +707,12 @@ class SkillComplianceReportGenerator:
                 v_status = "Fail" if v_errors > 0 else "Pass"
                 status_icon = "✅" if v_status == "Pass" else "❌"
                 v_parts = [f"{status_icon} {v_status}"]
+                if v_errors > 0:
+                    v_parts.append(f"Errors: {v_errors}")
+                if v_warnings > 0:
+                    v_parts.append(f"Warnings: {v_warnings}")
                 if v_tokens > 0:
                     v_parts.append(f"Total Tokens: {v_tokens}")
-                if v_status == "Fail":
-                    v_parts.append(f"Errors: {v_errors}, Warnings: {v_warnings}")
                 validator_cell = "<br>".join(v_parts)
             else:
                 validator_cell = "N/A"
