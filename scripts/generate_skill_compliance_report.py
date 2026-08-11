@@ -632,39 +632,114 @@ class SkillComplianceReportGenerator:
 """
         return html
 
+    def generate_markdown_summary(self) -> str:
+        """Generate Markdown summary for GitHub Actions job summary ($GITHUB_STEP_SUMMARY)"""
+        self.calculate_component_metrics()
+
+        total_skills = len(self.skills_data)
+        total_components = len(self.components)
+        total_evals = sum(s['eval_count'] for s in self.skills_data.values())
+        skills_with_benchmarks = sum(1 for s in self.skills_data.values() if s['eval_count'] > 0)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        lines = ["# Skill Compliance Report", ""]
+
+        if self.github_run_id and self.github_repo:
+            run_url = f"https://github.com/{self.github_repo}/actions/runs/{self.github_run_id}"
+            lines.append(f"**Generated:** {timestamp} &nbsp;|&nbsp; **Run:** [{self.github_run_id}]({run_url})")
+        else:
+            lines.append(f"**Generated:** {timestamp}")
+        lines.append("")
+
+        lines += [
+            "## Summary",
+            "",
+            "| Total Components | Total Skills | Eval Tests | Skills with Benchmarks |",
+            "|:---:|:---:|:---:|:---:|",
+            f"| {total_components} | {total_skills} | {total_evals} | {skills_with_benchmarks} |",
+            "",
+            "## Component Summary",
+            "",
+            "| Component | Skills | Eval Tests |",
+            "|---|:---:|:---:|",
+        ]
+        for component in sorted(self.components.keys()):
+            data = self.components[component]
+            lines.append(f"| **{component}** | {len(data['skills'])} | {data['total_eval_tests']} |")
+
+        lines += [
+            "",
+            "## Skill Details",
+            "",
+            "| Skill | Component | Evals | Pass Rate | Uplift | Validator | Security |",
+            "|---|---|:---:|:---:|:---:|:---:|:---:|",
+        ]
+        for skill_name in sorted(self.skills_data.keys()):
+            skill = self.skills_data[skill_name]
+            benchmark = skill['benchmark']
+            eval_count = skill['eval_count']
+
+            v = self.validator_data.get(skill_name, {})
+            v_errors = v.get('errors', 0)
+            v_warnings = v.get('warnings', 0)
+            if v_errors > 0:
+                validator_cell = f"❌ {v_errors}E {v_warnings}W"
+            elif v:
+                validator_cell = "✅ Pass"
+            else:
+                validator_cell = "—"
+
+            sp = self.spector_data.get(skill_name, {})
+            sp_c, sp_h, sp_m, sp_l = sp.get('critical', 0), sp.get('high', 0), sp.get('medium', 0), sp.get('low', 0)
+            if sp_c + sp_h + sp_m + sp_l > 0:
+                spector_cell = f"🔴{sp_c} 🟠{sp_h} 🟡{sp_m} 🔵{sp_l}"
+            elif sp:
+                spector_cell = "✅ Clean"
+            else:
+                spector_cell = "—"
+
+            lines.append(
+                f"| `{skill_name}` | {skill['component']} | {eval_count} "
+                f"| {benchmark['eval_pass_rate']} | {benchmark['eval_uplift']} "
+                f"| {validator_cell} | {spector_cell} |"
+            )
+
+        return "\n".join(lines) + "\n"
+
 
 def main():
     """Main entry point"""
-    skills_root = Path("/home/ecgd-ts-n1-l3r6/vinod/repos/skills/.agents/skills")
-    output_file = Path("/home/ecgd-ts-n1-l3r6/vinod/repos/skills/skill_summary_output.html")
-    skills_config_path = Path("/home/ecgd-ts-n1-l3r6/vinod/repos/skills/skills-config.json")
-    
+    repo_root = Path(__file__).resolve().parent.parent
+    skills_root = repo_root / ".agents/skills"
+    output_file = repo_root / "skill_summary_output.html"
+    skills_config_path = repo_root / "skills-config.json"
+
     # Check for validator and spector JSON files
     validator_json = Path("validator_results.json") if Path("validator_results.json").exists() else None
     spector_json = Path("spector_results.json") if Path("spector_results.json").exists() else None
-    
+
     print(f"🔍 Scanning skills from: {skills_root}")
     print(f"📝 Report will be written to: {output_file}")
-    
+
     if skills_config_path.exists():
         print(f"📋 Using skills config from: {skills_config_path}")
     else:
         print(f"⚠️ Skills config not found, will fallback to name-based component extraction")
-    
+
     if validator_json:
         print(f"📋 Using validator data from: {validator_json}")
     else:
         print(f"⚠️ No validator JSON data found")
-    
+
     if spector_json:
         print(f"🔒 Using spector data from: {spector_json}")
     else:
         print(f"⚠️ No spector JSON data found")
-    
+
     generator = SkillComplianceReportGenerator(
-        skills_root, 
-        str(validator_json), 
-        str(spector_json),
+        skills_root,
+        str(validator_json) if validator_json else None,
+        str(spector_json) if spector_json else None,
         str(skills_config_path)
     )
     generator.scan_skills()
@@ -673,12 +748,17 @@ def main():
     print(f"✅ Found {len(generator.components)} components")
     
     html_content = generator.generate_html_report()
-    
+
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
-    
+
     print(f"✅ Report generated successfully: {output_file}")
-    print(f"📊 Open the report in a web browser to view the compliance analysis")
+
+    md_file = output_file.with_suffix('.md')
+    with open(md_file, 'w', encoding='utf-8') as f:
+        f.write(generator.generate_markdown_summary())
+
+    print(f"✅ Markdown summary written to: {md_file}")
 
 
 if __name__ == '__main__':
