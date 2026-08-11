@@ -74,6 +74,18 @@
       "skillPath": "skills/library/getitune-training-a-model/SKILL.md",
       "computedHash": "3f5b1caeacf29d433a1978ded93ff8485f38618635a1e7a9933f32aad3522944"
     },
+    "metro-ai-apps-builder": {
+      "source": "open-edge-platform/edge-ai-suites",
+      "sourceType": "github",
+      "skillPath": "metro-ai-suite/prompt-library/.github/skills/metro-ai-apps-builder/SKILL.md",
+      "computedHash": "5134002958dafd6bd6f5aeb40624e82c4ca84ed711237e06b2fc0cb1f59117a2"
+    },
+    "metro-ai-apps-recipe": {
+      "source": "open-edge-platform/edge-ai-suites",
+      "sourceType": "github",
+      "skillPath": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/SKILL.md",
+      "computedHash": "553a68fe3ca8ac48ab502f2cca039d3af07bc9363b805ade64db554bc06ea5b1"
+    },
     "model-download-user": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
