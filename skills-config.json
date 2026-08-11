@@ -155,6 +155,24 @@
       "skills": [
         {"name": "scenescape-setup", "prompts_url": "https://github.com/open-edge-platform/scenescape/tree/main/.github/skills/scenescape-setup/example-prompts"}
       ]
+    },
+    {
+      "product": "Metro AI Suite - Prompt Library",
+      "repo": "open-edge-platform/edge-ai-suites",
+      "ref": "main",
+      "path": "metro-ai-suite/prompt-library/.github/skills",
+      "skills": [
+        {"name": "metro-ai-apps-builder", "prompts_url": "https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/prompt-library/.github/skills/metro-ai-apps-builder"}
+      ]
+    },
+    {
+      "product": "Metro AI Suite - Vision AI App Recipe",
+      "repo": "open-edge-platform/edge-ai-suites",
+      "ref": "main",
+      "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
+      "skills": [
+        {"name": "metro-ai-apps-recipe", "prompts_url": "https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe"}
+      ]
     }
   ]
 }
