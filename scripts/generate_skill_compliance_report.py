@@ -524,16 +524,15 @@ class SkillComplianceReportGenerator:
                 validator_warnings = validator_metrics.get('warnings', 0)
                 validator_tokens = validator_metrics.get('tokens_used', 0)
                 validator_status = "Fail" if validator_errors > 0 else "Pass"
-                validator_parts = [f"Status: {validator_status}"]
+                status_color = '#27ae60' if validator_status == "Pass" else '#e74c3c'
+                status_span = f'<span style="color: {status_color}; font-weight: 600;">{validator_status}</span>'
+                validator_parts = [status_span]
                 if validator_tokens > 0:
-                    validator_parts.append(f"Tokens: {validator_tokens}")
+                    validator_parts.append(f"Total Tokens: {validator_tokens}")
                 if validator_status == "Fail":
                     validator_parts.append(f"Errors: {validator_errors}, Warnings: {validator_warnings}")
                 validator_display = "<br>".join(validator_parts)
                 validator_class = 'metric-good' if validator_status == "Pass" else 'metric-warning'
-                if self.github_run_id and self.github_repo:
-                    workflow_url = f"https://github.com/{self.github_repo}/actions/runs/{self.github_run_id}"
-                    validator_display = f'<a href="{workflow_url}" target="_blank" style="color: #667eea; text-decoration: none;">{validator_display}</a>'
             
             # Get spector vulnerabilities — distinguish no-data (None) from a clean scan
             spector_vulns = self.spector_data.get(skill_name)
@@ -547,11 +546,13 @@ class SkillComplianceReportGenerator:
                 spector_low = spector_vulns.get('low', 0)
                 total_vulns = spector_critical + spector_high + spector_medium + spector_low
                 if total_vulns > 0:
-                    spector_display = f"🔴 {spector_critical}C, 🟠 {spector_high}H, 🟡 {spector_medium}M, 🔵 {spector_low}L"
+                    spector_parts = []
+                    if spector_critical > 0: spector_parts.append(f"🔴 {spector_critical}C")
+                    if spector_high > 0:     spector_parts.append(f"🟠 {spector_high}H")
+                    if spector_medium > 0:   spector_parts.append(f"🟡 {spector_medium}M")
+                    if spector_low > 0:      spector_parts.append(f"🔵 {spector_low}L")
+                    spector_display = ", ".join(spector_parts)
                     spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
-                    if self.github_run_id and self.github_repo:
-                        workflow_url = f"https://github.com/{self.github_repo}/actions/runs/{self.github_run_id}"
-                        spector_display = f'<a href="{workflow_url}" target="_blank" style="color: #667eea; text-decoration: none;">{spector_display}</a>'
                 else:
                     spector_display = "✅ No vulnerabilities reported"
                     spector_class = 'metric-good'
@@ -702,9 +703,10 @@ class SkillComplianceReportGenerator:
                 v_warnings = validator_metrics.get('warnings', 0)
                 v_tokens = validator_metrics.get('tokens_used', 0)
                 v_status = "Fail" if v_errors > 0 else "Pass"
-                v_parts = [f"Status: {v_status}"]
+                status_icon = "✅" if v_status == "Pass" else "❌"
+                v_parts = [f"{status_icon} {v_status}"]
                 if v_tokens > 0:
-                    v_parts.append(f"Tokens: {v_tokens}")
+                    v_parts.append(f"Total Tokens: {v_tokens}")
                 if v_status == "Fail":
                     v_parts.append(f"Errors: {v_errors}, Warnings: {v_warnings}")
                 validator_cell = "<br>".join(v_parts)
@@ -721,7 +723,12 @@ class SkillComplianceReportGenerator:
                 sp_m = spector_vulns.get('medium', 0)
                 sp_l = spector_vulns.get('low', 0)
                 if sp_c + sp_h + sp_m + sp_l > 0:
-                    spector_cell = f"🔴 {sp_c}C, 🟠 {sp_h}H, 🟡 {sp_m}M, 🔵 {sp_l}L"
+                    sp_parts = []
+                    if sp_c > 0: sp_parts.append(f"🔴 {sp_c}C")
+                    if sp_h > 0: sp_parts.append(f"🟠 {sp_h}H")
+                    if sp_m > 0: sp_parts.append(f"🟡 {sp_m}M")
+                    if sp_l > 0: sp_parts.append(f"🔵 {sp_l}L")
+                    spector_cell = ", ".join(sp_parts)
                 else:
                     spector_cell = "✅ No vulnerabilities reported"
 
