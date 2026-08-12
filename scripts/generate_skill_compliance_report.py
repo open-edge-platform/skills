@@ -14,6 +14,9 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 
 
+EXAMPLE_PROMPTS_DIR = "example-prompts"
+
+
 class SkillComplianceReportGenerator:
     def __init__(self, skills_root: Path, validator_json: Optional[str] = None, spector_json: Optional[str] = None, skills_config_path: Optional[str] = None):
         self.skills_root = skills_root
@@ -58,11 +61,11 @@ class SkillComplianceReportGenerator:
                     skill_name = skill.get('name', '')
                     if skill_name:
                         self.skills_config[skill_name] = product_name
-                        prompts_rel = skill.get('prompts_url', '')
                         ref = skill.get('ref', '') or product_ref
+                        has_prompts = (self.skills_root / skill_name / EXAMPLE_PROMPTS_DIR).is_dir()
                         self.skills_prompts_url[skill_name] = (
-                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{prompts_rel}"
-                            if prompts_rel else ""
+                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{EXAMPLE_PROMPTS_DIR}"
+                            if has_prompts else ""
                         )
             
             print(f"✅ Loaded skills config: {len(self.skills_config)} skills mapped")
