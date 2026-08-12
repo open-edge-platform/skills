@@ -21,6 +21,7 @@ class SkillComplianceReportGenerator:
         self.validator_data = {}
         self.spector_data = {}
         self.skills_config = {}
+        self.skills_prompts_url = {}
         self.github_run_id = os.getenv('GITHUB_RUN_ID', '')
         self.github_repo = os.getenv('GITHUB_REPOSITORY', '')
         self.components = defaultdict(lambda: {
@@ -52,10 +53,17 @@ class SkillComplianceReportGenerator:
             # Build a mapping of skill name to product/component
             for product_entry in config.get('products', []):
                 product_name = product_entry.get('product', '')
+                product_ref = product_entry.get('ref', 'main')
                 for skill in product_entry.get('skills', []):
                     skill_name = skill.get('name', '')
                     if skill_name:
                         self.skills_config[skill_name] = product_name
+                        prompts_rel = skill.get('prompts_url', '')
+                        ref = skill.get('ref', '') or product_ref
+                        self.skills_prompts_url[skill_name] = (
+                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{prompts_rel}"
+                            if prompts_rel else ""
+                        )
             
             print(f"✅ Loaded skills config: {len(self.skills_config)} skills mapped")
         except Exception as e:
@@ -481,6 +489,7 @@ class SkillComplianceReportGenerator:
                             <th>Skill Uplift</th>
                             <th>skill-validator metrics</th>
                             <th>skill-spector vulnerabilities</th>
+                            <th>Example Prompts</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -559,6 +568,9 @@ class SkillComplianceReportGenerator:
                     spector_display = "✅ No vulnerabilities reported"
                     spector_class = 'metric-good'
             
+            prompts_url = self.skills_prompts_url.get(skill_name, "")
+            prompts_cell = f'<a href="{prompts_url}">View</a>' if prompts_url else "N/A"
+
             html += f"""
                         <tr>
                             <td><strong>{skill_name}</strong></td>
@@ -568,6 +580,7 @@ class SkillComplianceReportGenerator:
                             <td class="{uplift_class}">{uplift_display}</td>
                             <td class="{validator_class}">{validator_display}</td>
                             <td class="{spector_class}">{spector_display}</td>
+                            <td>{prompts_cell}</td>
                         </tr>
 """
         
@@ -651,7 +664,9 @@ class SkillComplianceReportGenerator:
         lines += [
             "## Executive Summary",
             "",
-| Total Skills | Evaluation Tests | Skills with Evals |
+            "| Total Skills | Evaluation Tests | Skills with Benchmarks |",
+            "|:---:|:---:|:---:|",
+            f"| {total_skills} | {total_evals} | {skills_with_evals} |",
             "",
         ]
 
@@ -672,8 +687,8 @@ class SkillComplianceReportGenerator:
             "",
             "## Skill Details",
             "",
-            "| Skill Name | Component | Eval Tests | Evals Pass Rate | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities |",
-            "|---|---|:---:|:---:|:---:|:---:|:---:|",
+            "| Skill Name | Component | Eval Tests | Evals Pass Rate | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |",
+            "|---|---|:---:|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
             skill = self.skills_data[skill_name]
@@ -734,10 +749,13 @@ class SkillComplianceReportGenerator:
                 else:
                     spector_cell = "✅ No vulnerabilities reported"
 
+            prompts_url = self.skills_prompts_url.get(skill_name, "")
+            prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
+
             lines.append(
                 f"| **{skill_name}** | {skill['component']} | {eval_count} "
                 f"| {pass_rate_display} | {uplift_display} "
-                f"| {validator_cell} | {spector_cell} |"
+                f"| {validator_cell} | {spector_cell} | {prompts_cell} |"
             )
 
         return "\n".join(lines) + "\n"

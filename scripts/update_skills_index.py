@@ -60,7 +60,8 @@ def load_skills_config(config_path: Path) -> list[dict]:
     """
     Read skills-config.json.  Each product must have:
       repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skills — skill folder names    (become .agents/skills/<skill>)
+      skills — list of skill objects with name, ref, prompts_url, and optional path
+                (each skill is installed as .agents/skills/<name>)
     """
     if not config_path.exists():
         sys.exit(f"Error: skills-config.json not found at {config_path}")
@@ -380,19 +381,21 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     """
     Build only the skills table rows from installed SKILL.md files.
     Returns the full replacement block including sentinel comments and timestamp.
-    config_entries supplies optional extra metadata (e.g. prompts_url) per skill.
+    config_entries supplies per-skill metadata: ref (branch), prompts_url (full
+    GitHub URL to the skill's example-prompts folder, or empty string), and
+    optional path override.
     """
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
 
     # Index config extras by individual skill name for quick lookup.
-    # Each value stores the parent entry plus the skill-level prompts_url (if any).
+    # Each value stores the parent entry plus skill-level prompts/ref overrides.
     config_by_skill: dict = {}
     for e in config_entries:
         skills = e["skills"]
         for s in skills:
             skill_name = s["name"] if isinstance(s, dict) else s
-            skill_prompts_url = s.get("prompts_url") if isinstance(s, dict) else None
-            config_by_skill[skill_name] = {**e, "_skill_prompts_url": skill_prompts_url or ""}
+            skill_prompts_url = s.get("prompts_url", "") if isinstance(s, dict) else ""
+            config_by_skill[skill_name] = {**e, "_skill_prompts_url": skill_prompts_url}
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
@@ -416,9 +419,9 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
         product = cfg.get("product") or repo.split("/")[-1]
         # Use the canonical repo from config if available; fall back to lock source
         canonical_repo = cfg.get("repo") or repo
-        ref = cfg.get("ref") or "HEAD"
         print(f"  + [{product}] {fm['name']}", file=sys.stderr)
-        prompts_url = cfg.get("_skill_prompts_url") or None
+        skill_prompts_url = cfg.get("_skill_prompts_url") or None
+        prompts_url = skill_prompts_url if skill_prompts_url else None
         rows.append({
             "product": product,
             "repo_url": f"https://github.com/{canonical_repo}",
