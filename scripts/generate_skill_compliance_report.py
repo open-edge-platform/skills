@@ -94,47 +94,43 @@ class SkillComplianceReportGenerator:
             print(f"⚠️ Error loading spector data: {e}")
 
     def parse_benchmark_file(self, skill_path: Path) -> Dict:
-        """Parse benchmark.md or BENCHMARK.md file"""
-        benchmark_files = list(skill_path.glob('*BENCHMARK.md')) + list(skill_path.glob('*benchmark.md'))
-        
+        """Parse benchmark/benchmark.md file"""
+        benchmark_file = skill_path / 'benchmark' / 'benchmark.md'
+
         result = {
             'eval_pass_rate': 'Not Available',
-            'eval_tests_passing': 'Not Available',
-            'eval_tests_failing': 'Not Available',
-            'eval_uplift': 'Not Available'
+            'eval_uplift': 'Not Available',
+            'evals_with_skill': 'Not Available',
+            'evals_total': 'Not Available',
         }
-        
-        if not benchmark_files:
+
+        if not benchmark_file.exists():
             return result
-            
+
         try:
-            with open(benchmark_files[0], 'r') as f:
-                content = f.read()
-                
-            # Extract pass rate (look for "Pass Rate" in markdown table)
-            pass_rate_match = re.search(r'Pass Rate.*?\|.*?(\d+)%', content)
+            content = benchmark_file.read_text()
+
+            # Extract evals passed (w/ skill): row format | Copilot ... | 0 / 12 | 8 / 12 | **+8 ↑** |
+            evals_match = re.search(
+                r'### Evals passed[^\n]*\n(?:.*\n){0,5}?\|\s*Copilot[^|]*\|[^|]+\|\s*(\d+)\s*/\s*(\d+)',
+                content, re.IGNORECASE
+            )
+            if evals_match:
+                result['evals_with_skill'] = evals_match.group(1)
+                result['evals_total'] = evals_match.group(2)
+
+            # Extract pass rate % and uplift: row format | Copilot ... | 10% ±21% | 87% ±22% | **+76pp ↑** |
+            pass_rate_match = re.search(
+                r'### Pass rate[^\n]*\n(?:.*\n){0,5}?\|\s*Copilot[^|]*\|[^|]+\|\s*(\d+)%[^|]*\|\s*\*\*([+\-]\d+pp)',
+                content, re.IGNORECASE
+            )
             if pass_rate_match:
                 result['eval_pass_rate'] = f"{pass_rate_match.group(1)}%"
-            
-            # Extract Skill Lift (uplift)
-            uplift_match = re.search(r'Skill Lift.*?\|\s*([±+\-\d\.ppsp]+)', content)
-            if uplift_match:
-                result['eval_uplift'] = uplift_match.group(1).strip()
-            
-            # Look for additional metrics
-            if 'tests passing' in content.lower():
-                tests_match = re.search(r'tests passing[:\s]+(\d+)', content, re.IGNORECASE)
-                if tests_match:
-                    result['eval_tests_passing'] = tests_match.group(1)
-            
-            if 'tests failing' in content.lower():
-                fail_match = re.search(r'tests failing[:\s]+(\d+)', content, re.IGNORECASE)
-                if fail_match:
-                    result['eval_tests_failing'] = fail_match.group(1)
-                    
+                result['eval_uplift'] = pass_rate_match.group(2)
+
         except Exception as e:
-            print(f"Error parsing benchmark file: {e}")
-            
+            print(f"Error parsing benchmark file {benchmark_file}: {e}")
+
         return result
 
     def parse_evals_json(self, skill_path: Path) -> int:
@@ -498,19 +494,19 @@ class SkillComplianceReportGenerator:
             eval_count = skill['eval_count']
             pass_rate = benchmark['eval_pass_rate']
             
-            # Format pass rate calculation if we have the data
-            pass_rate_display = pass_rate
-            if pass_rate != 'Not Available' and eval_count > 0:
-                # Extract percentage from pass rate
-                try:
-                    pass_pct = int(pass_rate.rstrip('%')) if pass_rate != 'Not Available' else 0
-                    pass_tests = int((pass_pct / 100) * eval_count)
-                    pass_rate_display = f"{pass_tests}/{eval_count} ({pass_rate})"
-                except:
-                    pass_rate_display = pass_rate
+            # Use directly parsed evals_with_skill / evals_total from benchmark
+            evals_with = benchmark.get('evals_with_skill', 'Not Available')
+            evals_total_bm = benchmark.get('evals_total', 'Not Available')
+            if evals_with != 'Not Available' and evals_total_bm != 'Not Available':
+                pass_rate_display = (
+                    f"{evals_with}/{evals_total_bm} ({pass_rate})"
+                    if pass_rate != 'Not Available' else f"{evals_with}/{evals_total_bm}"
+                )
+            elif pass_rate != 'Not Available':
+                pass_rate_display = pass_rate
             else:
-                pass_rate_display = f"0/{eval_count} (N/A)" if eval_count > 0 else "N/A"
-            
+                pass_rate_display = "N/A"
+
             # Apply color coding for pass rate
             pass_rate_class = 'metric-good' if pass_rate != 'Not Available' and pass_rate.rstrip('%').isdigit() and int(pass_rate.rstrip('%')) > 80 else 'metric-neutral' if pass_rate == 'Not Available' else 'metric-warning'
             
@@ -518,49 +514,50 @@ class SkillComplianceReportGenerator:
             uplift_display = benchmark['eval_uplift']
             uplift_class = 'metric-good' if uplift_display != 'Not Available' else 'metric-neutral'
             
-            # Get validator metrics
-            validator_metrics = self.validator_data.get(skill_name, {})
-            validator_errors = validator_metrics.get('errors', 0)
-            validator_warnings = validator_metrics.get('warnings', 0)
-            validator_tokens = validator_metrics.get('tokens_used', 0)
-            
-            # Determine validator status (Pass/Fail based on errors)
-            validator_status = "Fail" if validator_errors > 0 else "Pass"
-            
-            # Build validator display with new format
-            validator_parts = [f"Status: {validator_status}"]
-            if validator_tokens > 0:
-                validator_parts.append(f"Tokens: {validator_tokens}")
-            
-            # Only show errors and warnings if status is Fail
-            if validator_status == "Fail":
-                validator_parts.append(f"Errors: {validator_errors}, Warnings: {validator_warnings}")
-            
-            validator_display = "<br>".join(validator_parts)
-            validator_class = 'metric-good' if validator_status == "Pass" else 'metric-warning'
-            
-            if self.github_run_id and self.github_repo:
-                workflow_url = f"https://github.com/{self.github_repo}/actions/runs/{self.github_run_id}"
-                validator_display = f'<a href="{workflow_url}" target="_blank" style="color: #667eea; text-decoration: none;">{validator_display}</a>'
-            
-            # Get spector vulnerabilities
-            spector_vulns = self.spector_data.get(skill_name, {})
-            spector_critical = spector_vulns.get('critical', 0)
-            spector_high = spector_vulns.get('high', 0)
-            spector_medium = spector_vulns.get('medium', 0)
-            spector_low = spector_vulns.get('low', 0)
-            
-            total_vulns = spector_critical + spector_high + spector_medium + spector_low
-            
-            if total_vulns > 0:
-                spector_display = f"🔴 {spector_critical}C, 🟠 {spector_high}H, 🟡 {spector_medium}M, 🔵 {spector_low}L"
-                spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
-                if self.github_run_id and self.github_repo:
-                    workflow_url = f"https://github.com/{self.github_repo}/actions/runs/{self.github_run_id}"
-                    spector_display = f'<a href="{workflow_url}" target="_blank" style="color: #667eea; text-decoration: none;">{spector_display}</a>'
+            # Get validator metrics — distinguish no-data (None) from a passing run ({})
+            validator_metrics = self.validator_data.get(skill_name)
+            if validator_metrics is None:
+                validator_display = "N/A"
+                validator_class = 'metric-neutral'
             else:
-                spector_display = "✅ No vulnerabilities reported"
-                spector_class = 'metric-good'
+                validator_errors = validator_metrics.get('errors', 0)
+                validator_warnings = validator_metrics.get('warnings', 0)
+                validator_tokens = validator_metrics.get('tokens_used', 0)
+                validator_status = "Fail" if validator_errors > 0 else "Pass"
+                status_color = '#27ae60' if validator_status == "Pass" else '#e74c3c'
+                status_span = f'<span style="color: {status_color}; font-weight: 600;">{validator_status}</span>'
+                validator_parts = [status_span]
+                if validator_errors > 0:
+                    validator_parts.append(f"Errors: {validator_errors}")
+                if validator_warnings > 0:
+                    validator_parts.append(f"Warnings: {validator_warnings}")
+                if validator_tokens > 0:
+                    validator_parts.append(f"Total Tokens: {validator_tokens}")
+                validator_display = "<br>".join(validator_parts)
+                validator_class = 'metric-good' if validator_status == "Pass" else 'metric-warning'
+            
+            # Get spector vulnerabilities — distinguish no-data (None) from a clean scan
+            spector_vulns = self.spector_data.get(skill_name)
+            if spector_vulns is None:
+                spector_display = "N/A"
+                spector_class = 'metric-neutral'
+            else:
+                spector_critical = spector_vulns.get('critical', 0)
+                spector_high = spector_vulns.get('high', 0)
+                spector_medium = spector_vulns.get('medium', 0)
+                spector_low = spector_vulns.get('low', 0)
+                total_vulns = spector_critical + spector_high + spector_medium + spector_low
+                if total_vulns > 0:
+                    spector_parts = []
+                    if spector_critical > 0: spector_parts.append(f"🔴 {spector_critical}C")
+                    if spector_high > 0:     spector_parts.append(f"🟠 {spector_high}H")
+                    if spector_medium > 0:   spector_parts.append(f"🟡 {spector_medium}M")
+                    if spector_low > 0:      spector_parts.append(f"🔵 {spector_low}L")
+                    spector_display = ", ".join(spector_parts)
+                    spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
+                else:
+                    spector_display = "✅ No vulnerabilities reported"
+                    spector_class = 'metric-good'
             
             html += f"""
                         <tr>
@@ -637,9 +634,8 @@ class SkillComplianceReportGenerator:
         self.calculate_component_metrics()
 
         total_skills = len(self.skills_data)
-        total_components = len(self.components)
         total_evals = sum(s['eval_count'] for s in self.skills_data.values())
-        skills_with_benchmarks = sum(1 for s in self.skills_data.values() if s['eval_count'] > 0)
+        skills_with_evals = sum(1 for s in self.skills_data.values() if s['eval_count'] > 0)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
         lines = ["# Skill Compliance Report", ""]
@@ -651,56 +647,96 @@ class SkillComplianceReportGenerator:
             lines.append(f"**Generated:** {timestamp}")
         lines.append("")
 
+        # Match HTML Executive Summary stat cards
         lines += [
-            "## Summary",
+            "## Executive Summary",
             "",
-            "| Total Components | Total Skills | Eval Tests | Skills with Benchmarks |",
-            "|:---:|:---:|:---:|:---:|",
-            f"| {total_components} | {total_skills} | {total_evals} | {skills_with_benchmarks} |",
+| Total Skills | Evaluation Tests | Skills with Evals |
             "",
+        ]
+
+        # Match HTML Component Summary: Component | Number of Skills | Skills (list)
+        lines += [
             "## Component Summary",
             "",
-            "| Component | Skills | Eval Tests |",
-            "|---|:---:|:---:|",
+            "| Component | Number of Skills | Skills |",
+            "|---|:---:|---|",
         ]
         for component in sorted(self.components.keys()):
             data = self.components[component]
-            lines.append(f"| **{component}** | {len(data['skills'])} | {data['total_eval_tests']} |")
+            skills_list = ", ".join(sorted(data['skills']))
+            lines.append(f"| **{component}** | {len(data['skills'])} | {skills_list} |")
 
+        # Match HTML Skill Details columns and formatting exactly
         lines += [
             "",
             "## Skill Details",
             "",
-            "| Skill | Component | Evals | Pass Rate | Uplift | Validator | Security |",
+            "| Skill Name | Component | Eval Tests | Evals Pass Rate | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities |",
             "|---|---|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
             skill = self.skills_data[skill_name]
             benchmark = skill['benchmark']
             eval_count = skill['eval_count']
+            pass_rate = benchmark['eval_pass_rate']
 
-            v = self.validator_data.get(skill_name, {})
-            v_errors = v.get('errors', 0)
-            v_warnings = v.get('warnings', 0)
-            if v_errors > 0:
-                validator_cell = f"❌ {v_errors}E {v_warnings}W"
-            elif v:
-                validator_cell = "✅ Pass"
+            # Use directly parsed evals_with_skill / evals_total from benchmark
+            evals_with = benchmark.get('evals_with_skill', 'Not Available')
+            evals_total_bm = benchmark.get('evals_total', 'Not Available')
+            if evals_with != 'Not Available' and evals_total_bm != 'Not Available':
+                pass_rate_display = (
+                    f"{evals_with}/{evals_total_bm} ({pass_rate})"
+                    if pass_rate != 'Not Available' else f"{evals_with}/{evals_total_bm}"
+                )
+            elif pass_rate != 'Not Available':
+                pass_rate_display = pass_rate
             else:
-                validator_cell = "—"
+                pass_rate_display = "N/A"
 
-            sp = self.spector_data.get(skill_name, {})
-            sp_c, sp_h, sp_m, sp_l = sp.get('critical', 0), sp.get('high', 0), sp.get('medium', 0), sp.get('low', 0)
-            if sp_c + sp_h + sp_m + sp_l > 0:
-                spector_cell = f"🔴{sp_c} 🟠{sp_h} 🟡{sp_m} 🔵{sp_l}"
-            elif sp:
-                spector_cell = "✅ Clean"
+            uplift_display = benchmark['eval_uplift']
+
+            # Match HTML validator display: Status / Tokens / Errors+Warnings
+            validator_metrics = self.validator_data.get(skill_name)
+            if validator_metrics is not None:
+                v_errors = validator_metrics.get('errors', 0)
+                v_warnings = validator_metrics.get('warnings', 0)
+                v_tokens = validator_metrics.get('tokens_used', 0)
+                v_status = "Fail" if v_errors > 0 else "Pass"
+                status_icon = "✅" if v_status == "Pass" else "❌"
+                v_parts = [f"{status_icon} {v_status}"]
+                if v_errors > 0:
+                    v_parts.append(f"Errors: {v_errors}")
+                if v_warnings > 0:
+                    v_parts.append(f"Warnings: {v_warnings}")
+                if v_tokens > 0:
+                    v_parts.append(f"Total Tokens: {v_tokens}")
+                validator_cell = "<br>".join(v_parts)
             else:
-                spector_cell = "—"
+                validator_cell = "N/A"
+
+            # Match HTML spector display — distinguish no-data (None) from a clean scan
+            spector_vulns = self.spector_data.get(skill_name)
+            if spector_vulns is None:
+                spector_cell = "N/A"
+            else:
+                sp_c = spector_vulns.get('critical', 0)
+                sp_h = spector_vulns.get('high', 0)
+                sp_m = spector_vulns.get('medium', 0)
+                sp_l = spector_vulns.get('low', 0)
+                if sp_c + sp_h + sp_m + sp_l > 0:
+                    sp_parts = []
+                    if sp_c > 0: sp_parts.append(f"🔴 {sp_c}C")
+                    if sp_h > 0: sp_parts.append(f"🟠 {sp_h}H")
+                    if sp_m > 0: sp_parts.append(f"🟡 {sp_m}M")
+                    if sp_l > 0: sp_parts.append(f"🔵 {sp_l}L")
+                    spector_cell = ", ".join(sp_parts)
+                else:
+                    spector_cell = "✅ No vulnerabilities reported"
 
             lines.append(
-                f"| `{skill_name}` | {skill['component']} | {eval_count} "
-                f"| {benchmark['eval_pass_rate']} | {benchmark['eval_uplift']} "
+                f"| **{skill_name}** | {skill['component']} | {eval_count} "
+                f"| {pass_rate_display} | {uplift_display} "
                 f"| {validator_cell} | {spector_cell} |"
             )
 
