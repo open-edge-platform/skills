@@ -651,9 +651,7 @@ class SkillComplianceReportGenerator:
         lines += [
             "## Executive Summary",
             "",
-            "| Total Skills | Evaluation Tests | Skills with Benchmarks |",
-            "|:---:|:---:|:---:|",
-            f"| {total_skills} | {total_evals} | {skills_with_evals} |",
+| Total Skills | Evaluation Tests | Skills with Evals |
             "",
         ]
 
