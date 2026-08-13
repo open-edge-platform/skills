@@ -181,6 +181,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Download validator JSON
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -215,7 +216,7 @@ jobs:
 
       - name: Publish report to job summary
         if: always()
-        run: cat skill_summary_output.md >> $GITHUB_STEP_SUMMARY
+        run: cat skill-compliance-report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Report Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -224,6 +225,25 @@ jobs:
           name: skill-compliance-report
           path: skill_summary_output.html
           retention-days: 30
+
+      - name: Commit report to repository
+        if: github.event_name != 'pull_request'
+        env:
+          SKILLS_PAT: ${{ secrets.SKILLS_PAT }}
+        run: |
+          git config user.name  "sys-siv-oep"
+          git config user.email "sys-siv-oep@intel.com"
+          git remote set-url origin "https://x-access-token:${SKILLS_PAT}@github.com/${{ github.repository }}.git"
+
+          git add skill-compliance-report.md
+
+          if git diff --cached --quiet; then
+            echo "Nothing changed — skipping commit."
+            exit 0
+          fi
+
+          git commit -m "chore: update skill compliance report"
+          git push
 
       - name: Display Report Summary
         run: |
