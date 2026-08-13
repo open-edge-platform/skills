@@ -487,8 +487,7 @@ class SkillComplianceReportGenerator:
                         <tr>
                             <th>Skill Name</th>
                             <th>Component</th>
-                            <th>Eval Tests</th>
-                            <th>Evals Pass Rate</th>
+                            <th>Evals Passed</th>
                             <th>Skill Uplift</th>
                             <th>skill-validator metrics</th>
                             <th>skill-spector vulnerabilities</th>
@@ -502,20 +501,13 @@ class SkillComplianceReportGenerator:
             skill = self.skills_data[skill_name]
             benchmark = skill['benchmark']
             
-            # Calculate pass rate from eval tests if available
-            eval_count = skill['eval_count']
             pass_rate = benchmark['eval_pass_rate']
             
             # Use directly parsed evals_with_skill / evals_total from benchmark
             evals_with = benchmark.get('evals_with_skill', 'Not Available')
             evals_total_bm = benchmark.get('evals_total', 'Not Available')
             if evals_with != 'Not Available' and evals_total_bm != 'Not Available':
-                pass_rate_display = (
-                    f"{evals_with}/{evals_total_bm} ({pass_rate})"
-                    if pass_rate != 'Not Available' else f"{evals_with}/{evals_total_bm}"
-                )
-            elif pass_rate != 'Not Available':
-                pass_rate_display = pass_rate
+                pass_rate_display = f"{evals_with}/{evals_total_bm}"
             else:
                 pass_rate_display = "N/A"
 
@@ -523,8 +515,9 @@ class SkillComplianceReportGenerator:
             pass_rate_class = 'metric-good' if pass_rate != 'Not Available' and pass_rate.rstrip('%').isdigit() and int(pass_rate.rstrip('%')) > 80 else 'metric-neutral' if pass_rate == 'Not Available' else 'metric-warning'
             
             # Format uplift
-            uplift_display = benchmark['eval_uplift']
-            uplift_class = 'metric-good' if uplift_display != 'Not Available' else 'metric-neutral'
+            uplift_raw = benchmark['eval_uplift']
+            uplift_class = 'metric-good' if uplift_raw != 'Not Available' else 'metric-neutral'
+            uplift_display = uplift_raw if uplift_raw != 'Not Available' else 'N/A'
             
             # Get validator metrics — distinguish no-data (None) from a passing run ({})
             validator_metrics = self.validator_data.get(skill_name)
@@ -535,7 +528,7 @@ class SkillComplianceReportGenerator:
                 validator_errors = validator_metrics.get('errors', 0)
                 validator_warnings = validator_metrics.get('warnings', 0)
                 validator_tokens = validator_metrics.get('tokens_used', 0)
-                validator_status = "Fail" if validator_errors > 0 else "Pass"
+                validator_status = "Fail" if validator_errors > 0 or validator_warnings > 0 else "Pass"
                 status_color = '#27ae60' if validator_status == "Pass" else '#e74c3c'
                 status_span = f'<span style="color: {status_color}; font-weight: 600;">{validator_status}</span>'
                 validator_parts = [status_span]
@@ -578,7 +571,6 @@ class SkillComplianceReportGenerator:
                         <tr>
                             <td><strong>{skill_name}</strong></td>
                             <td>{skill['component']}</td>
-                            <td>{eval_count}</td>
                             <td class="{pass_rate_class}">{pass_rate_display}</td>
                             <td class="{uplift_class}">{uplift_display}</td>
                             <td class="{validator_class}">{validator_display}</td>
@@ -690,29 +682,23 @@ class SkillComplianceReportGenerator:
             "",
             "## Skill Details",
             "",
-            "| Skill Name | Component | Eval Tests | Evals Pass Rate | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |",
-            "|---|---|:---:|:---:|:---:|:---:|:---:|:---:|",
+            "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |",
+            "|---|---|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
             skill = self.skills_data[skill_name]
             benchmark = skill['benchmark']
-            eval_count = skill['eval_count']
             pass_rate = benchmark['eval_pass_rate']
 
             # Use directly parsed evals_with_skill / evals_total from benchmark
             evals_with = benchmark.get('evals_with_skill', 'Not Available')
             evals_total_bm = benchmark.get('evals_total', 'Not Available')
             if evals_with != 'Not Available' and evals_total_bm != 'Not Available':
-                pass_rate_display = (
-                    f"{evals_with}/{evals_total_bm} ({pass_rate})"
-                    if pass_rate != 'Not Available' else f"{evals_with}/{evals_total_bm}"
-                )
-            elif pass_rate != 'Not Available':
-                pass_rate_display = pass_rate
+                pass_rate_display = f"{evals_with}/{evals_total_bm}"
             else:
                 pass_rate_display = "N/A"
 
-            uplift_display = benchmark['eval_uplift']
+            uplift_display = benchmark['eval_uplift'] if benchmark['eval_uplift'] != 'Not Available' else 'N/A'
 
             # Match HTML validator display: Status / Tokens / Errors+Warnings
             validator_metrics = self.validator_data.get(skill_name)
@@ -720,7 +706,7 @@ class SkillComplianceReportGenerator:
                 v_errors = validator_metrics.get('errors', 0)
                 v_warnings = validator_metrics.get('warnings', 0)
                 v_tokens = validator_metrics.get('tokens_used', 0)
-                v_status = "Fail" if v_errors > 0 else "Pass"
+                v_status = "Fail" if v_errors > 0 or v_warnings > 0 else "Pass"
                 status_icon = "✅" if v_status == "Pass" else "❌"
                 v_parts = [f"{status_icon} {v_status}"]
                 if v_errors > 0:
@@ -756,7 +742,7 @@ class SkillComplianceReportGenerator:
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
 
             lines.append(
-                f"| **{skill_name}** | {skill['component']} | {eval_count} "
+                f"| **{skill_name}** | {skill['component']} "
                 f"| {pass_rate_display} | {uplift_display} "
                 f"| {validator_cell} | {spector_cell} | {prompts_cell} |"
             )
