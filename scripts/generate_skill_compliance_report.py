@@ -797,7 +797,7 @@ def main():
 
     print(f"✅ Report generated successfully: {output_file}")
 
-    md_file = output_file.with_suffix('.md')
+    md_file = repo_root / "skill-compliance-report.md"
     with open(md_file, 'w', encoding='utf-8') as f:
         f.write(generator.generate_markdown_summary())
 
