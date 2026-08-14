@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-13 13:22:42 UTC &nbsp;|&nbsp; **Run:** [31704367429](https://github.com/open-edge-platform/skills/actions/runs/31704367429)
+**Generated:** 2026-08-14 00:15:52 UTC &nbsp;|&nbsp; **Run:** [31756625762](https://github.com/open-edge-platform/skills/actions/runs/31756625762)
 
 ## Executive Summary
 
@@ -41,8 +41,8 @@
 | **getitune-preparing-datasets** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 784 | 🟡 1M | N/A |
 | **getitune-running-inference** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
 | **getitune-training-a-model** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 1296 | ✅ No vulnerabilities reported | N/A |
-| **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | N/A | N/A | ✅ Pass<br>Total Tokens: 5161 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts) |
-| **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | N/A | N/A | ✅ Pass<br>Total Tokens: 16258 | 🟠 21H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts) |
+| **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | N/A | N/A | ✅ Pass<br>Total Tokens: 5508 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts) |
+| **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | N/A | N/A | ❌ Fail<br>Errors: 1<br>Warnings: 1<br>Total Tokens: 18482 | 🟠 21H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts) |
 | **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8556 | 🟠 2H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts) |
 | **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1652 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
 | **physicalai-runtime-adding-a-camera-backend** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 567 | ✅ No vulnerabilities reported | N/A |
@@ -55,7 +55,7 @@
 | **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1348 | 🟡 1M | N/A |
 | **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1446 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
-| **scenescape-setup** | Scenescape | 2/7 | +30pp | ❌ Fail<br>Errors: 1<br>Total Tokens: 25195 | 🟠 3H, 🟡 30M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
+| **scenescape-setup** | Scenescape | 2/7 | +30pp | ❌ Fail<br>Errors: 1<br>Total Tokens: 26324 | 🟠 3H, 🟡 30M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
 | **vdms-dataprep-user** | DataPrep microservice | N/A | N/A | ✅ Pass<br>Total Tokens: 1945 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vdms-dataprep-user/example-prompts) |
 | **vss-deploy** | Video Search and Summarization | 2/6 | +67pp | ✅ Pass<br>Total Tokens: 9889 | 🟠 19H, 🟡 3M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
 | **vss-deploy-helm** | Video Search and Summarization | 1/7 | +54pp | ✅ Pass<br>Total Tokens: 7595 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
