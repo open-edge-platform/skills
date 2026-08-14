@@ -78,13 +78,13 @@
       "source": "open-edge-platform/edge-ai-suites",
       "sourceType": "github",
       "skillPath": "metro-ai-suite/prompt-library/.github/skills/metro-ai-apps-builder/SKILL.md",
-      "computedHash": "6b25bd003ae04697f365495608ca3aa0084256b6ca18bb9827808b4c19c68485"
+      "computedHash": "6b86e50a4dc6c11acbb09501943890b1944b5f9d9925cdf65fa2b1ca61a268b7"
     },
     "metro-ai-apps-recipe": {
       "source": "open-edge-platform/edge-ai-suites",
       "sourceType": "github",
       "skillPath": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/SKILL.md",
-      "computedHash": "b885a232b0cd8409b35610f4c2ecaf9c9f8729cb2c581c449e1d986aff82604b"
+      "computedHash": "4bfa8a10f6c814ae006ac909e1e5203021f69ec0f25ce7d0c5006f2921f70dda"
     },
     "model-download-user": {
       "source": "open-edge-platform/edge-ai-libraries",
@@ -162,7 +162,7 @@
       "source": "open-edge-platform/scenescape",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "d16f266d754f1ff352d65514e55c065e8d71ecae73b4b5fb8418d3527e491f80"
+      "computedHash": "dcee0d5bcc31189a2c56094afc39e18caca9dc992ad01e9bc0ed3f9065d86207"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
