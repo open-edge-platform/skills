@@ -162,7 +162,7 @@
       "source": "open-edge-platform/scenescape",
       "sourceType": "github",
       "skillPath": ".github/skills/scenescape-setup/SKILL.md",
-      "computedHash": "dcee0d5bcc31189a2c56094afc39e18caca9dc992ad01e9bc0ed3f9065d86207"
+      "computedHash": "8f5a3b3dc22acee189af8d702cba9ccdc67aabf9b30091174c9d5dbaef190132"
     },
     "vdms-dataprep-user": {
       "source": "open-edge-platform/edge-ai-libraries",
