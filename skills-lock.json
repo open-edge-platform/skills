@@ -175,13 +175,13 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy/SKILL.md",
-      "computedHash": "3b0c430d740d14ad9f108873cebcffc01d3c2a59cec2cf78676970a8f8cd3352"
+      "computedHash": "ec64042ba796d8ac516b29fe3e17b1f8ef87865f9fd59ccd74637f09111a0319"
     },
     "vss-deploy-helm": {
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "sample-applications/video-search-and-summarization/.github/skills/vss-deploy-helm/SKILL.md",
-      "computedHash": "243c95d64105036b7751eee8e5e1e0848ea80181b2c15a9afc504815160475d0"
+      "computedHash": "2f5a720874a0e56c1d6da617470bf9c949c58e2041e782ac9908f97bfaee5ec7"
     },
     "vss-search-index": {
       "source": "open-edge-platform/edge-ai-libraries",
