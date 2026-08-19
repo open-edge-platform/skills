@@ -108,4 +108,4 @@ jobs:
             SOURCE="$REPO#${VERIFY_BRANCH}"
           fi
           npx skills add "$SOURCE" --list
-          npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global yes
+          npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
