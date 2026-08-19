@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "skills": "1.5.11"
+    "skills": ">=1.5.11"
   }
 }

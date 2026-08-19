@@ -54,17 +54,15 @@ Skills are installed using the [`skills` CLI](https://github.com/vercel-labs/ski
 
 ### Prerequisites
 
-`npx` ships with **Node.js**. Install it from [nodejs.org](https://nodejs.org/) (LTS recommended) or via a version manager:
+`npx` ships with **Node.js**. Install it from [nodejs.org](https://nodejs.org/) (LTS recommended) or via a version manager as below:
 
 ```bash
-# macOS / Linux — using nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-nvm install --lts
-
-# macOS — using Homebrew
-brew install node
-
-# Windows — download the installer from https://nodejs.org/
+# Download and install nvm:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
+# in lieu of restarting the shell
+\. "$HOME/.nvm/nvm.sh"
+# Download and install Node.js:
+nvm install 24
 ```
 
 Verify your installation:
