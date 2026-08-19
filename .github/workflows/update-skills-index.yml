@@ -61,6 +61,7 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           INSTALL: ${{ inputs.install || 'true' }}
+          NPM_CONFIG_YES: "true"
         run: |
           FLAGS=""
           if [ "$DRY_RUN" = "true" ]; then
@@ -95,6 +96,7 @@ jobs:
       - name: Verify skills installation
         env:
           VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
+          NPM_CONFIG_YES: "true"
         run: |
           node --version
           npx --version
