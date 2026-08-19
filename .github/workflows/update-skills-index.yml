@@ -21,6 +21,10 @@ on:
         description: "Preview changes without writing or committing (true/false)"
         required: false
         default: "false"
+      branch:
+        description: "Branch of open-edge-platform/skills to verify with npx skills add"
+        required: false
+        default: "main"
 
 permissions: {}
 
@@ -87,3 +91,14 @@ jobs:
           git commit -m "chore: sync skills and update README index \
           Installed/updated selected skills from skills-config.json and rebuilt README."
           git push
+
+      - name: Verify skills installation
+        env:
+          VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
+        run: |
+          node --version
+          npx --version
+          npx skills --version
+          REPO="open-edge-platform/skills"
+          npx skills "$REPO#${VERIFY_BRANCH}" --list
+          npx skills add "$REPO#${VERIFY_BRANCH}" --all --global --yes
