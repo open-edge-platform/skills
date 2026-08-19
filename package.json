@@ -1,8 +1,0 @@
-{
-  "name": "skills-workflow-deps",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "skills": ">=1.5.11"
-  }
-}
