@@ -21,6 +21,10 @@ on:
         description: "Preview changes without writing or committing (true/false)"
         required: false
         default: "false"
+      branch:
+        description: "Branch of open-edge-platform/skills to verify with npx skills add"
+        required: false
+        default: "main"
 
 permissions: {}
 
@@ -40,13 +44,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install skills CLI
-        run: |
-          npm ci
-          echo "$(pwd)/node_modules/.bin" >> "$GITHUB_PATH"
+          node-version: "24"
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -63,6 +61,7 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           INSTALL: ${{ inputs.install || 'true' }}
+          NPM_CONFIG_YES: "true"
         run: |
           FLAGS=""
           if [ "$DRY_RUN" = "true" ]; then
@@ -83,7 +82,7 @@ jobs:
           git config user.email "sys-siv-oep@intel.com"
           git remote set-url origin "https://x-access-token:${SKILLS_PAT}@github.com/${{ github.repository }}.git"
 
-          git add README.md .agents/skills/ skills-lock.json
+          git add README.md .agents/skills/
 
           if git diff --cached --quiet; then
             echo "Nothing changed — skipping commit."
@@ -93,3 +92,20 @@ jobs:
           git commit -m "chore: sync skills and update README index \
           Installed/updated selected skills from skills-config.json and rebuilt README."
           git push
+
+      - name: Verify skills installation
+        env:
+          VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
+          NPM_CONFIG_YES: "true"
+        run: |
+          node --version
+          npx --version
+          npx skills --version
+          REPO="open-edge-platform/skills"
+          if [ "${VERIFY_BRANCH}" = "main" ]; then
+            SOURCE="$REPO"
+          else
+            SOURCE="$REPO#${VERIFY_BRANCH}"
+          fi
+          npx skills add "$SOURCE" --list
+          npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes

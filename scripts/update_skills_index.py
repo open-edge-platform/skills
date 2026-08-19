@@ -90,6 +90,8 @@ def load_skills_lock(lock_path: Path) -> dict:
 
 def remove_skills_from_lock(lock_path: Path, skill_names: list[str]) -> None:
     """Remove project skills from the lock file after the CLI removes them."""
+    if not lock_path.exists():
+        return
     with lock_path.open(encoding="utf-8") as f:
         data = json.load(f)
 
@@ -251,7 +253,11 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
     }
     has_error = False
 
-    stale_skills = sorted(set(installed) - set(configured))
+    # Detect stale skills from disk so removal works even when skills-lock.json
+    # is not committed (i.e., starts absent and is written fresh each CI run).
+    local_skills_dir = repo_root / ".agents" / "skills"
+    installed_on_disk = {d.name for d in local_skills_dir.iterdir() if d.is_dir()} if local_skills_dir.is_dir() else set()
+    stale_skills = sorted(installed_on_disk - set(configured))
     relocated_skills = sorted(
         name
         for name, (entry, skill) in configured.items()

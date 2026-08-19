@@ -56,23 +56,23 @@ Skills are installed using the [`skills` CLI](https://github.com/vercel-labs/ski
 
 `npx` ships with **Node.js**. Install it from [nodejs.org](https://nodejs.org/) (LTS recommended) or via a version manager:
 
-```bash
-# macOS / Linux — using nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-nvm install --lts
-
-# macOS — using Homebrew
-brew install node
-
-# Windows — download the installer from https://nodejs.org/
-```
-
-Verify your installation:
+> Note: If `npx skills add` fails, try to install this version of skills cli by running command "npm install -g skills@1.5.23" and re-run the command.
 
 ```bash
-node --version   # v20.x or newer recommended
-npm --version
-npx --version
+# Download and install nvm:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
+# in lieu of restarting the shell
+\. "$HOME/.nvm/nvm.sh"
+# Download and install Node.js:
+nvm install 24
+# Verify the Node.js version:
+node -v # Should print "v24.19.0".
+# Verify npm version:
+npm -v # Should print "11.17.0".
+# Verify npm version:
+npx -v # Should print "11.17.0".
+# Verify npm version:
+npx skills -v # Should print "1.5.23"
 ```
 
 Once Node.js is installed, `npx skills` works without any extra install step.
