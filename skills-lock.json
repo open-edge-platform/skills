@@ -17,7 +17,7 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "microservices/dlstreamer-pipeline-server/.github/skills/dlsps-user/SKILL.md",
-      "computedHash": "51158b4709cc54ef6413e9eec0e11d62e42e6b3bfb5ff2279d8d8d23b9c23759"
+      "computedHash": "841d2e6c1d512d648a79d5c38c1603c9d2bcfe9ca5f7ba3800bea8ece40da5a1"
     },
     "dlstreamer-coding-agent": {
       "source": "open-edge-platform/dlstreamer",
@@ -90,7 +90,7 @@
       "source": "open-edge-platform/edge-ai-libraries",
       "sourceType": "github",
       "skillPath": "microservices/model-download/.github/skills/model-download-user/SKILL.md",
-      "computedHash": "66d2e5764f4fab8bd5cbd68edce717c6a0a1f45e9db65accf621bcab3950ed5b"
+      "computedHash": "af40e60989132ceb37e663fb27a295ae38fc8c614aeb9c36d867769a8f5d15af"
     },
     "multimodal-embedding-serving-user": {
       "source": "open-edge-platform/edge-ai-libraries",
