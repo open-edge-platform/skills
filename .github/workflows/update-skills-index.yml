@@ -102,5 +102,10 @@ jobs:
           npx --version
           npx skills --version
           REPO="open-edge-platform/skills"
-          npx skills "$REPO#${VERIFY_BRANCH}" --list
-          npx skills add "$REPO#${VERIFY_BRANCH}" --all --global --yes
+          if [ "${VERIFY_BRANCH}" = "main" ]; then
+            SOURCE="$REPO"
+          else
+            SOURCE="$REPO#${VERIFY_BRANCH}"
+          fi
+          npx skills add "$SOURCE" --list
+          npx skills add "$SOURCE" --all --global --yes
