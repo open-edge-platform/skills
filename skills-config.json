@@ -73,15 +73,15 @@
       ]
     },
     {
-      "product": "DataPrep microservice",
+      "product": "Multimodal DataPrep microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
-      "path": "microservices/visual-data-preparation-for-retrieval/vdms/.github/skills",
+      "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
       "skills": [
         {
-          "name": "vdms-dataprep-user",
+          "name": "multimodal-dataprep-user",
           "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vdms-dataprep-user/example-prompts"
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user/example-prompts"
         }
       ]
     },
