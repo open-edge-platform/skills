@@ -63,6 +63,13 @@ jobs:
           INSTALL: ${{ inputs.install || 'true' }}
           NPM_CONFIG_YES: "true"
         run: |
+          npm install -g skills@1.5.23
+          echo "Node.js version:"
+          node --version
+          echo "npx version:"
+          npx --version
+          echo "skills version:"
+          npx skills --version
           FLAGS=""
           if [ "$DRY_RUN" = "true" ]; then
             FLAGS="$FLAGS --dry-run"
@@ -98,9 +105,6 @@ jobs:
           VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
           NPM_CONFIG_YES: "true"
         run: |
-          node --version
-          npx --version
-          npx skills --version
           REPO="open-edge-platform/skills"
           if [ "${VERIFY_BRANCH}" = "main" ]; then
             SOURCE="$REPO"

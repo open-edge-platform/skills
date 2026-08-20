@@ -322,6 +322,27 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
             name = _skill_name(skill)
             lock_meta = current_lock.get(name)
             if not lock_meta:
+                # Skill absent after batch add — the CLI's findSkillDirs has a
+                # hardcoded maxDepth=5 so skills nested 6+ levels deep are
+                # silently skipped. Retry with a path-scoped tree URL which
+                # resets the scan root to the skill's .github/skills/ dir.
+                skill_path = _skill_path(entry, skill)
+                if skill_path:
+                    tree_ref = entry.get("ref", "main").strip() or "main"
+                    ref_suffix = f"#{tree_ref}" if tree_ref != "main" else ""
+                    tree_source = f"{entry['repo']}/{skill_path}{ref_suffix}"
+                    logger.warning(
+                        "Skill '%s' absent after batch add — retrying with path-scoped source %s",
+                        name, tree_source,
+                    )
+                    _run(
+                        ["npx", "skills", "add", tree_source,
+                         "--skill", name, "--agent", "universal", "--copy", "--yes"],
+                        repo_root, retries=1,
+                    )
+                    current_lock = load_skills_lock(lock_path)
+                    lock_meta = current_lock.get(name)
+            if not lock_meta:
                 logger.error("Skill '%s' missing from skills-lock.json after add", name)
                 has_error = True
                 continue
