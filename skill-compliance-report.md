@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-20 03:20:38 UTC &nbsp;|&nbsp; **Run:** [32327722082](https://github.com/open-edge-platform/skills/actions/runs/32327722082)
+**Generated:** 2026-08-20 12:17:22 UTC &nbsp;|&nbsp; **Run:** [32367848536](https://github.com/open-edge-platform/skills/actions/runs/32367848536)
 
 ## Executive Summary
 
@@ -15,11 +15,11 @@
 | **Chat Question and Answer** | 2 | chatqna-docker-deploy, chatqna-helm-deploy |
 | **DL Streamer** | 1 | dlstreamer-coding-agent |
 | **DL Streamer Pipeline Server** | 1 | dlsps-user |
-| **DataPrep microservice** | 1 | vdms-dataprep-user |
 | **Geti** | 7 | geti-using-the-pipeline, getitune-discovering-models, getitune-exporting-a-model, getitune-optimizing-a-model, getitune-preparing-datasets, getitune-running-inference, getitune-training-a-model |
 | **Metro AI Suite - Prompt Library** | 1 | metro-ai-apps-builder |
 | **Metro AI Suite - Vision AI App Recipe** | 1 | metro-ai-apps-recipe |
 | **Model Download** | 1 | model-download-user |
+| **Multimodal DataPrep microservice** | 1 | multimodal-dataprep-user |
 | **Multimodal Embedding Serving Microservice** | 1 | multimodal-embedding-serving-user |
 | **Physical AI Runtime** | 5 | physicalai-runtime-adding-a-camera-backend, physicalai-runtime-adding-a-robot-integration, physicalai-runtime-configuring-inference-pipeline, physicalai-runtime-loading-exported-policies, physicalai-runtime-running-policy-on-robot |
 | **Physical AI Train** | 5 | physicalai-train-adding-a-policy, physicalai-train-benchmarking-a-policy, physicalai-train-exporting-and-validating, physicalai-train-training-a-policy, physicalai-train-working-with-datasets |
@@ -44,19 +44,19 @@
 | **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | N/A | N/A | ✅ Pass<br>Total Tokens: 5508 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts) |
 | **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | N/A | N/A | ❌ Fail<br>Errors: 1<br>Warnings: 1<br>Total Tokens: 18482 | 🟠 21H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts) |
 | **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8562 | 🟠 2H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts) |
+| **multimodal-dataprep-user** | Multimodal DataPrep microservice | N/A | N/A | ✅ Pass<br>Total Tokens: 2033 | 🟠 3H, 🟡 1M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user/example-prompts) |
 | **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1652 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
 | **physicalai-runtime-adding-a-camera-backend** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 567 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-adding-a-robot-integration** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 843 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-configuring-inference-pipeline** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 530 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-loading-exported-policies** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 1035 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-running-policy-on-robot** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 548 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1518 | ✅ No vulnerabilities reported | N/A |
+| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ❌ Fail<br>Errors: 1<br>Total Tokens: 1518 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1012 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1348 | 🟡 1M | N/A |
 | **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1446 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
 | **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29600 | 🟠 5H, 🟡 23M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
-| **vdms-dataprep-user** | DataPrep microservice | N/A | N/A | ✅ Pass<br>Total Tokens: 1945 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vdms-dataprep-user/example-prompts) |
 | **vss-deploy** | Video Search and Summarization | 2/6 | +67pp | ✅ Pass<br>Total Tokens: 9889 | 🟠 19H, 🟡 3M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
 | **vss-deploy-helm** | Video Search and Summarization | 1/7 | +54pp | ✅ Pass<br>Total Tokens: 7593 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
 | **vss-search-index** | Video Search and Summarization | 5/7 | +69pp | ❌ Fail<br>Errors: 2<br>Total Tokens: 2482 | 🟠 2H, 🟡 1M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts) |
