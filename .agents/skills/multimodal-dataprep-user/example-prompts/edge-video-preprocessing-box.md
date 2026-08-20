@@ -1,14 +1,19 @@
-Build an edge video preprocessing box: a small watcher that runs near the cameras and turns each new MP4 into retrieval-ready data locally, before any central sync.
+Build an edge preprocessing workflow that turns files from a mounted camera
+drop directory into retrieval-ready records.
 
-- Bring the full stack up on the edge host (dataprep + VDMS + MinIO, all local); export strong MinIO credentials in-shell and reuse the same pair across restarts.
-- Watch a drop folder; on each new MP4, POST /videos/upload with a moderate frame_interval and a per-camera tag (e.g. tags=camera-1).
-- Raw MP4s land in MinIO (console on :6011), embeddings and metadata in the local VDMS collection — everything stays on the box; a later sync job can read MinIO and VDMS directly.
-- Report per-file ingestion status and rolling GET /telemetry timings.
+- Select a supported vector backend (VDMS or Milvus) and media storage backend
+  (MinIO or local filesystem).
+- Bind the host drop directory to `MM_DATAPREP_INGEST_DATA_ROOT`.
+- Submit the relative directory with `POST /media/ingest-dir`; optionally
+  recurse and apply camera tags.
+- Poll `GET /media/jobs/{job_id}` and report per-item success/error results.
+- Inspect `GET /media` and `GET /telemetry` after completion.
 
-Validate the application using:
-- Embedding model CLIP/clip-vit-b-32; API base http://localhost:6007/v1/dataprep.
-- Two clips from Intel's sample-videos repo (download: https://github.com/intel-iot-devkit/sample-videos/raw/refs/heads/master/<name>.mp4) dropped one after another: car-detection.mp4 (tag camera-1) and people-detection.mp4 (tag camera-2).
+Validate with two supported media files tagged for different cameras. Expected
+results:
 
-Expected results:
-- Each drop returns 201 and the clip appears in GET /videos; the MinIO console shows the raw files; GET /telemetry shows two ingestion entries.
-- Stopping and restarting the stack with the same credentials keeps the library intact (the MinIO volume and VDMS collection persist).
+- Submission returns HTTP 202 with a `job_id`.
+- Job state reaches `completed` or `completed_with_errors` with a result for
+  every accepted item.
+- Successful items appear in `GET /media` and have telemetry records.
+- A `dir_path` that escapes the configured ingest root is rejected.
