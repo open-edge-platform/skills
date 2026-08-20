@@ -52,7 +52,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install JSON schema validator
-        run: python3 -m pip install check-jsonschema==0.34.0
+        run: python3 -m pip install -r requirements.txt
 
       - name: Validate skills config
         run: check-jsonschema --schemafile skills-config.schema.json skills-config.json
@@ -63,7 +63,7 @@ jobs:
           INSTALL: ${{ inputs.install || 'true' }}
           NPM_CONFIG_YES: "true"
         run: |
-          npm install -g skills@1.5.23
+          npm ci
           echo "Node.js version:"
           node --version
           echo "npx version:"
