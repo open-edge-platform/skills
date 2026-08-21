@@ -243,26 +243,24 @@ def finalize_process_result(cli: str, result: RunResult, returncode: int) -> Non
 # --------------------------------------------------------------------------
 
 def build_prompt(eval_prompt: str, skill_path: str | None) -> str:
-    """Build the task prompt. If skill_path is given, instruct the agent to
-    read and follow that skill's SKILL.md before answering — this works
-    identically across all three CLIs regardless of their native "skills"
-    support, which makes the with/without comparison apples-to-apples."""
+    """Build the task prompt.
+
+    with_skill: invokes skill-creator's own executor subagent protocol so the CLI
+    behaves identically to a manual /skill-creator run.
+
+    without_skill: bare eval prompt — no mediation, skill-creator handles the rest.
+    """
     if skill_path:
         return (
-            f"You have access to a skill at this path: {skill_path}\n\n"
-            "Read the skill's SKILL.md file (and any reference/example files it "
-            "points you to, as needed) and follow its instructions to answer this "
-            "task. Do not perform any real network calls, downloads, or start any "
-            "real services — just produce the guidance, commands, and request "
-            "payloads a user would need.\n\n"
-            f"TASK: {eval_prompt}"
+            f"You have access to the skill-creator skill at: {SKILL_CREATOR_DIR}/SKILL.md\n"
+            f"and the skill to evaluate at: {skill_path}\n\n"
+            "Using skill-creator's eval executor protocol, complete this task for the "
+            "skill above. Read skill-creator's SKILL.md to understand how to run a "
+            "with-skill eval subagent, then read and follow the target skill's "
+            "SKILL.md to carry out the task below.\n\n"
+            f"Task: {eval_prompt}"
         )
-    return (
-        "Answer this task directly using your own general knowledge. Do not "
-        "perform any real network calls, downloads, or start any real services "
-        "— just produce the guidance, commands, and request payloads a user "
-        f"would need.\n\nTASK: {eval_prompt}"
-    )
+    return eval_prompt
 
 
 # --------------------------------------------------------------------------
@@ -572,9 +570,7 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
     # narrates as a normal (if useless) assistant message. Retry once with
     # `danger-full-access`, which skips bubblewrap sandboxing entirely — the same
     # trust model already used for claude (--dangerously-skip-permissions) and
-    # copilot (--allow-all-tools --allow-all-paths) in this script, and safe here
-    # because every eval prompt already instructs the agent not to perform real
-    # network calls, downloads, or start real services.
+    # copilot (--allow-all-tools --allow-all-paths) in this script.
     combined_for_retry_check = "\n".join(part for part in (result.raw_stderr, result.raw_stdout) if part)
     if (
         not _is_retry
@@ -624,15 +620,26 @@ def slugify(text: str, max_len: int = 40) -> str:
 
 
 def eval_dir_name(ev: dict) -> str:
-    # Prefer an explicit eval_name if the evals.json provides one; otherwise
-    # fall back to a short slug of the prompt itself (not expected_output,
-    # which tends to produce long, awkward directory names).
-    name = ev.get("eval_name") or slugify(ev["prompt"], max_len=30)
+    # Prefer eval_name, then the stem of prompt_file (e.g. "01-upload-and-index-new-clip"
+    # → "01-upload-and-index-new-clip"), then a slug of the prompt text.
+    # Using prompt_file keeps directory names consistent with skill-creator runs.
+    name = (
+        ev.get("eval_name")
+        or (Path(ev["prompt_file"]).stem if ev.get("prompt_file") else None)
+        or slugify(ev["prompt"], max_len=30)
+    )
     return f"eval-{ev['id']}-{name}"
 
 
-def run_one(cli: str, binary: str, ev: dict, config: str, skill_path: str, timeout: int,
-            model: str | None = None) -> tuple[str, dict, str, RunResult]:
+def run_one(
+    cli: str,
+    binary: str,
+    ev: dict,
+    config: str,
+    skill_path: str,
+    timeout: int,
+    model: str | None = None,
+) -> tuple[str, dict, str, RunResult]:
     prompt = build_prompt(ev["prompt"], skill_path if config == "with_skill" else None)
     scratch = Path(tempfile.mkdtemp(prefix=f"skilleval-{cli}-{ev['id']}-{config}-"))
     try:
@@ -724,22 +731,24 @@ def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult
 # Grading (LLM-as-judge, following skill-creator's agents/grader.md)
 # --------------------------------------------------------------------------
 
-def build_grader_prompt(eval_meta: dict, transcript_path: Path, outputs_dir: Path) -> str:
-    """Build the grading instructions, following agents/grader.md's process
-    but condensed for CLI invocation: read transcript+outputs, judge each
-    expectation, emit JSON matching the schema the viewer/aggregator expect."""
+def build_grader_prompt(
+    eval_meta: dict,
+    transcript_path: Path,
+    outputs_dir: Path,
+) -> str:
+    """Build the grading prompt by delegating to skill-creator's grader.md.
+
+    skill-creator's grader.md already encodes all the right grading heuristics;
+    re-using it keeps the grading behaviour identical to a manual skill-creator run.
+    """
     assertions = eval_meta.get("assertions", [])
     assertions_block = "\n".join(f"- {a}" for a in assertions) or "(no assertions provided)"
 
-    return f"""You are grading an AI assistant's response to a task, evaluating whether \
-it satisfies a list of expectations. Follow this process:
+    return f"""Follow the grading instructions in: {GRADER_MD_PATH}
 
-1. Read the transcript file at: {transcript_path}
-2. Read all files in the outputs directory: {outputs_dir}
-3. For each expectation below, decide PASS or FAIL based on clear evidence in the \
-transcript/outputs. Burden of proof is on the expectation — if you can't find clear \
-evidence, it fails. A technically-satisfied assertion whose underlying task outcome is \
-wrong or incomplete should also fail.
+Inputs:
+- transcript_path: {transcript_path}
+- outputs_dir: {outputs_dir}
 
 Expectations to evaluate:
 {assertions_block}
@@ -747,7 +756,7 @@ Expectations to evaluate:
 Write your grading result as a SINGLE JSON object (and nothing else — no markdown \
 fences, no commentary before or after) to this exact path: {outputs_dir.parent / 'grading.json'}
 
-The JSON must have this exact structure:
+The JSON must use these exact field names (the viewer depends on them):
 {{
   "expectations": [
     {{"text": "<expectation text>", "passed": true/false, "evidence": "<specific quote or description>"}}
@@ -759,8 +768,14 @@ Use the file-write tools available to you to actually create this file — do no
 print the JSON in your final response."""
 
 
-def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict,
-               timeout: int, grader_model: str | None = None) -> tuple[bool, str | None]:
+def run_grader(
+    grader_cli: str,
+    grader_binary: str,
+    run_dir: Path,
+    eval_meta: dict,
+    timeout: int,
+    grader_model: str | None = None,
+) -> tuple[bool, str | None]:
     """Invoke the grader CLI to write grading.json into run_dir. Returns (success, grader_model)."""
     transcript_path = run_dir / "transcript.md"
     outputs_dir = run_dir / "outputs"
@@ -807,9 +822,16 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     return False, effective_model
 
 
-def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: str,
-                   workers: int, timeout: int, grader_model: str | None = None,
-                   eval_ids: set[int] | None = None) -> str | None:
+def grade_all_runs(
+    workspace: Path,
+    cli: str,
+    grader_cli: str,
+    grader_binary: str,
+    workers: int,
+    timeout: int,
+    grader_model: str | None = None,
+    eval_ids: set[int] | None = None,
+) -> str | None:
     """Grade all ungraded runs under workspace/<cli>. Returns the grader model if detected."""
     cli_dir = workspace / cli
     run_dirs = []
@@ -831,7 +853,8 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
     detected_model: str | None = None
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout, grader_model): run_dir
+            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout,
+                        grader_model): run_dir
             for run_dir, eval_meta in run_dirs
         }
         for future in as_completed(futures):
@@ -1212,7 +1235,7 @@ def main() -> int:
     parser.add_argument("--clis", default="copilot", help="Comma-separated list of CLIs to run")
     parser.add_argument("--configs", default="with_skill,without_skill", help="Comma-separated configs to run")
     parser.add_argument("--workers", type=int, default=4, help="Max concurrent subprocess runs")
-    parser.add_argument("--timeout", type=int, default=300, help="Per-run timeout in seconds")
+    parser.add_argument("--timeout", type=int, default=600, help="Per-run timeout in seconds")
     parser.add_argument("--eval-ids", default="", help="Comma-separated eval IDs to restrict to (default: all)")
     parser.add_argument("--copilot-bin", default=None, help="Explicit path to the copilot binary (default: auto-detect on PATH)")
     parser.add_argument("--claude-bin", default=None, help="Explicit path to the claude binary (default: auto-detect on PATH)")
@@ -1293,7 +1316,8 @@ def main() -> int:
     results_summary = []
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
-            pool.submit(run_one, cli, binaries[cli], ev, config, skill_path, args.timeout, models[cli]): (cli, ev, config)
+            pool.submit(run_one, cli, binaries[cli], ev, config, skill_path,
+                        args.timeout, models[cli]): (cli, ev, config)
             for cli, ev, config in jobs
         }
         for future in as_completed(futures):
