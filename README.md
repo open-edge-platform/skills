@@ -8,7 +8,7 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-08-22 00:04 UTC -->
+<!-- Last updated: 2026-08-23 00:04 UTC -->
 | Product | Skill | Skill Description |
 |---------|-------|-------------------|
 | [Chat Question and Answer](https://github.com/open-edge-platform/edge-ai-libraries) | [chatqna-docker-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-docker-deploy) | Deploy Chat Question-and-Answer Core with Docker Compose (OpenVINO CPU, OpenVINO GPU, or Ollama CPU), including env setup, profile selection, startup verification, health checks, and teardown. Use this skill when the user says "deploy chatqna core", "start chatqna container", "run compose", "openvino gpu deploy", or "ollama deploy". |
