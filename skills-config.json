@@ -16,17 +16,17 @@
     {
       "product": "Chat Question and Answer",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "sample-applications/chat-question-and-answer-core/.github/skills",
       "skills": [
         {
           "name": "chatqna-docker-deploy",
-          "ref": "main",
+          "ref": "release-2026.2.0",
           "prompts_url": ""
         },
         {
           "name": "chatqna-helm-deploy",
-          "ref": "main",
+          "ref": "release-2026.2.0",
           "prompts_url": ""
         }
       ]
@@ -34,80 +34,80 @@
     {
       "product": "Video Search and Summarization",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
       "skills": [
         {
           "name": "vss-deploy",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy/example-prompts"
         },
         {
           "name": "vss-deploy-helm",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy-helm/example-prompts"
         },
         {
           "name": "vss-search-index",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-search-index/example-prompts"
         },
         {
           "name": "vss-summarize-video",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-summarize-video/example-prompts"
         }
       ]
     },
     {
       "product": "Multimodal Embedding Serving Microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/multimodal-embedding-serving/.github/skills",
       "skills": [
         {
           "name": "multimodal-embedding-serving-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-embedding-serving-user/example-prompts"
         }
       ]
     },
     {
       "product": "Multimodal DataPrep microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
       "skills": [
         {
           "name": "multimodal-dataprep-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-dataprep-user/example-prompts"
         }
       ]
     },
     {
       "product": "Model Download",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/model-download/.github/skills",
       "skills": [
         {
           "name": "model-download-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/model-download-user/example-prompts"
         }
       ]
     },
     {
       "product": "DL Streamer Pipeline Server",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/dlstreamer-pipeline-server/.github/skills",
       "skills": [
         {
           "name": "dlsps-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/dlsps-user/example-prompts"
         }
       ]
     },
@@ -232,39 +232,39 @@
     {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": ".github/skills",
       "skills": [
         {
           "name": "scenescape-setup",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/scenescape-setup/example-prompts"
         }
       ]
     },
     {
       "product": "Metro AI Suite - Prompt Library",
       "repo": "open-edge-platform/edge-ai-suites",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "metro-ai-suite/prompt-library/.github/skills",
       "skills": [
         {
           "name": "metro-ai-apps-builder",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-builder/example-prompts"
         }
       ]
     },
     {
       "product": "Metro AI Suite - Vision AI App Recipe",
       "repo": "open-edge-platform/edge-ai-suites",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
           "name": "metro-ai-apps-recipe",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts"
+          "ref": "release-2026.2.0",
+          "prompts_url": "https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-recipe/example-prompts"
         }
       ]
     }
