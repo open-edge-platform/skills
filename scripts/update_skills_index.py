@@ -411,9 +411,12 @@ def _skills_repo_branch(repo_root: Path) -> str:
             ["git", "-C", str(repo_root), "rev-parse", "--abbrev-ref", "HEAD"],
             capture_output=True, text=True, check=True,
         )
-        return result.stdout.strip() or "main"
+        branch = result.stdout.strip()
+        if not branch or branch == "HEAD":
+            return os.getenv("GITHUB_REF_NAME") or "main"
+        return branch
     except subprocess.CalledProcessError:
-        return "main"
+        return os.getenv("GITHUB_REF_NAME") or "main"
 
 
 def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> str:
