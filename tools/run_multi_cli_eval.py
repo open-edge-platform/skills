@@ -1494,7 +1494,11 @@ def main() -> int:
             print("\n=== Consolidated benchmark (all agents) ===")
             if len(binaries) >= 2:
                 cross = build_cross_cli_benchmark(workspace, list(binaries.keys()), skill_name, configs=configs)
-                (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
+            else:
+                # single-CLI run — reuse the per-CLI benchmark as the consolidated one
+                only_cli = next(iter(binaries))
+                cross = json.loads((workspace / only_cli / "benchmark.json").read_text())
+            (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
             (workspace / "benchmark.md").write_text(
                 generate_consolidated_benchmark_md(
                     workspace, list(binaries.keys()), skill_name, evals, grader_cli, grader_model
