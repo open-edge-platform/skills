@@ -267,6 +267,39 @@
           "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts"
         }
       ]
+    },
+    {
+      "product": "Anomalib",
+      "repo": "open-edge-platform/anomalib",
+      "ref": "main",
+      "path": ".agents/skills",
+      "skills": [
+        {
+          "name": "anomalib-adding-a-model",
+          "ref": "main",
+          "prompts_url": ""
+        },
+        {
+          "name": "anomalib-adding-a-datamodule",
+          "ref": "main",
+          "prompts_url": ""
+        },
+        {
+          "name": "anomalib-training",
+          "ref": "main",
+          "prompts_url": ""
+        },
+        {
+          "name": "anomalib-tiled-ensemble",
+          "ref": "main",
+          "prompts_url": ""
+        },
+        {
+          "name": "anomalib-benchmarking",
+          "ref": "main",
+          "prompts_url": ""
+        }
+      ]
     }
   ]
 }
