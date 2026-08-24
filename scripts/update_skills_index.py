@@ -120,7 +120,7 @@ def _run(cmd: list[str], cwd: Path, retries: int = 2, retry_delay: float = 5.0) 
     for attempt in range(1, attempts + 1):
         suffix = f" (attempt {attempt}/{attempts})" if attempts > 1 else ""
         logger.info("$ %s%s", " ".join(cmd), suffix)
-        rc = subprocess.run(cmd, cwd=str(cwd)).returncode
+        rc = subprocess.run(cmd, cwd=str(cwd), env={**os.environ, "DISABLE_TELEMETRY": "1"}).returncode
         if rc == 0:
             return rc
         if attempt < attempts:

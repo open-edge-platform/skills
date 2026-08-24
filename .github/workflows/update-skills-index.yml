@@ -111,5 +111,5 @@ jobs:
           else
             SOURCE="$REPO#${VERIFY_BRANCH}"
           fi
-          npx skills add "$SOURCE" --list
-          npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
+          DISABLE_TELEMETRY=1 npx skills add "$SOURCE" --list
+          DISABLE_TELEMETRY=1 npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
