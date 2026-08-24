@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "release-*"
     paths:
       - "skills-config.json"
       - "skills-config.schema.json"
@@ -102,7 +103,7 @@ jobs:
 
       - name: Verify skills installation
         env:
-          VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
+          VERIFY_BRANCH: ${{ inputs.branch || github.ref_name }}
           NPM_CONFIG_YES: "true"
         run: |
           REPO="open-edge-platform/skills"
