@@ -276,7 +276,7 @@ def build_prompt(
     so no skill-creator preamble is needed here."""
     save_line = (
         f"- Save outputs to: {outputs_dir}/\n"
-        "- Outputs to save: response.md (complete answer), transcript.md (steps taken)"
+        "- Outputs to save: response.md (complete answer)"
         if outputs_dir else "- Input files: none"
     )
     if skill_path:
@@ -704,8 +704,10 @@ def run_one(
     try:
         runner = CLI_RUNNERS[cli]
         try:
+            skill_creator_md = SKILL_CREATOR_DIR / "SKILL.md"
+            attachments = [skill_creator_md] if skill_creator_md.exists() else None
             result = runner(binary, prompt, scratch, timeout, model,
-                            attachments=[SKILL_CREATOR_DIR / "SKILL.md"])
+                            attachments=attachments)
         except OSError as error:
             result = RunResult(
                 error=(
@@ -1504,9 +1506,7 @@ def main() -> int:
     # eval outputs, transcripts, and grading results are persisted with the skill.
     skill_benchmark_dir = Path(skill_path) / "benchmark"
     if workspace.resolve() != skill_benchmark_dir.resolve():
-        if skill_benchmark_dir.exists():
-            shutil.rmtree(skill_benchmark_dir)
-        shutil.copytree(workspace, skill_benchmark_dir)
+        shutil.copytree(workspace, skill_benchmark_dir, dirs_exist_ok=True)
         print(f"\nWorkspace copied to: {skill_benchmark_dir}")
     else:
         print(f"\nResults written directly to: {skill_benchmark_dir}")
