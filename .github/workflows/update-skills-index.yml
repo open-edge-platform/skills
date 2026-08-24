@@ -104,6 +104,7 @@ jobs:
         env:
           VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
           NPM_CONFIG_YES: "true"
+          DISABLE_TELEMETRY: "1"
         run: |
           REPO="open-edge-platform/skills"
           if [ "${VERIFY_BRANCH}" = "main" ]; then
@@ -111,5 +112,5 @@ jobs:
           else
             SOURCE="$REPO#${VERIFY_BRANCH}"
           fi
-          DISABLE_TELEMETRY=1 npx skills add "$SOURCE" --list
-          DISABLE_TELEMETRY=1 npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
+          npx skills add "$SOURCE" --list
+          npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
