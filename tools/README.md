@@ -33,7 +33,8 @@ For every `(cli, eval, configuration)` combination it:
      every CLI that ran, written to `<workspace>/benchmark.json` +
      `benchmark.md` (top level of the workspace).
 6. Copies the full workspace tree to `<skill-path>/benchmark/` so results
-   are persisted alongside the skill.
+   are persisted alongside the skill. Just commit only the `benchmark/benchmark.md`
+   and `benchmark/benchmark.json` files into your `<skill-path>` directory
 
 ## Prerequisites
 
