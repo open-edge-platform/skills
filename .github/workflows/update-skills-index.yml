@@ -104,6 +104,7 @@ jobs:
         env:
           VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
           NPM_CONFIG_YES: "true"
+          DISABLE_TELEMETRY: "1"
         run: |
           REPO="open-edge-platform/skills"
           if [ "${VERIFY_BRANCH}" = "main" ]; then
