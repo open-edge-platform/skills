@@ -32,6 +32,9 @@ For every `(cli, eval, configuration)` combination it:
    - **Cross-CLI**: `with_skill` pass rate / time / tokens side-by-side for
      every CLI that ran, written to `<workspace>/benchmark.json` +
      `benchmark.md` (top level of the workspace).
+6. Copies the full workspace tree to `<skill-path>/benchmark/` so results
+   are persisted alongside the skill. Just commit only the `benchmark/benchmark.md`
+   and `benchmark/benchmark.json` files into your `<skill-path>` directory
 
 ## Prerequisites
 
@@ -58,47 +61,119 @@ For every `(cli, eval, configuration)` combination it:
 
   If skill-creator isn't found, eval **running** still works, but grading
   aggregation (`benchmark.json`/`benchmark.md`) will be skipped with a
-  warning — grade/aggregate manually with skill-creator's own
-  `aggregate_benchmark.py` in that case.
+  warning.
 
 ## Usage
 
-Run the full pipeline (evals → grading → aggregation) for any skill. By default,
-only Copilot runs. Add other supported CLIs with `--clis` when needed:
+### Simplest form — one required argument
 
-By default, the grading judge is `copilot`. The grader model defaults to that CLI's own default
-model unless `--grader-model` is provided. When the grader is Copilot, `--copilot-model`
-is used as the grader model fallback.
+Only `--skill-path` is required. Everything else has a sensible default:
 
 ```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --configs with_skill,without_skill \
-  --grader-cli copilot \
-  --grader-model gpt-5.5
+python3 tools/run_multi_cli_eval.py --skill-path .agents/skills/my-skill
 ```
 
-To override the default grader CLI, set `--grader-cli` explicitly (for example,
-using Claude as the judge):
+Defaults applied automatically:
+- Evals loaded from `<skill-path>/evals/evals.json`
+- Results written directly to `<skill-path>/benchmark/`
+- CLI: `copilot` (using its own default model)
+- Both `with_skill` and `without_skill` configs run
+- Grader: `copilot` (using its own default model)
+
+### Pin a model
 
 ```bash
 python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --configs with_skill,without_skill \
+  --skill-path .agents/skills/my-skill \
+  --copilot-model claude-sonnet-4-6 \
+  --grader-model claude-sonnet-4-6
+```
+
+### Run multiple CLIs for a cross-agent comparison
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --clis copilot,claude \
+  --copilot-model claude-sonnet-4-6 \
+  --claude-model claude-sonnet-4-6
+```
+
+### Use a custom workspace or evals file
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --evals-json /custom/path/evals.json \
+  --workspace /tmp/my-eval-run
+```
+
+Results are still copied to `<skill-path>/benchmark/` at the end unless
+`--workspace` already points there.
+
+### Run only specific eval IDs
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --eval-ids 1,3,5
+```
+
+### Skip grading or aggregation
+
+```bash
+# evals only, no grading
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --skip-grading
+
+# evals + grading, no benchmark aggregation
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --skip-aggregate
+```
+
+### Use a different grading judge
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
   --grader-cli claude \
   --grader-model claude-sonnet-4-6
 ```
 
-This produces:
+### Dry run — see the plan without executing
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --dry-run
+```
+
+### Full example with all explicit options
+
+```bash
+python3 tools/run_multi_cli_eval.py \
+  --skill-path .agents/skills/my-skill \
+  --evals-json .agents/skills/my-skill/evals/evals.json \
+  --workspace /tmp/my-skill-eval-run \
+  --clis copilot,claude,codex \
+  --configs with_skill,without_skill \
+  --copilot-model claude-sonnet-4-6 \
+  --claude-model claude-sonnet-4-6 \
+  --codex-model gpt-5.5 \
+  --grader-cli copilot \
+  --grader-model claude-sonnet-4-6 \
+  --workers 4 \
+  --timeout 600
+```
+
+## Output layout
 
 ```
-/tmp/my-skill-eval-run/
+<workspace>/
 ├── run_summary.json                    # per-run timing/token/error summary
-├── benchmark.json / benchmark.md       # cross-CLI comparison (written when ≥2 CLIs run)
+├── benchmark.json / benchmark.md       # cross-CLI comparison
 ├── copilot/
 │   ├── benchmark.json / benchmark.md   # with_skill vs without_skill, this CLI
 │   └── eval-<id>-<name>/
@@ -111,295 +186,75 @@ This produces:
 │               └── outputs/
 │                   ├── response.md
 │                   ├── metrics.json
-│                   └── diagnostics.json          # exit code plus bounded stdout/stderr
+│                   └── diagnostics.json
 ├── claude/  ... (same layout)
 └── codex/   ... (same layout)
 ```
 
-## Troubleshooting failed CLI runs
+The full workspace is also copied to `<skill-path>/benchmark/` at the end,
+unless the workspace was already set to that path (the default).
 
-The runner prints each resolved CLI binary before starting. When a process
-fails, exits without a captured assistant response, or cannot be started, the
-console reports an actionable cause and points to that run's
-`outputs/diagnostics.json`. The diagnostic file records the exit code and the
-last 8,000 characters of stdout and stderr, which commonly exposes:
+## Viewing results
 
-- Missing or expired authentication, with the appropriate `copilot`, `claude`,
-  or `codex login` command to run.
-- Rate limits, exhausted quota, and account usage limits.
-- Invalid, unsupported, or inaccessible model selections.
-- Incorrect binary paths, missing executable permissions, and runtime failures.
-- Successful process exits that emitted no parseable assistant response.
-
-Raw output is deliberately bounded to keep benchmark workspaces manageable.
-If a failure remains unclear, run the resolved binary shown at startup
-interactively to confirm its authentication and configuration.
-
-### Run additional CLIs or restrict configs
-
-Default execution is Copilot-only. Supported values for `--clis` are `copilot`, `claude`, and `codex`
-(comma-separated, any combination). To run all three for a full cross-agent comparison:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --clis copilot,claude,codex \
-  --configs with_skill,without_skill
-```
-
-To run only a subset, list only the CLIs you want:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --clis copilot,claude \
-  --configs with_skill
-```
-
-### Only run specific eval IDs
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --eval-ids 1,3,5
-```
-
-### Skip grading or aggregation
-
-Useful for a fast smoke test of the eval-running stage only, or if you want
-to grade manually:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --clis copilot,claude,codex \
-  --configs with_skill,without_skill \
-  --skip-grading
-```
-
-To also skip aggregation:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --clis copilot,claude,codex \
-  --configs with_skill,without_skill \
-  --skip-grading \
-  --skip-aggregate
-```
-
-### Choose which CLI acts as the grading judge
-
-By default the script uses copilot as the grading judge. Override explicitly:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --grader-cli copilot
-```
-
-If your chosen judge CLI hits a rate limit or quota mid-run, re-running the
-same command is safe — `grade_all_runs` only grades runs that don't already
-have a `grading.json`, so it picks up where it left off (optionally with a
-different `--grader-cli`).
-
-### Choose a specific grading judge model
-
-By default, grading uses this precedence:
-- `--grader-model` (if set)
-- `--copilot-model` (only when `--grader-cli copilot`)
-- selected grader CLI built-in default model
-
-Use `--grader-model` to force a specific model for grading:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --grader-cli claude \
-  --grader-model claude-sonnet-4-6
-```
-
-### Point at a specific CLI binary
-
-If a CLI isn't on `PATH`, pass its path explicitly with the corresponding
-`--*-bin` flag. For Copilot and Claude this is uncommon; for Codex it
-happens when Codex is installed under an `nvm`-managed Node version that
-isn't the system default:
-
-```bash
-# Codex installed under a non-default nvm Node version
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --codex-bin ~/.nvm/versions/node/v24.18.0/bin/codex
-
-# Copilot and/or Claude at non-standard paths
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --copilot-bin /usr/local/bin/copilot \
-  --claude-bin /opt/claude/bin/claude
-```
-
-If `--codex-bin` is not provided, the script first checks `PATH` then
-falls back to any `~/.nvm/versions/node/*/bin/codex` binary it finds.
-
-### Pin a specific model per CLI
-
-By default each CLI picks its own built-in default model, and the benchmark
-reports label the run with whatever model it turns out to have used
-(see [Model tracking](#model-tracking-in-benchmark-reports) below). To pin a
-specific model instead (e.g. to compare the same model across CLIs, or a
-cheaper/faster model for quick iteration):
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --copilot-model claude-sonnet-5 \
-  --claude-model claude-sonnet-4-6 \
-  --codex-model gpt-5.5
-```
-
-`--copilot-model` also sets the grader model when `--grader-cli copilot` (the default)
-and `--grader-model` is not explicitly set. To use a different model for Copilot eval
-runs without affecting the grader, combine both flags:
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --copilot-model claude-haiku-4-5 \
-  --grader-model gpt-5.5
-```
-
-### Dry run (see the execution plan without running anything)
-
-```bash
-python3 tools/run_multi_cli_eval.py \
-  --evals-json /path/to/my-skill/evals/evals.json \
-  --skill-path /path/to/my-skill \
-  --workspace /tmp/my-skill-eval-run \
-  --dry-run
-```
-
-### Full flag reference
-
-| Flag | Required | Default | Description |
-|---|---|---|---|
-| `--evals-json` | **yes** | — | Path to the skill's `evals/evals.json` |
-| `--skill-path` | **yes** | — | Path to the skill directory (contains `SKILL.md`) |
-| `--workspace` | **yes** | — | Output workspace directory |
-| `--clis` | no | `copilot` | Comma-separated list of CLIs to run; valid values: `copilot`, `claude`, `codex` |
-| `--configs` | no | `with_skill,without_skill` | Comma-separated configs to run |
-| `--workers` | no | `4` | Max concurrent subprocess runs |
-| `--timeout` | no | `300` | Per-run timeout in seconds |
-| `--eval-ids` | no | *(all)* | Comma-separated eval IDs to restrict to |
-| `--copilot-bin` | no | *(auto-detect on PATH)* | Explicit path to the `copilot` binary |
-| `--claude-bin` | no | *(auto-detect on PATH)* | Explicit path to the `claude` binary |
-| `--codex-bin` | no | *(auto-detect on PATH / nvm fallback)* | Explicit path to the `codex` binary |
-| `--copilot-model` | no | *(Copilot CLI default)* | Model for `copilot` eval runs; also used as grader model fallback when `--grader-cli copilot` and `--grader-model` is not set |
-| `--claude-model` | no | *(Claude Code CLI default)* | Model to pass to `claude` via `--model` |
-| `--codex-model` | no | *(Codex CLI default)* | Model to pass to `codex` via `-m`/`--model` |
-| `--skill-name` | no | skill directory name | Skill name used in benchmark metadata |
-| `--grader-cli` | no | `copilot` | CLI to use as the LLM grading judge |
-| `--grader-model` | no | *(`--copilot-model` when grader is copilot, else grader CLI default)* | Model to pass to the grading judge CLI |
-| `--grader-workers` | no | `4` | Max concurrent grading calls |
-| `--grader-timeout` | no | `180` | Per-grading-call timeout in seconds |
-| `--skip-grading` | no | `false` | Only run evals, skip LLM grading |
-| `--skip-aggregate` | no | `false` | Skip `benchmark.json`/`.md` generation |
-| `--dry-run` | no | `false` | Print the execution plan without running anything |
-
-## Viewing the results
-
-Once the pipeline finishes, use skill-creator's own viewer against any
-per-CLI directory (it needs no modification — the directory layout this
-script produces is already compatible):
+Use skill-creator's own viewer against any per-CLI directory:
 
 ```bash
 python3 $SKILL_CREATOR_DIR/eval-viewer/generate_review.py \
-  /tmp/my-skill-eval-run/claude \
+  <workspace>/copilot \
   --skill-name my-skill \
-  --benchmark /tmp/my-skill-eval-run/claude/benchmark.json \
-  --static /tmp/my-skill-eval-run/claude/review.html
+  --benchmark <workspace>/copilot/benchmark.json \
+  --static <workspace>/copilot/review.html
 ```
 
-(`--static` is required in headless environments without a display/browser —
-it writes a standalone HTML file you can open locally instead of starting a
-server.)
+(`--static` is required in headless environments — it writes a standalone
+HTML file instead of starting a server.)
 
-## Model tracking in benchmark reports
+## Flag reference
 
-Each run's `timing.json` records a `model` field showing which model actually
-answered the prompt, and the **Model** line in every `benchmark.md` is
-derived from that (the most common value seen across that CLI's runs), not a
-placeholder:
+| Flag | Default | Description |
+|---|---|---|
+| `--skill-path` | *(required)* | Path to the skill directory (contains `SKILL.md`) |
+| `--evals-json` | `<skill-path>/evals/evals.json` | Path to the skill's evals JSON |
+| `--workspace` | `<skill-path>/benchmark` | Output workspace directory |
+| `--clis` | `copilot` | Comma-separated CLIs: `copilot`, `claude`, `codex` |
+| `--configs` | `with_skill,without_skill` | Comma-separated configs to run |
+| `--workers` | `4` | Max concurrent subprocess runs |
+| `--timeout` | `600` | Per-run timeout in seconds |
+| `--eval-ids` | *(all)* | Comma-separated eval IDs to restrict to |
+| `--copilot-bin` | *(auto-detect)* | Explicit path to the `copilot` binary |
+| `--claude-bin` | *(auto-detect)* | Explicit path to the `claude` binary |
+| `--codex-bin` | *(auto-detect / nvm fallback)* | Explicit path to the `codex` binary |
+| `--copilot-model` | *(CLI default)* | Model for copilot runs; also grader fallback when `--grader-cli copilot` |
+| `--claude-model` | *(CLI default)* | Model for claude runs |
+| `--codex-model` | *(CLI default)* | Model for codex runs |
+| `--skill-name` | *(skill dir name)* | Skill name in benchmark metadata |
+| `--grader-cli` | `copilot` | CLI to use as the LLM grading judge |
+| `--grader-model` | `--copilot-model` or *(CLI default)* | Model for the grading judge |
+| `--grader-workers` | `4` | Max concurrent grading calls |
+| `--grader-timeout` | `180` | Per-grading-call timeout in seconds |
+| `--skip-grading` | `false` | Skip LLM grading |
+| `--skip-aggregate` | `false` | Skip `benchmark.json`/`.md` generation |
+| `--dry-run` | `false` | Print the plan without running anything |
 
-- **Copilot**: read directly from the CLI's own JSON event stream
-  (`assistant.message`/`assistant.turn_start` events include the model that
-  served each turn) — this is exact, whether or not you pinned one with
-  `--copilot-model`.
-- **Claude**: read from the `modelUsage` field in the CLI's JSON output. Claude
-  Code sometimes routes small subagent/title-generation calls to a cheaper
-  model (e.g. `claude-haiku-4-5`) alongside the model that produced the actual
-  answer — this script picks whichever model produced the most output tokens,
-  since that's the one whose response is being graded.
-- **Codex**: its non-interactive JSON output (`codex exec --json`) does not
-  expose which model served the request anywhere in the event stream, even
-  with debug logging. If you passed `--codex-model`, that's what gets
-  recorded (accurate, since you told it explicitly which model to use).
-  Otherwise the report will say `unspecified (codex CLI default)` — pass
-  `--codex-model` explicitly if you need a precise label for Codex runs.
+## Troubleshooting
 
-If you're aggregating an older run that predates this field (`timing.json`
-has no `model` key), the report will say
-`unknown (recorded before model tracking was added — re-run to capture it)`.
+When a run fails, the console reports the cause and points to
+`outputs/diagnostics.json`. Common issues:
 
-## Notes and known limitations
+- **Authentication**: run the CLI interactively once (`copilot`, `claude`, or `codex login`).
+- **Rate limits / quota**: check account usage and retry later, optionally with a different `--grader-cli`.
+- **Invalid model**: verify the `--*-model` value and account access.
+- **Codex sandbox on nested containers**: the `workspace-write` sandbox uses
+  bubblewrap which can fail inside rootless containers; the script retries
+  automatically with `--sandbox danger-full-access`.
+- **Grader partial failure**: already-graded runs are skipped on rerun, so
+  re-running the same command resumes where it left off.
 
-- **Codex CLI setup**: requires Node.js ≥ 16. If your system default Node is
-  older, install Codex under a newer Node version (e.g. via `nvm`) and pass
-  `--codex-bin` pointing at that installation.
-- **Copilot CLI token counts**: the Copilot CLI's `--output-format json` event
-  stream does not expose a token-usage field (the final `result` event's
-  `usage` object only has premium-request/duration fields). To recover real
-  counts, this script sets `COPILOT_OTEL_FILE_EXPORTER_PATH` to a temporary
-  file for each Copilot invocation, which makes the CLI additionally emit
-  OpenTelemetry GenAI spans/metrics as JSON lines (see `copilot help
-  monitoring`). It sums `gen_ai.usage.input_tokens` + `gen_ai.usage.output_tokens`
-  across every `chat <model>` span (there can be more than one per run if the
-  agent makes multiple LLM calls, e.g. across tool-use turns), then deletes
-  the temp file. This is the officially documented telemetry mechanism, so it
-  should remain stable across CLI updates; if a future Copilot CLI version
-  removes/renames these attributes, `total_tokens` will fall back to `null`
-  for that run rather than raising an error.
-- **Codex model attribution**: see [Model tracking](#model-tracking-in-benchmark-reports)
-  above — pin `--codex-model` explicitly if precise model labeling for Codex
-  matters for your comparison.
-- **Grader quota/rate limits**: LLM grading makes one CLI call per ungraded
-  run. If the judge CLI hits a session limit partway through, re-run the
-  command (optionally with a different `--grader-cli`) — already-graded runs
-  are skipped automatically. To improve consistency across reruns or across
-  environments, pin the grader with `--grader-model`.
-- **Portability**: this script assumes `evals.json` uses the schema
-  documented in skill-creator's `references/schemas.md` (an `evals` array of
-  objects with `id`, `prompt`, and either `assertions` or `expectations`).
-  Both field names are accepted.
+## Notes
+
+- **Codex model attribution**: Codex's JSON output doesn't expose which model
+  served the request. Pass `--codex-model` explicitly for precise labeling.
+- **Copilot token counts**: recovered via OpenTelemetry (`COPILOT_OTEL_FILE_EXPORTER_PATH`);
+  falls back to `null` if a future CLI version removes those attributes.
+- **Portability**: `evals.json` must follow skill-creator's schema —
+  an `evals` array with `id`, `prompt`, and `assertions` or `expectations`.

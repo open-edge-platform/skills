@@ -43,16 +43,25 @@ You can still point the normal skill-creator viewer at any of these:
 
     python eval-viewer/generate_review.py <workspace>/<cli> --static review.html
 
-Usage:
+Simplest usage (all defaults — copilot CLI, evals from <skill>/evals/evals.json,
+results written to <skill>/benchmark):
+
+    python3 run_multi_cli_eval.py --skill-path /path/to/skill
+
+With explicit options:
+
     python3 run_multi_cli_eval.py \
-        --evals-json /path/to/skill/evals/evals.json \
         --skill-path /path/to/skill \
-        --workspace /path/to/output-workspace \
-        --clis copilot \
-        --configs with_skill,without_skill \
-        --workers 4 \
-        --timeout 300 \
-        --grader-cli copilot
+        --clis copilot,claude \
+        --copilot-model claude-sonnet-4-6 \
+        --grader-model claude-sonnet-4-6
+
+With a custom workspace and evals file:
+
+    python3 run_multi_cli_eval.py \
+        --skill-path /path/to/skill \
+        --evals-json /custom/path/evals.json \
+        --workspace /tmp/my-eval-run
 
 Flags to control the extra stages:
     --skip-grading      Only run evals, skip the LLM-grading step.
@@ -242,26 +251,48 @@ def finalize_process_result(cli: str, result: RunResult, returncode: int) -> Non
 # Prompt construction
 # --------------------------------------------------------------------------
 
-def build_prompt(eval_prompt: str, skill_path: str | None) -> str:
-    """Build the task prompt. If skill_path is given, instruct the agent to
-    read and follow that skill's SKILL.md before answering — this works
-    identically across all three CLIs regardless of their native "skills"
-    support, which makes the with/without comparison apples-to-apples."""
+def _skill_description(skill_path: str) -> str:
+    """Extract the one-line description from a skill's YAML frontmatter."""
+    skill_md = Path(skill_path) / "SKILL.md"
+    try:
+        m = re.match(r'^---\s*\n(.*?)\n---', skill_md.read_text(), re.DOTALL)
+        if m:
+            dm = re.search(r'^description:\s*(.+?)(?=\n\w|\Z)', m.group(1), re.MULTILINE | re.DOTALL)
+            if dm:
+                return " ".join(dm.group(1).split())
+    except OSError:
+        pass
+    return ""
+
+
+def build_prompt(
+    eval_prompt: str,
+    skill_path: str | None,
+    outputs_dir: Path | None = None,
+    baseline_skill_path: str | None = None,
+) -> str:
+    """Build the executor task block.  skill-creator's SKILL.md is injected as
+    a CLI attachment (copilot) or prompt prefix (claude/codex) by the runners,
+    so no skill-creator preamble is needed here."""
+    save_line = (
+        f"- Save outputs to: {outputs_dir}/\n"
+        "- Outputs to save: response.md (complete answer)"
+        if outputs_dir else "- Input files: none"
+    )
     if skill_path:
         return (
-            f"You have access to a skill at this path: {skill_path}\n\n"
-            "Read the skill's SKILL.md file (and any reference/example files it "
-            "points you to, as needed) and follow its instructions to answer this "
-            "task. Do not perform any real network calls, downloads, or start any "
-            "real services — just produce the guidance, commands, and request "
-            "payloads a user would need.\n\n"
-            f"TASK: {eval_prompt}"
+            f"Execute this eval task:\n"
+            f"- Skill path: {skill_path}\n"
+            f"- Task: {eval_prompt}\n"
+            f"{save_line}\n"
         )
+    context = _skill_description(baseline_skill_path) if baseline_skill_path else ""
+    context_line = f"- Context: {context}\n" if context else ""
     return (
-        "Answer this task directly using your own general knowledge. Do not "
-        "perform any real network calls, downloads, or start any real services "
-        "— just produce the guidance, commands, and request payloads a user "
-        f"would need.\n\nTASK: {eval_prompt}"
+        f"Execute this eval task (baseline — no skill):\n"
+        f"{context_line}"
+        f"- Task: {eval_prompt}\n"
+        f"{save_line}\n"
     )
 
 
@@ -375,9 +406,14 @@ def _read_copilot_otel_tokens(otel_path: Path) -> tuple[int | None, int | None, 
     return total_in + total_out, total_in, total_out
 
 
-def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None) -> RunResult:
+def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None,
+               attachments: list[Path] | None = None) -> RunResult:
+    # Copilot --attachment only accepts images/native docs; prepend markdown files to the prompt.
+    full_prompt = "".join(
+        f"[{att.name}]\n{att.read_text()}\n\n---\n\n" for att in (attachments or [])
+    ) + prompt
     cmd = [
-        binary, "-p", prompt,
+        binary, "-p", full_prompt,
         "--allow-all-tools", "--allow-all-paths",
         "--no-color", "--output-format", "json",
         "-C", str(cwd),
@@ -445,9 +481,14 @@ def run_copilot(binary: str, prompt: str, cwd: Path, timeout: int, model: str | 
     return result
 
 
-def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None) -> RunResult:
+def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None,
+               attachments: list[Path] | None = None) -> RunResult:
+    # Claude has no --attachment for markdown; prepend file contents to the prompt.
+    full_prompt = "".join(
+        f"[{att.name}]\n{att.read_text()}\n\n---\n\n" for att in (attachments or [])
+    ) + prompt
     cmd = [
-        binary, "-p", prompt,
+        binary, "-p", full_prompt,
         "--output-format", "json",
         "--dangerously-skip-permissions",
     ]
@@ -504,9 +545,14 @@ def run_claude(binary: str, prompt: str, cwd: Path, timeout: int, model: str | N
 
 
 def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | None = None,
-              sandbox: str = "workspace-write", _is_retry: bool = False) -> RunResult:
+              sandbox: str = "workspace-write", _is_retry: bool = False,
+              attachments: list[Path] | None = None) -> RunResult:
+    # Codex has no --attachment for markdown; prepend file contents to the prompt.
+    full_prompt = "".join(
+        f"[{att.name}]\n{att.read_text()}\n\n---\n\n" for att in (attachments or [])
+    ) + prompt
     cmd = [
-        binary, "exec", prompt,
+        binary, "exec", full_prompt,
         "--json",
         "--sandbox", sandbox,
         "--skip-git-repo-check",
@@ -572,9 +618,7 @@ def run_codex(binary: str, prompt: str, cwd: Path, timeout: int, model: str | No
     # narrates as a normal (if useless) assistant message. Retry once with
     # `danger-full-access`, which skips bubblewrap sandboxing entirely — the same
     # trust model already used for claude (--dangerously-skip-permissions) and
-    # copilot (--allow-all-tools --allow-all-paths) in this script, and safe here
-    # because every eval prompt already instructs the agent not to perform real
-    # network calls, downloads, or start real services.
+    # copilot (--allow-all-tools --allow-all-paths) in this script.
     combined_for_retry_check = "\n".join(part for part in (result.raw_stderr, result.raw_stdout) if part)
     if (
         not _is_retry
@@ -624,21 +668,46 @@ def slugify(text: str, max_len: int = 40) -> str:
 
 
 def eval_dir_name(ev: dict) -> str:
-    # Prefer an explicit eval_name if the evals.json provides one; otherwise
-    # fall back to a short slug of the prompt itself (not expected_output,
-    # which tends to produce long, awkward directory names).
-    name = ev.get("eval_name") or slugify(ev["prompt"], max_len=30)
+    # Prefer eval_name, then the stem of prompt_file (e.g. "01-upload-and-index-new-clip"
+    # → "01-upload-and-index-new-clip"), then a slug of the prompt text.
+    # Using prompt_file keeps directory names consistent with skill-creator runs.
+    name = (
+        ev.get("eval_name")
+        or (Path(ev["prompt_file"]).stem if ev.get("prompt_file") else None)
+        or slugify(ev["prompt"], max_len=30)
+    )
     return f"eval-{ev['id']}-{name}"
 
 
-def run_one(cli: str, binary: str, ev: dict, config: str, skill_path: str, timeout: int,
-            model: str | None = None) -> tuple[str, dict, str, RunResult]:
-    prompt = build_prompt(ev["prompt"], skill_path if config == "with_skill" else None)
+def run_one(
+    cli: str,
+    binary: str,
+    ev: dict,
+    config: str,
+    skill_path: str,
+    timeout: int,
+    model: str | None = None,
+    workspace: Path | None = None,
+) -> tuple[str, dict, str, RunResult]:
+    # Pre-create the real outputs dir for all configs so the agent writes files there.
+    outputs_dir: Path | None = None
+    if workspace:
+        outputs_dir = workspace / cli / eval_dir_name(ev) / config / "run-1" / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+    prompt = build_prompt(
+        ev["prompt"],
+        skill_path if config == "with_skill" else None,
+        outputs_dir=outputs_dir,
+        baseline_skill_path=skill_path if config != "with_skill" else None,
+    )
     scratch = Path(tempfile.mkdtemp(prefix=f"skilleval-{cli}-{ev['id']}-{config}-"))
     try:
         runner = CLI_RUNNERS[cli]
         try:
-            result = runner(binary, prompt, scratch, timeout, model)
+            skill_creator_md = SKILL_CREATOR_DIR / "SKILL.md"
+            attachments = [skill_creator_md] if skill_creator_md.exists() else None
+            result = runner(binary, prompt, scratch, timeout, model,
+                            attachments=attachments)
         except OSError as error:
             result = RunResult(
                 error=(
@@ -668,10 +737,11 @@ def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult
     }
     (run_dir.parent / "eval_metadata.json").write_text(json.dumps(metadata, indent=2))
 
-    # outputs/response.md
-    (outputs_dir / "response.md").write_text(
-        result.response_text or "(no response captured)"
-    )
+    # outputs/response.md — prefer a file the agent wrote directly (skill-creator
+    # executor protocol), fall back to the captured response text.
+    agent_response = outputs_dir / "response.md"
+    if not agent_response.exists():
+        agent_response.write_text(result.response_text or "(no response captured)")
 
     # outputs/metrics.json
     metrics = {
@@ -724,22 +794,20 @@ def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult
 # Grading (LLM-as-judge, following skill-creator's agents/grader.md)
 # --------------------------------------------------------------------------
 
-def build_grader_prompt(eval_meta: dict, transcript_path: Path, outputs_dir: Path) -> str:
-    """Build the grading instructions, following agents/grader.md's process
-    but condensed for CLI invocation: read transcript+outputs, judge each
-    expectation, emit JSON matching the schema the viewer/aggregator expect."""
+def build_grader_prompt(
+    eval_meta: dict,
+    transcript_path: Path,
+    outputs_dir: Path,
+) -> str:
+    """Delegate to skill-creator's grader.md so grading criteria match a manual run."""
     assertions = eval_meta.get("assertions", [])
     assertions_block = "\n".join(f"- {a}" for a in assertions) or "(no assertions provided)"
 
-    return f"""You are grading an AI assistant's response to a task, evaluating whether \
-it satisfies a list of expectations. Follow this process:
+    return f"""Follow the grading instructions in: {GRADER_MD_PATH}
 
-1. Read the transcript file at: {transcript_path}
-2. Read all files in the outputs directory: {outputs_dir}
-3. For each expectation below, decide PASS or FAIL based on clear evidence in the \
-transcript/outputs. Burden of proof is on the expectation — if you can't find clear \
-evidence, it fails. A technically-satisfied assertion whose underlying task outcome is \
-wrong or incomplete should also fail.
+Parameters for this grading task:
+- transcript_path: {transcript_path}
+- outputs_dir: {outputs_dir}
 
 Expectations to evaluate:
 {assertions_block}
@@ -747,7 +815,7 @@ Expectations to evaluate:
 Write your grading result as a SINGLE JSON object (and nothing else — no markdown \
 fences, no commentary before or after) to this exact path: {outputs_dir.parent / 'grading.json'}
 
-The JSON must have this exact structure:
+The JSON must use these exact field names (the viewer depends on them):
 {{
   "expectations": [
     {{"text": "<expectation text>", "passed": true/false, "evidence": "<specific quote or description>"}}
@@ -759,8 +827,14 @@ Use the file-write tools available to you to actually create this file — do no
 print the JSON in your final response."""
 
 
-def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: dict,
-               timeout: int, grader_model: str | None = None) -> tuple[bool, str | None]:
+def run_grader(
+    grader_cli: str,
+    grader_binary: str,
+    run_dir: Path,
+    eval_meta: dict,
+    timeout: int,
+    grader_model: str | None = None,
+) -> tuple[bool, str | None]:
     """Invoke the grader CLI to write grading.json into run_dir. Returns (success, grader_model)."""
     transcript_path = run_dir / "transcript.md"
     outputs_dir = run_dir / "outputs"
@@ -807,9 +881,16 @@ def run_grader(grader_cli: str, grader_binary: str, run_dir: Path, eval_meta: di
     return False, effective_model
 
 
-def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: str,
-                   workers: int, timeout: int, grader_model: str | None = None,
-                   eval_ids: set[int] | None = None) -> str | None:
+def grade_all_runs(
+    workspace: Path,
+    cli: str,
+    grader_cli: str,
+    grader_binary: str,
+    workers: int,
+    timeout: int,
+    grader_model: str | None = None,
+    eval_ids: set[int] | None = None,
+) -> str | None:
     """Grade all ungraded runs under workspace/<cli>. Returns the grader model if detected."""
     cli_dir = workspace / cli
     run_dirs = []
@@ -831,7 +912,8 @@ def grade_all_runs(workspace: Path, cli: str, grader_cli: str, grader_binary: st
     detected_model: str | None = None
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout, grader_model): run_dir
+            pool.submit(run_grader, grader_cli, grader_binary, run_dir, eval_meta, timeout,
+                        grader_model): run_dir
             for run_dir, eval_meta in run_dirs
         }
         for future in as_completed(futures):
@@ -1206,28 +1288,30 @@ def generate_consolidated_benchmark_md(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--evals-json", required=True, help="Path to the skill's evals/evals.json")
     parser.add_argument("--skill-path", required=True, help="Path to the skill directory (contains SKILL.md)")
-    parser.add_argument("--workspace", required=True, help="Output workspace directory")
+    parser.add_argument("--evals-json", default=None,
+                         help="Path to evals/evals.json (default: <skill-path>/evals/evals.json)")
+    parser.add_argument("--workspace", default=None,
+                         help="Output workspace directory (default: <skill-path>/benchmark)")
     parser.add_argument("--clis", default="copilot", help="Comma-separated list of CLIs to run")
     parser.add_argument("--configs", default="with_skill,without_skill", help="Comma-separated configs to run")
     parser.add_argument("--workers", type=int, default=4, help="Max concurrent subprocess runs")
-    parser.add_argument("--timeout", type=int, default=300, help="Per-run timeout in seconds")
+    parser.add_argument("--timeout", type=int, default=600, help="Per-run timeout in seconds")
     parser.add_argument("--eval-ids", default="", help="Comma-separated eval IDs to restrict to (default: all)")
     parser.add_argument("--copilot-bin", default=None, help="Explicit path to the copilot binary (default: auto-detect on PATH)")
     parser.add_argument("--claude-bin", default=None, help="Explicit path to the claude binary (default: auto-detect on PATH)")
     parser.add_argument("--codex-bin", default=None, help="Explicit path to the codex binary (default: auto-detect on PATH / nvm fallback)")
     parser.add_argument("--copilot-model", default=None,
-                         help="Model to pass to copilot via --model (default: let Copilot CLI choose its own default)")
+                         help="Model to pass to copilot via --model (default: CLI default)")
     parser.add_argument("--claude-model", default=None,
-                         help="Model to pass to claude via --model (default: let Claude Code CLI choose its own default)")
+                         help="Model to pass to claude via --model (default: CLI default)")
     parser.add_argument("--codex-model", default=None,
-                         help="Model to pass to codex via -m/--model (default: let Codex CLI choose its own default)")
+                         help="Model to pass to codex via -m/--model (default: CLI default)")
     parser.add_argument("--skill-name", default=None, help="Skill name for benchmark metadata (default: skill dir name)")
     parser.add_argument("--grader-cli", default="copilot",
                          help="CLI to use as the LLM grading judge (default: copilot)")
     parser.add_argument("--grader-model", default=None,
-                         help="Model to pass to the grader CLI (default: use --copilot-model when grader CLI is copilot; otherwise grader CLI default)")
+                         help="Model to pass to the grader CLI (default: same as --copilot-model when grader is copilot, otherwise CLI default)")
     parser.add_argument("--grader-workers", type=int, default=4, help="Max concurrent grading calls")
     parser.add_argument("--grader-timeout", type=int, default=180, help="Per-grading-call timeout in seconds")
     parser.add_argument("--skip-grading", action="store_true", help="Only run evals, skip LLM grading")
@@ -1235,10 +1319,11 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Print the plan without running anything")
     args = parser.parse_args()
 
-    evals_json_path = Path(args.evals_json).resolve()
     skill_path = str(Path(args.skill_path).resolve())
-    skill_name = args.skill_name or Path(args.skill_path).resolve().name
-    workspace = Path(args.workspace).resolve()
+    evals_json_path = Path(args.evals_json).resolve() if args.evals_json else Path(skill_path) / "evals" / "evals.json"
+    skill_name = args.skill_name or Path(skill_path).name
+    skill_benchmark_dir = Path(skill_path) / "benchmark"
+    workspace = Path(args.workspace).resolve() if args.workspace else skill_benchmark_dir
     workspace.mkdir(parents=True, exist_ok=True)
 
     clis = [c.strip() for c in args.clis.split(",") if c.strip()]
@@ -1293,7 +1378,8 @@ def main() -> int:
     results_summary = []
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
-            pool.submit(run_one, cli, binaries[cli], ev, config, skill_path, args.timeout, models[cli]): (cli, ev, config)
+            pool.submit(run_one, cli, binaries[cli], ev, config, skill_path,
+                        args.timeout, models[cli], workspace): (cli, ev, config)
             for cli, ev, config in jobs
         }
         for future in as_completed(futures):
@@ -1408,13 +1494,26 @@ def main() -> int:
             print("\n=== Consolidated benchmark (all agents) ===")
             if len(binaries) >= 2:
                 cross = build_cross_cli_benchmark(workspace, list(binaries.keys()), skill_name, configs=configs)
-                (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
+            else:
+                # single-CLI run — reuse the per-CLI benchmark as the consolidated one
+                only_cli = next(iter(binaries))
+                cross = json.loads((workspace / only_cli / "benchmark.json").read_text())
+            (workspace / "benchmark.json").write_text(json.dumps(cross, indent=2))
             (workspace / "benchmark.md").write_text(
                 generate_consolidated_benchmark_md(
                     workspace, list(binaries.keys()), skill_name, evals, grader_cli, grader_model
                 )
             )
             print(f"  Written: {workspace / 'benchmark.md'}")
+
+    # Copy the full workspace tree into the skill's benchmark/ directory so all
+    # eval outputs, transcripts, and grading results are persisted with the skill.
+    skill_benchmark_dir = Path(skill_path) / "benchmark"
+    if workspace.resolve() != skill_benchmark_dir.resolve():
+        shutil.copytree(workspace, skill_benchmark_dir, dirs_exist_ok=True)
+        print(f"\nWorkspace copied to: {skill_benchmark_dir}")
+    else:
+        print(f"\nResults written directly to: {skill_benchmark_dir}")
 
     print("\nOptional next step — open a review in your browser:")
     for cli in binaries:
