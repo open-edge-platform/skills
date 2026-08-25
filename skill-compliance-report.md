@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-25 06:26:55 UTC &nbsp;|&nbsp; **Run:** [32816821871](https://github.com/open-edge-platform/skills/actions/runs/32816821871)
+**Generated:** 2026-08-25 10:05:41 UTC &nbsp;|&nbsp; **Run:** [32835216812](https://github.com/open-edge-platform/skills/actions/runs/32835216812)
 
 ## Executive Summary
 
@@ -34,13 +34,13 @@
 | **chatqna-helm-deploy** | Chat Question and Answer | 10/12 | +77pp | ❌ Fail<br>Warnings: 1<br>Total Tokens: 2554 | ✅ No vulnerabilities reported | N/A |
 | **dlsps-user** | DL Streamer Pipeline Server | 1/2 | +62pp | ✅ Pass<br>Total Tokens: 5948 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
 | **dlstreamer-coding-agent** | DL Streamer | 2/7 | +30pp | ✅ Pass<br>Total Tokens: 28674 | 🟡 3M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts) |
-| **geti-using-the-pipeline** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 1092 | ✅ No vulnerabilities reported | N/A |
-| **getitune-discovering-models** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 634 | ✅ No vulnerabilities reported | N/A |
-| **getitune-exporting-a-model** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 764 | ✅ No vulnerabilities reported | N/A |
-| **getitune-optimizing-a-model** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 673 | ✅ No vulnerabilities reported | N/A |
-| **getitune-preparing-datasets** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 784 | 🟡 1M | N/A |
-| **getitune-running-inference** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
-| **getitune-training-a-model** | Geti | N/A | N/A | ❌ Fail<br>Warnings: 1<br>Total Tokens: 1296 | ✅ No vulnerabilities reported | N/A |
+| **geti-using-the-pipeline** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1250 | ✅ No vulnerabilities reported | N/A |
+| **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | ✅ No vulnerabilities reported | N/A |
+| **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | ✅ No vulnerabilities reported | N/A |
+| **getitune-optimizing-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 673 | ✅ No vulnerabilities reported | N/A |
+| **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | 🟡 1M | N/A |
+| **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
+| **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | ✅ No vulnerabilities reported | N/A |
 | **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6160 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts) |
 | **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20816 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts) |
 | **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8562 | 🟠 2H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts) |
