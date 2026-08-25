@@ -1,12 +1,12 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-24 15:43:13 UTC &nbsp;|&nbsp; **Run:** [32746299358](https://github.com/open-edge-platform/skills/actions/runs/32746299358)
+**Generated:** 2026-08-25 00:07:22 UTC &nbsp;|&nbsp; **Run:** [32792158921](https://github.com/open-edge-platform/skills/actions/runs/32792158921)
 
 ## Executive Summary
 
 | Total Skills | Evaluation Tests | Skills with Benchmarks |
 |:---:|:---:|:---:|
-| 31 | 95 | 14 |
+| 31 | 84 | 14 |
 
 ## Component Summary
 
@@ -57,7 +57,7 @@
 | **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1446 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
 | **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29600 | 🟠 5H, 🟡 23M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
-| **vss-deploy** | Video Search and Summarization | 2/6 | +67pp | ✅ Pass<br>Total Tokens: 9889 | 🟠 19H, 🟡 3M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
-| **vss-deploy-helm** | Video Search and Summarization | 1/7 | +54pp | ✅ Pass<br>Total Tokens: 7593 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
-| **vss-search-index** | Video Search and Summarization | 5/7 | +69pp | ❌ Fail<br>Errors: 2<br>Total Tokens: 2482 | 🟠 2H, 🟡 1M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts) |
-| **vss-summarize-video** | Video Search and Summarization | 2/7 | +46pp | ❌ Fail<br>Errors: 2<br>Total Tokens: 2156 | 🟠 2H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video/example-prompts) |
+| **vss-deploy** | Video Search and Summarization | 4/4 | +100pp | ✅ Pass<br>Total Tokens: 11218 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
+| **vss-deploy-helm** | Video Search and Summarization | 4/4 | +75pp | ✅ Pass<br>Total Tokens: 7870 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
+| **vss-search-index** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 3068 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts) |
+| **vss-summarize-video** | Video Search and Summarization | 4/4 | +100pp | ✅ Pass<br>Total Tokens: 2714 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video/example-prompts) |
