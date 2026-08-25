@@ -60,7 +60,7 @@ def load_skills_config(config_path: Path) -> list[dict]:
     """
     Read skills-config.json.  Each product must have:
       repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skills — list of skill objects with name, ref, prompts_url, and optional path
+      skills — list of skill objects with name and optional path
                 (each skill is installed as .agents/skills/<name>)
     """
     if not config_path.exists():
@@ -404,25 +404,39 @@ def parse_frontmatter(skill_md: Path) -> dict:
 # README builder (reads from .agents/skills/ + skills-lock.json)
 # ---------------------------------------------------------------------------
 
+def _skills_repo_branch(repo_root: Path) -> str:
+    """Return the current git branch, falling back to 'main'."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True, text=True, check=True,
+        )
+        branch = result.stdout.strip()
+        if not branch or branch == "HEAD":
+            return os.getenv("GITHUB_REF_NAME") or "main"
+        return branch
+    except subprocess.CalledProcessError:
+        return os.getenv("GITHUB_REF_NAME") or "main"
+
+
 def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries: list[dict]) -> str:
     """
     Build only the skills table rows from installed SKILL.md files.
     Returns the full replacement block including sentinel comments and timestamp.
-    config_entries supplies per-skill metadata: ref (branch), prompts_url (full
-    GitHub URL to the skill's example-prompts folder, or empty string), and
-    optional path override.
+    config_entries supplies per-skill metadata: ref (branch) and optional path
+    override. The prompts URL is derived from the local example-prompts directory.
     """
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    repo_root = local_skills_dir.parent.parent
+    skills_branch = _skills_repo_branch(repo_root)
 
     # Index config extras by individual skill name for quick lookup.
-    # Each value stores the parent entry plus skill-level prompts/ref overrides.
     config_by_skill: dict = {}
     for e in config_entries:
         skills = e["skills"]
         for s in skills:
             skill_name = s["name"] if isinstance(s, dict) else s
-            skill_prompts_url = s.get("prompts_url", "") if isinstance(s, dict) else ""
-            config_by_skill[skill_name] = {**e, "_skill_prompts_url": skill_prompts_url}
+            config_by_skill[skill_name] = {**e}
 
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
@@ -447,13 +461,16 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
         # Use the canonical repo from config if available; fall back to lock source
         canonical_repo = cfg.get("repo") or repo
         print(f"  + [{product}] {fm['name']}", file=sys.stderr)
-        skill_prompts_url = cfg.get("_skill_prompts_url") or None
-        prompts_url = skill_prompts_url if skill_prompts_url else None
+        has_prompts = (local_skills_dir / skill_name / "example-prompts").is_dir()
+        prompts_url = (
+            f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{skill_name}/example-prompts"
+            if has_prompts else None
+        )
         rows.append({
             "product": product,
             "repo_url": f"https://github.com/{canonical_repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/open-edge-platform/skills/tree/main/.agents/skills/{skill_name}",
+            "skill_url": f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{skill_name}",
             "description": fm.get("description", ""),
             "prompts_url": prompts_url,
         })

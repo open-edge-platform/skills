@@ -61,7 +61,7 @@ class SkillComplianceReportGenerator:
                     skill_name = skill.get('name', '')
                     if skill_name:
                         self.skills_config[skill_name] = product_name
-                        ref = skill.get('ref', '') or product_ref
+                        ref = os.getenv("GITHUB_REF_NAME") or "main"
                         has_prompts = (self.skills_root / skill_name / EXAMPLE_PROMPTS_DIR).is_dir()
                         self.skills_prompts_url[skill_name] = (
                             f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{EXAMPLE_PROMPTS_DIR}"

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "release-*"
     paths:
       - "skills-config.json"
       - "skills-config.schema.json"
@@ -42,9 +43,11 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
+        # zizmor: ignore[cache-poisoning] -- caching explicitly disabled via cache: ""
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
+          cache: ""
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -102,7 +105,7 @@ jobs:
 
       - name: Verify skills installation
         env:
-          VERIFY_BRANCH: ${{ inputs.branch || 'main' }}
+          VERIFY_BRANCH: ${{ inputs.branch || github.ref_name }}
           NPM_CONFIG_YES: "true"
           DISABLE_TELEMETRY: "1"
         run: |

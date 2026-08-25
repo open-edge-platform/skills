@@ -7,9 +7,7 @@
       "path": ".github/skills",
       "skills": [
         {
-          "name": "dlstreamer-coding-agent",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts"
+          "name": "dlstreamer-coding-agent"
         }
       ]
     },
@@ -20,14 +18,10 @@
       "path": "sample-applications/chat-question-and-answer-core/.github/skills",
       "skills": [
         {
-          "name": "chatqna-docker-deploy",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "chatqna-docker-deploy"
         },
         {
-          "name": "chatqna-helm-deploy",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "chatqna-helm-deploy"
         }
       ]
     },
@@ -38,24 +32,16 @@
       "path": "sample-applications/video-search-and-summarization/.github/skills",
       "skills": [
         {
-          "name": "vss-deploy",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts"
+          "name": "vss-deploy"
         },
         {
-          "name": "vss-deploy-helm",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts"
+          "name": "vss-deploy-helm"
         },
         {
-          "name": "vss-search-index",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts"
+          "name": "vss-search-index"
         },
         {
-          "name": "vss-summarize-video",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video/example-prompts"
+          "name": "vss-summarize-video"
         }
       ]
     },
@@ -66,9 +52,7 @@
       "path": "microservices/multimodal-embedding-serving/.github/skills",
       "skills": [
         {
-          "name": "multimodal-embedding-serving-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user/example-prompts"
+          "name": "multimodal-embedding-serving-user"
         }
       ]
     },
@@ -79,9 +63,7 @@
       "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
       "skills": [
         {
-          "name": "multimodal-dataprep-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user/example-prompts"
+          "name": "multimodal-dataprep-user"
         }
       ]
     },
@@ -92,9 +74,7 @@
       "path": "microservices/model-download/.github/skills",
       "skills": [
         {
-          "name": "model-download-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts"
+          "name": "model-download-user"
         }
       ]
     },
@@ -105,9 +85,7 @@
       "path": "microservices/dlstreamer-pipeline-server/.github/skills",
       "skills": [
         {
-          "name": "dlsps-user",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts"
+          "name": "dlsps-user"
         }
       ]
     },
@@ -118,29 +96,19 @@
       "path": "skills/library",
       "skills": [
         {
-          "name": "physicalai-train-adding-a-policy",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-train-adding-a-policy"
         },
         {
-          "name": "physicalai-train-benchmarking-a-policy",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-train-benchmarking-a-policy"
         },
         {
-          "name": "physicalai-train-exporting-and-validating",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-train-exporting-and-validating"
         },
         {
-          "name": "physicalai-train-training-a-policy",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-train-training-a-policy"
         },
         {
-          "name": "physicalai-train-working-with-datasets",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-train-working-with-datasets"
         }
       ]
     },
@@ -151,32 +119,22 @@
       "path": "skills/runtime",
       "skills": [
         {
-          "name": "physicalai-runtime-adding-a-robot-integration",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-runtime-adding-a-robot-integration"
         },
         {
-          "name": "physicalai-runtime-running-policy-on-robot",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "physicalai-runtime-running-policy-on-robot"
         },
         {
           "name": "physicalai-runtime-configuring-inference-pipeline",
-          "ref": "main",
-          "path": "skills/inference",
-          "prompts_url": ""
+          "path": "skills/inference"
         },
         {
           "name": "physicalai-runtime-loading-exported-policies",
-          "ref": "main",
-          "path": "skills/inference",
-          "prompts_url": ""
+          "path": "skills/inference"
         },
         {
           "name": "physicalai-runtime-adding-a-camera-backend",
-          "ref": "main",
-          "path": "skills/capture",
-          "prompts_url": ""
+          "path": "skills/capture"
         }
       ]
     },
@@ -187,45 +145,31 @@
       "path": "skills/application",
       "skills": [
         {
-          "name": "geti-using-the-pipeline",
-          "ref": "develop",
-          "prompts_url": ""
+          "name": "geti-using-the-pipeline"
         },
         {
           "name": "getitune-discovering-models",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         },
         {
           "name": "getitune-preparing-datasets",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         },
         {
           "name": "getitune-training-a-model",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         },
         {
           "name": "getitune-running-inference",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         },
         {
           "name": "getitune-exporting-a-model",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         },
         {
           "name": "getitune-optimizing-a-model",
-          "ref": "develop",
-          "path": "skills/library",
-          "prompts_url": ""
+          "path": "skills/library"
         }
       ]
     },
@@ -236,9 +180,7 @@
       "path": ".github/skills",
       "skills": [
         {
-          "name": "scenescape-setup",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts"
+          "name": "scenescape-setup"
         }
       ]
     },
@@ -249,9 +191,7 @@
       "path": "metro-ai-suite/prompt-library/.github/skills",
       "skills": [
         {
-          "name": "metro-ai-apps-builder",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts"
+          "name": "metro-ai-apps-builder"
         }
       ]
     },
@@ -262,9 +202,7 @@
       "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
-          "name": "metro-ai-apps-recipe",
-          "ref": "main",
-          "prompts_url": "https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts"
+          "name": "metro-ai-apps-recipe"
         }
       ]
     }
