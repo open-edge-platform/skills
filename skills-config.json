@@ -14,7 +14,7 @@
     {
       "product": "Chat Question and Answer",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "sample-applications/chat-question-and-answer-core/.github/skills",
       "skills": [
         {
@@ -28,7 +28,7 @@
     {
       "product": "Video Search and Summarization",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
       "skills": [
         {
@@ -48,7 +48,7 @@
     {
       "product": "Multimodal Embedding Serving Microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/multimodal-embedding-serving/.github/skills",
       "skills": [
         {
@@ -59,7 +59,7 @@
     {
       "product": "Multimodal DataPrep microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
       "skills": [
         {
@@ -70,7 +70,7 @@
     {
       "product": "Model Download",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/model-download/.github/skills",
       "skills": [
         {
@@ -81,7 +81,7 @@
     {
       "product": "DL Streamer Pipeline Server",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "microservices/dlstreamer-pipeline-server/.github/skills",
       "skills": [
         {
@@ -176,7 +176,7 @@
     {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": ".github/skills",
       "skills": [
         {
@@ -187,7 +187,7 @@
     {
       "product": "Metro AI Suite - Prompt Library",
       "repo": "open-edge-platform/edge-ai-suites",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "metro-ai-suite/prompt-library/.github/skills",
       "skills": [
         {
@@ -198,7 +198,7 @@
     {
       "product": "Metro AI Suite - Vision AI App Recipe",
       "repo": "open-edge-platform/edge-ai-suites",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
