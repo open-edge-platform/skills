@@ -176,7 +176,7 @@
     {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
-      "ref": "main",
+      "ref": "release-2026.2.0",
       "path": ".github/skills",
       "skills": [
         {
