@@ -205,6 +205,17 @@
           "name": "metro-ai-apps-recipe"
         }
       ]
+    },
+    {
+      "product": "Time Series Analytics Microservice",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "microservices/time-series-analytics/.github/skills",
+      "skills": [
+        {
+          "name": "time-series-analytics-user"
+        }
+      ]
     }
   ]
 }
