@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-26 08:42:15 UTC &nbsp;|&nbsp; **Run:** [32948913993](https://github.com/open-edge-platform/skills/actions/runs/32948913993)
+**Generated:** 2026-08-27 01:11:41 UTC &nbsp;|&nbsp; **Run:** [33029175178](https://github.com/open-edge-platform/skills/actions/runs/33029175178)
 
 ## Executive Summary
 
@@ -32,8 +32,8 @@
 |---|---|:---:|:---:|:---:|:---:|:---:|
 | **chatqna-docker-deploy** | Chat Question and Answer | 8/12 | +76pp | ✅ Pass<br>Total Tokens: 1410 | ✅ No vulnerabilities reported | N/A |
 | **chatqna-helm-deploy** | Chat Question and Answer | 10/12 | +77pp | ✅ Pass<br>Total Tokens: 2554 | ✅ No vulnerabilities reported | N/A |
-| **dlsps-user** | DL Streamer Pipeline Server | 1/2 | +62pp | ✅ Pass<br>Total Tokens: 5953 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
-| **dlstreamer-coding-agent** | DL Streamer | 2/7 | +30pp | ❌ Fail<br>Warnings: 1<br>Total Tokens: 28692 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts) |
+| **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5960 | 🟠 2H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
+| **dlstreamer-coding-agent** | DL Streamer | 7/7 | +24pp | ❌ Fail<br>Warnings: 1<br>Total Tokens: 28732 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts) |
 | **geti-using-the-pipeline** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1250 | ✅ No vulnerabilities reported | N/A |
 | **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | ✅ No vulnerabilities reported | N/A |
 | **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | ✅ No vulnerabilities reported | N/A |
