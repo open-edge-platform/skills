@@ -152,13 +152,13 @@ Show the user the service startup command, using only the plugins their request 
 
 ```bash
 # Clone (if not already done)
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b release-2026.2.0
 cd edge-ai-libraries/microservices/model-download
 
 # Set env vars
 export HUGGINGFACEHUB_API_TOKEN=<your-hf-token>   # mapped into the container as HF_TOKEN
 export REGISTRY="intel/"
-export TAG=latest
+export TAG=2026.2.0-rc2
 
 # Start service (adjust --plugins to match what you need)
 source scripts/run_service.sh up --plugins <comma-separated-list> --model-path $PWD/models
@@ -256,6 +256,6 @@ for model conversion.
 
 **Quick alternative:** For one-shot, ephemeral container use (CI/CD, scripted workflows), use the `get_model.sh` one-liner
 ```bash
-curl -sSLO https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh
+curl -sSLO https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/release-2026.2.0/microservices/model-download/scripts/get_model.sh
 source ./get_model.sh --model-name <model> --hub <hub> --plugins <plugins>
 ```
