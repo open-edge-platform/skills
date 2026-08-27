@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-27 08:31:07 UTC &nbsp;|&nbsp; **Run:** [33054197144](https://github.com/open-edge-platform/skills/actions/runs/33054197144)
+**Generated:** 2026-08-27 11:44:42 UTC &nbsp;|&nbsp; **Run:** [33068530684](https://github.com/open-edge-platform/skills/actions/runs/33068530684)
 
 ## Executive Summary
 
@@ -58,7 +58,7 @@
 | **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1446 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
 | **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29600 | 🟠 5H, 🟡 23M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
-| **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ❌ Fail<br>Warnings: 1<br>Total Tokens: 12127 | 🔵 1L | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user/example-prompts) |
+| **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ✅ Pass<br>Total Tokens: 12127 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user/example-prompts) |
 | **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11218 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
 | **vss-deploy-helm** | Video Search and Summarization | 4/4 | +42pp | ✅ Pass<br>Total Tokens: 7870 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
 | **vss-search-index** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 3068 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index/example-prompts) |
