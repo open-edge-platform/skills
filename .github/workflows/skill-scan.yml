@@ -50,7 +50,7 @@ jobs:
 
       - name: Run SkillSpector scan
         id: skill-scan
-        uses: open-edge-platform/geti-ci/actions/skill-scan@0745e2b1612e4c25c3e83eb37bddeba8743a2439 # skill-scan/v0.1.1
+        uses: open-edge-platform/geti-ci/actions/skill-scan@d4d1e54759aac44307b38001996e486a6b7c0569 # skill-scan/v0.2.0
         with:
           skills-path: .agents/skills/
           severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || github.event.inputs.severity || 'LOW' }}
