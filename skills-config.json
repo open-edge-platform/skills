@@ -90,6 +90,17 @@
       ]
     },
     {
+      "product": "Time Series Analytics Microservice",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "release-2026.2.0",
+      "path": "microservices/time-series-analytics/.github/skills",
+      "skills": [
+        {
+          "name": "time-series-analytics-user"
+        }
+      ]
+    },
+    {
       "product": "Physical AI Train",
       "repo": "open-edge-platform/physical-ai-studio",
       "ref": "main",
