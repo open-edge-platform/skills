@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-27 13:35:29 UTC &nbsp;|&nbsp; **Run:** [33077362460](https://github.com/open-edge-platform/skills/actions/runs/33077362460)
+**Generated:** 2026-08-28 04:38:48 UTC &nbsp;|&nbsp; **Run:** [33142285830](https://github.com/open-edge-platform/skills/actions/runs/33142285830)
 
 ## Executive Summary
 
@@ -42,10 +42,10 @@
 | **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | ✅ No vulnerabilities reported | N/A |
 | **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
 | **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | ✅ No vulnerabilities reported | N/A |
-| **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6160 | 🟡 15M | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-builder/example-prompts) |
-| **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20832 | 🟡 2M | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-recipe/example-prompts) |
+| **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6202 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-builder/example-prompts) |
+| **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20877 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-apps-recipe/example-prompts) |
 | **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8601 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/model-download-user/example-prompts) |
-| **multimodal-dataprep-user** | Multimodal DataPrep microservice | 5/5 | +90pp | ✅ Pass<br>Total Tokens: 2041 | 🟠 3H, 🟡 1M | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-dataprep-user/example-prompts) |
+| **multimodal-dataprep-user** | Multimodal DataPrep microservice | 5/5 | +90pp | ✅ Pass<br>Total Tokens: 2130 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-dataprep-user/example-prompts) |
 | **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1668 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
 | **physicalai-runtime-adding-a-camera-backend** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 567 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-adding-a-robot-integration** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 843 | ✅ No vulnerabilities reported | N/A |
@@ -59,7 +59,7 @@
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
 | **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | 🟡 19M | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/scenescape-setup/example-prompts) |
 | **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ✅ Pass<br>Total Tokens: 12127 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/time-series-analytics-user/example-prompts) |
-| **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11276 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy/example-prompts) |
+| **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11267 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy/example-prompts) |
 | **vss-deploy-helm** | Video Search and Summarization | 4/4 | +42pp | ✅ Pass<br>Total Tokens: 7895 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy-helm/example-prompts) |
 | **vss-search-index** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 3068 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-search-index/example-prompts) |
 | **vss-summarize-video** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 2714 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-summarize-video/example-prompts) |
