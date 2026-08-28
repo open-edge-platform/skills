@@ -55,6 +55,7 @@ jobs:
           skills-path: .agents/skills/
           severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || github.event.inputs.severity || 'LOW' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          version: "ab0431ff2a9e9d75ba866f986be17f8600cfd086"
 
       - name: Upload spector report
         if: always() && steps.skill-scan.outputs.report_path != ''
