@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-08-28 05:45:08 UTC &nbsp;|&nbsp; **Run:** [33145559894](https://github.com/open-edge-platform/skills/actions/runs/33145559894)
+**Generated:** 2026-08-29 00:07:33 UTC &nbsp;|&nbsp; **Run:** [33222437832](https://github.com/open-edge-platform/skills/actions/runs/33222437832)
 
 ## Executive Summary
 
@@ -33,8 +33,8 @@
 |---|---|:---:|:---:|:---:|:---:|:---:|
 | **chatqna-docker-deploy** | Chat Question and Answer | 12/12 | +72pp | ✅ Pass<br>Total Tokens: 2875 | ✅ No vulnerabilities reported | N/A |
 | **chatqna-helm-deploy** | Chat Question and Answer | 12/12 | +72pp | ✅ Pass<br>Total Tokens: 2866 | ✅ No vulnerabilities reported | N/A |
-| **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5960 | 🟠 7H, 🟡 2M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
-| **dlstreamer-coding-agent** | DL Streamer | 7/7 | +24pp | ❌ Fail<br>Warnings: 1<br>Total Tokens: 28732 | 🟠 4H, 🟡 5M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts) |
+| **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5960 | 🟠 3H, 🟡 2M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
+| **dlstreamer-coding-agent** | DL Streamer | 7/7 | +24pp | ❌ Fail<br>Warnings: 2<br>Total Tokens: 29358 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent/example-prompts) |
 | **geti-using-the-pipeline** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1250 | ✅ No vulnerabilities reported | N/A |
 | **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | ✅ No vulnerabilities reported | N/A |
 | **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | ✅ No vulnerabilities reported | N/A |
@@ -52,12 +52,12 @@
 | **physicalai-runtime-configuring-inference-pipeline** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 530 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-loading-exported-policies** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 1035 | ✅ No vulnerabilities reported | N/A |
 | **physicalai-runtime-running-policy-on-robot** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 548 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ❌ Fail<br>Errors: 1<br>Total Tokens: 1518 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1012 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1348 | 🟡 1M | N/A |
-| **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1446 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 969 | ✅ No vulnerabilities reported | N/A |
-| **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | 🟡 19M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
+| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1496 | ✅ No vulnerabilities reported | N/A |
+| **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1015 | ✅ No vulnerabilities reported | N/A |
+| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1351 | 🟡 1M | N/A |
+| **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1449 | ✅ No vulnerabilities reported | N/A |
+| **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 975 | ✅ No vulnerabilities reported | N/A |
+| **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup/example-prompts) |
 | **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ✅ Pass<br>Total Tokens: 12127 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user/example-prompts) |
 | **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11218 | 🟠 1H | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy/example-prompts) |
 | **vss-deploy-helm** | Video Search and Summarization | 4/4 | +42pp | ✅ Pass<br>Total Tokens: 7870 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm/example-prompts) |
