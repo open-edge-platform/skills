@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-09-01 03:12:45 UTC &nbsp;|&nbsp; **Run:** [33465206985](https://github.com/open-edge-platform/skills/actions/runs/33465206985)
+**Generated:** 2026-09-01 15:55:45 UTC &nbsp;|&nbsp; **Run:** [33528441860](https://github.com/open-edge-platform/skills/actions/runs/33528441860)
 
 ## Executive Summary
 
@@ -16,8 +16,8 @@
 | **DL Streamer** | 1 | dlstreamer-coding-agent |
 | **DL Streamer Pipeline Server** | 1 | dlsps-user |
 | **Geti** | 7 | geti-using-the-pipeline, getitune-discovering-models, getitune-exporting-a-model, getitune-optimizing-a-model, getitune-preparing-datasets, getitune-running-inference, getitune-training-a-model |
-| **Metro AI Suite - Prompt Library** | 1 | metro-ai-apps-builder |
-| **Metro AI Suite - Vision AI App Recipe** | 1 | metro-ai-apps-recipe |
+| **Metro AI Suite - AI App Builder** | 1 | metro-ai-app-builder |
+| **Metro AI Suite - Vision AI App Recipe** | 1 | metro-ai-app-recipe |
 | **Model Download** | 1 | model-download-user |
 | **Multimodal DataPrep microservice** | 1 | multimodal-dataprep-user |
 | **Multimodal Embedding Serving Microservice** | 1 | multimodal-embedding-serving-user |
@@ -42,8 +42,8 @@
 | **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | ✅ No vulnerabilities reported | N/A |
 | **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
 | **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | ✅ No vulnerabilities reported | N/A |
-| **metro-ai-apps-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6202 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-builder/example-prompts) |
-| **metro-ai-apps-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20861 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-apps-recipe/example-prompts) |
+| **metro-ai-app-builder** | Metro AI Suite - AI App Builder | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6183 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-builder/example-prompts) |
+| **metro-ai-app-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20861 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-recipe/example-prompts) |
 | **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8563 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user/example-prompts) |
 | **multimodal-dataprep-user** | Multimodal DataPrep microservice | 5/5 | +90pp | ✅ Pass<br>Total Tokens: 2033 | 🟠 3H, 🟡 1M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user/example-prompts) |
 | **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1652 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
