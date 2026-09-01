@@ -185,13 +185,13 @@
       ]
     },
     {
-      "product": "Metro AI Suite - Prompt Library",
+      "product": "Metro AI Suite - AI App Builder",
       "repo": "open-edge-platform/edge-ai-suites",
       "ref": "main",
       "path": "metro-ai-suite/prompt-library/.github/skills",
       "skills": [
         {
-          "name": "metro-ai-apps-builder"
+          "name": "metro-ai-app-builder"
         }
       ]
     },
@@ -202,7 +202,7 @@
       "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
-          "name": "metro-ai-apps-recipe"
+          "name": "metro-ai-app-recipe"
         }
       ]
     },
