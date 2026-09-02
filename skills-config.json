@@ -235,19 +235,19 @@
       "path": ".agents/skills",
       "skills": [
         {
-          "name": "anomalib-adding-a-model",
+          "name": "anomalib-adding-a-model"
         },
         {
-          "name": "anomalib-adding-a-datamodule",
+          "name": "anomalib-adding-a-datamodule"
         },
         {
-          "name": "anomalib-training",
+          "name": "anomalib-training"
         },
         {
-          "name": "anomalib-tiled-ensemble",
+          "name": "anomalib-tiled-ensemble"
         },
         {
-          "name": "anomalib-benchmarking",
+          "name": "anomalib-benchmarking"
         }
       ]
     }
