@@ -27,7 +27,6 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 
 get-started
 how-it-works
-how-to-configure
 Release Notes <release-notes>
 
 :::

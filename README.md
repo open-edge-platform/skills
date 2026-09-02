@@ -7,7 +7,7 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 
 ---
 
-> **Disclaimer:** The skills listed above are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
+> **Disclaimer:** The skills listed below are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
 
 
 <!-- BEGIN SKILLS INDEX -->
@@ -57,7 +57,6 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 | [Overview](docs/user-guide/index.md) | What skills are and key features of this repository |
 | [Get Started](docs/user-guide/get-started.md) | Install, list, update, and remove skills via `npx skills` |
 | [How It Works](docs/user-guide/how-it-works.md) | Skill loading, index maintenance CI workflow, and lock file |
-| [How to Configure](docs/user-guide/how-to-configure.md) | Contribute a skill: create `SKILL.md`, evaluate, and add to `skills-config.json` |
 | [Release Notes](docs/user-guide/release-notes.md) | Changelog and release history |
 
 ---

@@ -53,19 +53,14 @@ npx skills add open-edge-platform/skills#release-2026.2.0 --agent claude-code --
 
 ## Install a Specific Skill
 
+For the current catalog of available skills, see the [Skills Index](https://github.com/open-edge-platform/skills/tree/release-2026.2.0#open-edge-platform--agent-skills-index).
+
 ```bash
 # Symlink a single skill (interactive agent selection)
 npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent
 
 # Copy a single skill to a specific agent
 npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent --agent claude-code --copy --yes
-
-# Install directly from the skill's source repo
-npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent --copy --yes
-
-# Install from a skill directory when the product repo uses a custom layout
-npx skills add https://github.com/openvinotoolkit/physicalai/tree/main/skills/inference/physicalai-runtime-loading-exported-policies \
-  --skill physicalai-runtime-loading-exported-policies --copy --yes
 ```
 
 ## List Installed Skills
@@ -105,4 +100,3 @@ npx skills experimental_install
 
 - [Overview](./index.md)
 - [How It Works](./how-it-works.md)
-- [How to Configure](./how-to-configure.md)

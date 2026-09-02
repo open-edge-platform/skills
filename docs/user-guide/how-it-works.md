@@ -35,7 +35,7 @@ Skills installed by `npx skills` land in `.agents/skills/<skill-name>/SKILL.md` 
 
 ## skills-lock.json
 
-Each `npx skills add` or `npx skills update` writes a `skills-lock.json` alongside the installed skills. This file records the source repository, branch/ref, and exact skill path for every installed skill, enabling reproducible restores via `npx skills experimental_install`.
+Each `npx skills add` or `npx skills update` writes a `skills-lock.json` alongside the installed skills. This file records the source repository, branch/ref, and exact skill path for every installed skill.
 
 ## Index Maintenance (CI Workflow)
 
