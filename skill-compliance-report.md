@@ -1,17 +1,18 @@
 # Skill Compliance Report
 
-**Generated:** 2026-09-02 03:13:15 UTC &nbsp;|&nbsp; **Run:** [33586009662](https://github.com/open-edge-platform/skills/actions/runs/33586009662)
+**Generated:** 2026-09-02 14:56:52 UTC &nbsp;|&nbsp; **Run:** [33645041796](https://github.com/open-edge-platform/skills/actions/runs/33645041796)
 
 ## Executive Summary
 
 | Total Skills | Evaluation Tests | Skills with Benchmarks |
 |:---:|:---:|:---:|
-| 32 | 89 | 15 |
+| 37 | 114 | 20 |
 
 ## Component Summary
 
 | Component | Number of Skills | Skills |
 |---|:---:|---|
+| **Anomalib** | 5 | anomalib-adding-a-datamodule, anomalib-adding-a-model, anomalib-benchmarking, anomalib-tiled-ensemble, anomalib-training |
 | **Chat Question and Answer** | 2 | chatqna-docker-deploy, chatqna-helm-deploy |
 | **DL Streamer** | 1 | dlstreamer-coding-agent |
 | **DL Streamer Pipeline Server** | 1 | dlsps-user |
@@ -31,6 +32,11 @@
 
 | Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |
 |---|---|:---:|:---:|:---:|:---:|:---:|
+| **anomalib-adding-a-datamodule** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 3168 | ✅ No vulnerabilities reported | N/A |
+| **anomalib-adding-a-model** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1737 | ✅ No vulnerabilities reported | N/A |
+| **anomalib-benchmarking** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 855 | ✅ No vulnerabilities reported | N/A |
+| **anomalib-tiled-ensemble** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1199 | ✅ No vulnerabilities reported | N/A |
+| **anomalib-training** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1296 | ✅ No vulnerabilities reported | N/A |
 | **chatqna-docker-deploy** | Chat Question and Answer | 12/12 | +72pp | ✅ Pass<br>Total Tokens: 2875 | ✅ No vulnerabilities reported | N/A |
 | **chatqna-helm-deploy** | Chat Question and Answer | 12/12 | +72pp | ✅ Pass<br>Total Tokens: 2866 | ✅ No vulnerabilities reported | N/A |
 | **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5960 | 🟠 3H, 🟡 2M | [View](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user/example-prompts) |
