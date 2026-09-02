@@ -37,23 +37,6 @@ Skills installed by `npx skills` land in `.agents/skills/<skill-name>/SKILL.md` 
 
 Each `npx skills add` or `npx skills update` writes a `skills-lock.json` alongside the installed skills. This file records the source repository, branch/ref, and exact skill path for every installed skill.
 
-## Index Maintenance (CI Workflow)
-
-The [`update-skills-index`](https://github.com/open-edge-platform/skills/blob/release-2026.2.0/.github/workflows/update-skills-index.yml) workflow keeps this repository's README and `.agents/skills/` directory in sync automatically. It:
-
-- Runs on a **daily schedule** to pick up upstream skill changes.
-- Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews.
-- Reads [`skills-config.json`](../../skills-config.json) as the **single source of truth** for which skills to install.
-- Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in the README between the `<!-- BEGIN SKILLS INDEX -->` / `<!-- END SKILLS INDEX -->` sentinels.
-
-### Reconciliation Logic
-
-On each run the workflow:
-
-1. **Removes** skills that are no longer in `skills-config.json` or whose configured source (repo / ref / path) has changed.
-2. **Batches** remaining installs/updates by `(repo, ref)` so each source repository is cloned only once per run, regardless of how many skills it contains.
-3. **Verifies** each installed skill appears in `skills-lock.json` at the expected path; falls back to a path-scoped retry if a skill is nested too deeply for the CLI's default scan depth.
-
 ## Supporting Resources
 
 - [Get Started](./get-started.md)
