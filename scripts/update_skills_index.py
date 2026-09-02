@@ -485,7 +485,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
         repo_url = group[0]["repo_url"]
         skills_cell = ", ".join(f"[{r['skill_name']}]({r['skill_url']})" for r in group)
         lines.append(f"| [{product}]({repo_url}) | {skills_cell} |")
-    lines.append(f"| **Total** | **{len(product_groups)} components, {len(rows)} skills** |")
+    lines.append(f"| **Total** | **{len(product_groups)} products, {len(rows)} skills** |")
     lines.append(SKILLS_INDEX_END)
     return "\n".join(lines)
 
