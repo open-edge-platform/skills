@@ -224,29 +224,19 @@
       "path": ".agents/skills",
       "skills": [
         {
-          "name": "anomalib-adding-a-model",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "anomalib-adding-a-model"
         },
         {
-          "name": "anomalib-adding-a-datamodule",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "anomalib-adding-a-datamodule"
         },
         {
-          "name": "anomalib-training",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "anomalib-training"
         },
         {
-          "name": "anomalib-tiled-ensemble",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "anomalib-tiled-ensemble"
         },
         {
-          "name": "anomalib-benchmarking",
-          "ref": "main",
-          "prompts_url": ""
+          "name": "anomalib-benchmarking"
         }
       ]
     }
