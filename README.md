@@ -63,13 +63,21 @@ to build solutions with Open Edge Platform products.
 
 ## Maintaining the Index
 
-The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow keeps this README and the `.agents/skills/` directory in sync automatically. It:
 
-- Runs on a schedule as configured to pick up upstream skill changes
-- Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews
-- Reads [`skills-config.json`](skills-config.json) as the single source of truth for which skills to install
-- Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in this README
+The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow keeps this repository's README and `.agents/skills/` directory in sync automatically. It:
 
+- Runs on a **daily schedule** to pick up upstream skill changes.
+- Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews.
+- Reads [`skills-config.json`](../../skills-config.json) as the **single source of truth** for which skills to install.
+- Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in the README between the `<!-- BEGIN SKILLS INDEX -->` / `<!-- END SKILLS INDEX -->` sentinels.
+
+### Reconciliation Logic
+
+On each run the workflow:
+
+1. **Removes** skills that are no longer in `skills-config.json` or whose configured source (repo / ref / path) has changed.
+2. **Batches** remaining installs/updates by `(repo, ref)` so each source repository is cloned only once per run, regardless of how many skills it contains.
+3. **Verifies** each installed skill appears in `skills-lock.json` at the expected path; falls back to a path-scoped retry if a skill is nested too deeply for the CLI's default scan depth.
 ---
 
 ## Contributing a Skill
