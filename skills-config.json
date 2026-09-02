@@ -227,6 +227,29 @@
           "name": "time-series-analytics-user"
         }
       ]
+    },
+    {
+      "product": "Anomalib",
+      "repo": "open-edge-platform/anomalib",
+      "ref": "main",
+      "path": ".agents/skills",
+      "skills": [
+        {
+          "name": "anomalib-adding-a-model"
+        },
+        {
+          "name": "anomalib-adding-a-datamodule"
+        },
+        {
+          "name": "anomalib-training"
+        },
+        {
+          "name": "anomalib-tiled-ensemble"
+        },
+        {
+          "name": "anomalib-benchmarking"
+        }
+      ]
     }
   ]
 }
