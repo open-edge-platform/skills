@@ -7,6 +7,9 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 
 ---
 
+> **Disclaimer:** The skills listed above are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
+
+
 <!-- BEGIN SKILLS INDEX -->
 <!-- Last updated: 2026-08-28 04:36 UTC -->
 | Product | Skill | Skill Description |
@@ -45,7 +48,17 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 | ↳ | [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-summarize-video) ([Prompts](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-summarize-video/example-prompts)) | Summarize a video through the VSS Pipeline Manager - start a summary pipeline with POST /summary (full required body), poll GET /summary/{stateId} until complete, then return the summary via GET /summary/{stateId}/raw. Use when the user says "summarize this video", "create a summary", "what happens in this video" (on an ingested video), or wants to run/inspect the summarization pipeline. Requires a summary-capable deployment (--summary, --dual, or --unified). |
 <!-- END SKILLS INDEX -->
 
-> **Disclaimer:** The skills listed above are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Overview](docs/user-guide/index.md) | What skills are and key features of this repository |
+| [Get Started](docs/user-guide/get-started.md) | Install, list, update, and remove skills via `npx skills` |
+| [How It Works](docs/user-guide/how-it-works.md) | Skill loading, index maintenance CI workflow, and lock file |
+| [How to Configure](docs/user-guide/how-to-configure.md) | Contribute a skill: create `SKILL.md`, evaluate, and add to `skills-config.json` |
+| [Release Notes](docs/user-guide/release-notes.md) | Changelog and release history |
 
 ---
 
@@ -89,26 +102,26 @@ There are two installation modes:
 
 ```bash
 # Symlink — interactive (recommended for local development)
-npx skills add open-edge-platform/skills
+npx skills add open-edge-platform/skills#release-2026.2.0
 
 # Symlink — non-interactive, all agents
-npx skills add open-edge-platform/skills --all
+npx skills add open-edge-platform/skills#release-2026.2.0 --all
 
 # Copy — non-interactive, all agents (portable, no symlinks)
-npx skills add open-edge-platform/skills --all --copy
+npx skills add open-edge-platform/skills#release-2026.2.0 --all --copy
 
 # Copy — specific agent only (e.g. Claude Code)
-npx skills add open-edge-platform/skills --agent claude-code --copy --yes
+npx skills add open-edge-platform/skills#release-2026.2.0 --agent claude-code --copy --yes
 ```
 
 ### Install a specific skill
 
 ```bash
 # Symlink a single skill (interactive agent selection)
-npx skills add open-edge-platform/skills --skill dlstreamer-coding-agent
+npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent
 
 # Copy a single skill to a specific agent
-npx skills add open-edge-platform/skills --skill dlstreamer-coding-agent --agent claude-code --copy --yes
+npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent --agent claude-code --copy --yes
 
 # Install directly from the skill's source repo
 npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent --copy --yes
