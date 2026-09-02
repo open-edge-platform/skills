@@ -3,12 +3,7 @@
 This repository is the central hub for **External facing agent skills** to be used by the customers
 to build solutions with Open Edge Platform products.
 
-A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specific instructions. When a prompt matches a skill's description, the agent loads that skill's guidance automatically.
-
 ---
-
-> **Disclaimer:** The skills listed below are sourced from their respective product repositories as configured in [`skills-config.json`](skills-config.json). Each product team is solely responsible for the content, security scanning, licensing compliance, and validation of their own skills.
-
 
 <!-- BEGIN SKILLS INDEX -->
 <!-- Last updated: 2026-08-28 04:36 UTC -->
@@ -50,6 +45,7 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 
 ---
 
+
 ## Documentation
 
 | Guide | Description |
@@ -59,111 +55,6 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 | [How It Works](docs/user-guide/how-it-works.md) | Skill loading, index maintenance CI workflow, and lock file |
 | [Release Notes](docs/user-guide/release-notes.md) | Changelog and release history |
 
----
-
-## Using Skills
-
-Skills are installed using the [`skills` CLI](https://github.com/vercel-labs/skills), available via `npx`.
-
-### Prerequisites
-
-`npx` ships with **Node.js**. Install it from [nodejs.org](https://nodejs.org/) (LTS recommended) or via a version manager:
-
-> Note: If `npx skills add` fails, try to install this version of skills cli by running command "npm install -g skills@1.5.23" and re-run the command.
-
-```bash
-# Download and install nvm:
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
-# in lieu of restarting the shell
-\. "$HOME/.nvm/nvm.sh"
-# Download and install Node.js:
-nvm install 24
-# Verify the Node.js version:
-node -v # Should print "v24.19.0".
-# Verify npm version:
-npm -v # Should print "11.17.0".
-# Verify npm version:
-npx -v # Should print "11.17.0".
-# Verify npm version:
-npx skills -v # Should print "1.5.23"
-```
-
-Once Node.js is installed, `npx skills` works without any extra install step.
-
-There are two installation modes:
-
-| Mode | Flag | Effect |
-|------|------|--------|
-| **Symlink** *(default)* | *(none)* | Creates symlinks in agent directories pointing to a shared location — updates propagate automatically |
-| **Copy** | `--copy` | Copies files directly into each agent directory — self-contained, no shared state |
-
-### Install all skills from this repo
-
-```bash
-# Symlink — interactive (recommended for local development)
-npx skills add open-edge-platform/skills#release-2026.2.0
-
-# Symlink — non-interactive, all agents
-npx skills add open-edge-platform/skills#release-2026.2.0 --all
-
-# Copy — non-interactive, all agents (portable, no symlinks)
-npx skills add open-edge-platform/skills#release-2026.2.0 --all --copy
-
-# Copy — specific agent only (e.g. Claude Code)
-npx skills add open-edge-platform/skills#release-2026.2.0 --agent claude-code --copy --yes
-```
-
-### Install a specific skill
-
-```bash
-# Symlink a single skill (interactive agent selection)
-npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent
-
-# Copy a single skill to a specific agent
-npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent --agent claude-code --copy --yes
-
-# Install directly from the skill's source repo
-npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent --copy --yes
-
-# Install directly from a skill directory when the product repo uses a custom layout
-npx skills add https://github.com/openvinotoolkit/physicalai/tree/main/skills/inference/physicalai-runtime-loading-exported-policies \
-  --skill physicalai-runtime-loading-exported-policies --copy --yes
-```
-
-### List installed skills
-
-```bash
-npx skills list           # project-level skills
-npx skills list -g        # globally installed skills
-npx skills list --json    # machine-readable output
-```
-
-### Update skills to the latest version
-
-```bash
-npx skills update                          # update all project skills
-npx skills update dlstreamer-coding-agent  # update a single skill
-npx skills update -g                       # update all global skills
-```
-
-### Remove a skill
-
-```bash
-npx skills remove dlstreamer-coding-agent                              # interactive
-npx skills remove dlstreamer-coding-agent --agent claude-code --yes   # targeted
-```
-
-### Restore skills from the lock file
-
-If a repo already has a `skills-lock.json`, restore all pinned skills in one command:
-
-```bash
-npx skills experimental_install
-```
-
-> **Tip:** Use `--agent universal` to install into `.agents/skills/` only (no symlinks to other agent directories).
-
----
 
 ## Maintaining the Index
 
@@ -191,49 +82,33 @@ To add a skill to the org index:
    | Skills folder | `**/skills/<skill-name>/SKILL.md` |
    | Repo root, single skill | `SKILL.md` |
 
-   Go through some of the guidelines documented at [SKILLS_GUIDE.md](./SKILLS_GUIDE.md) for defining, creating, validating and
-   managing skills.
+   Go through some of the guidelines documented at [SKILLS_GUIDE.md](./SKILLS_GUIDE.md) for defining, creating, validating and managing skills.
 
-2. Evaluate and benchmark your skill using `tools/run_multi_cli_eval.py`. This
+2. Run [skill validator](https://github.com/open-edge-platform/skills/blob/release-2026.2.0/SKILLS_GUIDE.md#6-validation) 
+   and [skillspector](https://github.com/open-edge-platform/skills/blob/release-2026.2.0/SKILLS_GUIDE.md#7-security-scanning) against your skills to have a clean report.
+
+   ```bash
+   # Run skill-validator tool
+   skill-validator check --allow-dirs=evals,benchmark,example-prompts /path/to/your-skill
+   # Run skillspector tool
+   skillspector scan /path/to/your-skill --no-llm
+   ```
+
+3. Evaluate and benchmark your skill using `tools/run_multi_cli_eval.py`. This
    runs your skill's `evals/evals.json` across GitHub Copilot CLI, Claude Code
-   CLI, and OpenAI Codex CLI in one pass, grades each run with an LLM judge,
+   CLI, and OpenAI Codex CLI per configuration, grades each run with an LLM judge,
    and produces per-CLI and cross-CLI benchmark reports:
 
    ```bash
    python3 tools/run_multi_cli_eval.py \
-     --evals-json /path/to/your-skill/evals/evals.json \
      --skill-path /path/to/your-skill \
-     --workspace /tmp/your-skill-eval-run \
-     --clis copilot,claude,codex \
-     --configs with_skill,without_skill \
-     --grader-cli copilot
    ```
-
-   **Prerequisites** — at least one CLI must be installed and authenticated:
-   - GitHub Copilot CLI: `npm install -g @github/copilot-cli`
-   - Claude Code CLI: see [claude.ai/code](https://claude.ai/code)
-   - OpenAI Codex CLI: `npm install -g @openai/codex`
-
-   Also install skill-creator globally (used for grading and aggregation):
-
-   ```bash
-   npx skills add anthropics/skills --skill skill-creator \
-     -a github-copilot -a claude-code -a codex -g
-   ```
-
-   Results are written to the workspace directory you specify:
-
-   | File | What it contains |
-   |------|-----------------|
-   | `benchmark.md` | Cross-CLI comparison — which agent benefits most from the skill |
-   | `<cli>/benchmark.md` | Per-CLI `with_skill` vs. `without_skill` pass rate, time, tokens |
-   | `<cli>/eval-*/` | Per-eval transcripts, grading, and timing |
 
    See [`tools/README.md`](tools/README.md) for the full option reference,
-   including how to run a subset of CLIs, pin specific models, skip grading,
+   including how to run multiple coding agents CLIs, pin specific models, skip grading,
    or point at non-default CLI binary paths.
 
-3. Add an entry to `skills-config.json` in this repo and open a PR against `main`.
+4. Add an entry to `skills-config.json` in this repo and open a PR against `release-2026.2.0`.
 
    **On every PR that touches `skills-config.json`**, the
    [`Check Skills Config`](.github/workflows/check-skills-config.yml) workflow
@@ -244,7 +119,7 @@ To add a skill to the org index:
 
    Once the PR is merged, the
    [`Update Skills Index`](.github/workflows/update-skills-index.yml) workflow
-   triggers automatically on the push to `main`. It installs or updates each
+   triggers automatically on the push to `release-2026.2.0`. It installs or updates each
    skill via `npx skills add/update` and rebuilds the skills table in this
    README. The workflow also runs on a daily schedule to pick up upstream skill
    changes, and can be triggered manually via `workflow_dispatch` for on-demand

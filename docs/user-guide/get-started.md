@@ -5,7 +5,6 @@
 
 ## Prerequisites
 
-### Node.js
 
 `npx` ships with Node.js. Install it from [nodejs.org](https://nodejs.org/) (LTS recommended) or via a version manager:
 
@@ -28,14 +27,17 @@ npx skills -v  # 1.5.23
 > npm install -g skills@1.5.23
 > ```
 
-### Installation Modes
+Once Node.js is installed, `npx skills` works without any extra install step.
+-
+-There are two installation modes:
+-
+-| Mode | Flag | Effect |
+-|------|------|--------|
+-| **Symlink** *(default)* | *(none)* | Creates symlinks in agent directories pointing to a shared location 
+— updates propagate automatically |
+-| **Copy** | `--copy` | Copies files directly into each agent directory — self-contained, no shared state |
 
-| Mode | Flag | Effect |
-|------|------|--------|
-| **Symlink** *(default)* | *(none)* | Creates symlinks pointing to a shared location — updates propagate automatically |
-| **Copy** | `--copy` | Copies files directly into each agent directory — self-contained, no shared state |
-
-## Install All Skills from This Repo
+## Install all skills from this repo
 
 ```bash
 # Symlink — interactive (recommended for local development)
@@ -51,9 +53,9 @@ npx skills add open-edge-platform/skills#release-2026.2.0 --all --copy
 npx skills add open-edge-platform/skills#release-2026.2.0 --agent claude-code --copy --yes
 ```
 
-## Install a Specific Skill
+## Install a specific skill
 
-For the current catalog of available skills, see the [Skills Index](https://github.com/open-edge-platform/skills/tree/release-2026.2.0#open-edge-platform--agent-skills-index).
+
 
 ```bash
 # Symlink a single skill (interactive agent selection)
@@ -63,7 +65,7 @@ npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-cod
 npx skills add open-edge-platform/skills#release-2026.2.0 --skill dlstreamer-coding-agent --agent claude-code --copy --yes
 ```
 
-## List Installed Skills
+## List installed skills
 
 ```bash
 npx skills list           # project-level skills
@@ -71,7 +73,7 @@ npx skills list -g        # globally installed skills
 npx skills list --json    # machine-readable output
 ```
 
-## Update Skills to the Latest Version
+## Update skills to the latest version
 
 ```bash
 npx skills update                          # update all project skills
@@ -79,14 +81,14 @@ npx skills update dlstreamer-coding-agent  # update a single skill
 npx skills update -g                       # update all global skills
 ```
 
-## Remove a Skill
+## Remove a skill
 
 ```bash
 npx skills remove dlstreamer-coding-agent                              # interactive
 npx skills remove dlstreamer-coding-agent --agent claude-code --yes   # targeted
 ```
 
-## Restore Skills from the Lock File
+## Restore skills from the lock file
 
 If a repo already has a `skills-lock.json`, restore all pinned skills in one command:
 
@@ -95,6 +97,8 @@ npx skills experimental_install
 ```
 
 > **Tip:** Use `--agent universal` to install into `.agents/skills/` only (no symlinks to other agent directories).
+
+----
 
 ## Supporting Resources
 
