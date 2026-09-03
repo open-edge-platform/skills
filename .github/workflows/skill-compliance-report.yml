@@ -163,7 +163,6 @@ jobs:
               if sev:
                 severity_key = sev.group(1).lower()
                 spector_data[current_skill][severity_key] += 1
-                spector_data[current_skill]['issues'] += 1
 
           total_critical = sum(s['critical'] for s in spector_data.values())
           total_high = sum(s['high'] for s in spector_data.values())
