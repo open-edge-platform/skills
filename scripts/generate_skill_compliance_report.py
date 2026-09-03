@@ -279,7 +279,8 @@ class SkillComplianceReportGenerator:
         severity = spector_vulns.get('severity', '')
         recommendation = spector_vulns.get('recommendation', '')
         severity_display = severity or 'UNKNOWN'
-        recommendation_display = recommendation or 'N/A'
+        recommendation_icon = '✅' if recommendation == 'SAFE' else '❌'
+        recommendation_display = f"{recommendation_icon} {recommendation or 'N/A'}"
 
         severity_colors = {
             'LOW': '#27ae60',
