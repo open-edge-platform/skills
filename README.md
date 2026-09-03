@@ -8,7 +8,7 @@ A **skill** is a `SKILL.md` file that gives a coding agent focused, task-specifi
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-09-02 14:53 UTC -->
+<!-- Last updated: 2026-09-03 00:04 UTC -->
 | Product | Skill | Skill Description |
 |---------|-------|-------------------|
 | [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule) | Adds a new dataset/datamodule to anomalib under src/anomalib/data/. Use when wiring a new data source into the AnomalibDataset/AnomalibDataModule base classes, exporting it so anomalib.data.<Name> and the CLI/config (jsonargparse) can discover it, and adding matching tests. Do not use for model architecture work (see anomalib-adding-a-model) or for training an existing datamodule (see anomalib-training). |
