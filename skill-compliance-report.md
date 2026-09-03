@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-09-02 14:45:20 UTC &nbsp;|&nbsp; **Run:** [33643821999](https://github.com/open-edge-platform/skills/actions/runs/33643821999)
+**Generated:** 2026-09-03 10:28:32 UTC &nbsp;|&nbsp; **Run:** [33744214383](https://github.com/open-edge-platform/skills/actions/runs/33744214383)
 
 ## Executive Summary
 
@@ -30,42 +30,42 @@
 
 ## Skill Details
 
-| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |
+| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skillspector vulnerabilities | Example Prompts |
 |---|---|:---:|:---:|:---:|:---:|:---:|
-| **anomalib-adding-a-datamodule** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 3168 | ✅ No vulnerabilities reported | N/A |
-| **anomalib-adding-a-model** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1737 | ✅ No vulnerabilities reported | N/A |
-| **anomalib-benchmarking** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 855 | ✅ No vulnerabilities reported | N/A |
-| **anomalib-tiled-ensemble** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1199 | ✅ No vulnerabilities reported | N/A |
-| **anomalib-training** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1296 | ✅ No vulnerabilities reported | N/A |
-| **chatqna-docker-deploy** | Chat Question and Answer | 8/12 | +76pp | ✅ Pass<br>Total Tokens: 1410 | ✅ No vulnerabilities reported | N/A |
-| **chatqna-helm-deploy** | Chat Question and Answer | 10/12 | +77pp | ✅ Pass<br>Total Tokens: 2554 | ✅ No vulnerabilities reported | N/A |
-| **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5973 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/dlsps-user/example-prompts) |
-| **dlstreamer-coding-agent** | DL Streamer | 7/7 | +24pp | ❌ Fail<br>Warnings: 2<br>Total Tokens: 29358 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/dlstreamer-coding-agent/example-prompts) |
-| **geti-using-the-pipeline** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1250 | ✅ No vulnerabilities reported | N/A |
-| **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | ✅ No vulnerabilities reported | N/A |
-| **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | ✅ No vulnerabilities reported | N/A |
-| **getitune-optimizing-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 673 | ✅ No vulnerabilities reported | N/A |
-| **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | 🟡 1M | N/A |
-| **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | ✅ No vulnerabilities reported | N/A |
-| **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | ✅ No vulnerabilities reported | N/A |
-| **metro-ai-app-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6183 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-app-builder/example-prompts) |
-| **metro-ai-app-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20893 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/metro-ai-app-recipe/example-prompts) |
-| **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8576 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/model-download-user/example-prompts) |
-| **multimodal-dataprep-user** | Multimodal DataPrep microservice | 5/5 | +90pp | ✅ Pass<br>Total Tokens: 2130 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-dataprep-user/example-prompts) |
-| **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1668 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
-| **physicalai-runtime-adding-a-camera-backend** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 567 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-runtime-adding-a-robot-integration** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 843 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-runtime-configuring-inference-pipeline** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 530 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-runtime-loading-exported-policies** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 1035 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-runtime-running-policy-on-robot** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 548 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1496 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1015 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1351 | 🟡 1M | N/A |
-| **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1449 | ✅ No vulnerabilities reported | N/A |
-| **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 975 | ✅ No vulnerabilities reported | N/A |
-| **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/scenescape-setup/example-prompts) |
-| **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ✅ Pass<br>Total Tokens: 12127 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/time-series-analytics-user/example-prompts) |
-| **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11267 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy/example-prompts) |
-| **vss-deploy-helm** | Video Search and Summarization | 4/4 | +42pp | ✅ Pass<br>Total Tokens: 7895 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-deploy-helm/example-prompts) |
-| **vss-search-index** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 3068 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-search-index/example-prompts) |
-| **vss-summarize-video** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 2714 | ✅ No vulnerabilities reported | [View](https://github.com/open-edge-platform/skills/tree/release-2026.2.0/.agents/skills/vss-summarize-video/example-prompts) |
+| **anomalib-adding-a-datamodule** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 3168 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **anomalib-adding-a-model** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1737 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **anomalib-benchmarking** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 855 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **anomalib-tiled-ensemble** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1199 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **anomalib-training** | Anomalib | N/A | N/A | ✅ Pass<br>Total Tokens: 1296 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **chatqna-docker-deploy** | Chat Question and Answer | 8/12 | +76pp | ✅ Pass<br>Total Tokens: 1410 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **chatqna-helm-deploy** | Chat Question and Answer | 10/12 | +77pp | ✅ Pass<br>Total Tokens: 2554 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **dlsps-user** | DL Streamer Pipeline Server | 2/2 | +28pp | ✅ Pass<br>Total Tokens: 5973 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/dlsps-user/example-prompts) |
+| **dlstreamer-coding-agent** | DL Streamer | 7/7 | +24pp | ✅ Pass<br>Warnings: 2<br>Total Tokens: 29358 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/dlstreamer-coding-agent/example-prompts) |
+| **geti-using-the-pipeline** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1250 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **getitune-optimizing-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 673 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | Score: 8/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 2<br>Counts: 🟡 1M | N/A |
+| **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **metro-ai-app-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6183 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/metro-ai-app-builder/example-prompts) |
+| **metro-ai-app-recipe** | Metro AI Suite - Vision AI App Recipe | 5/5 | +40pp | ✅ Pass<br>Total Tokens: 20893 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/metro-ai-app-recipe/example-prompts) |
+| **model-download-user** | Model Download | 5/8 | +38pp | ✅ Pass<br>Total Tokens: 8576 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/model-download-user/example-prompts) |
+| **multimodal-dataprep-user** | Multimodal DataPrep microservice | 5/5 | +90pp | ✅ Pass<br>Total Tokens: 2130 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/multimodal-dataprep-user/example-prompts) |
+| **multimodal-embedding-serving-user** | Multimodal Embedding Serving Microservice | 5/5 | +67pp | ✅ Pass<br>Total Tokens: 1668 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/multimodal-embedding-serving-user/example-prompts) |
+| **physicalai-runtime-adding-a-camera-backend** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 567 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-runtime-adding-a-robot-integration** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 843 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-runtime-configuring-inference-pipeline** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 530 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-runtime-loading-exported-policies** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 1035 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-runtime-running-policy-on-robot** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 548 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1496 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1015 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1351 | Score: 7/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 2<br>Counts: 🟡 1M | N/A |
+| **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1449 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 975 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
+| **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/scenescape-setup/example-prompts) |
+| **time-series-analytics-user** | Time Series Analytics Microservice | 5/5 | +48pp | ✅ Pass<br>Total Tokens: 12127 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/time-series-analytics-user/example-prompts) |
+| **vss-deploy** | Video Search and Summarization | 4/4 | +17pp | ✅ Pass<br>Total Tokens: 11267 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/vss-deploy/example-prompts) |
+| **vss-deploy-helm** | Video Search and Summarization | 4/4 | +42pp | ✅ Pass<br>Total Tokens: 7895 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/vss-deploy-helm/example-prompts) |
+| **vss-search-index** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 3068 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/vss-search-index/example-prompts) |
+| **vss-summarize-video** | Video Search and Summarization | 4/4 | +92pp | ✅ Pass<br>Total Tokens: 2714 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/vss-summarize-video/example-prompts) |
