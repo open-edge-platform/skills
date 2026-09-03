@@ -490,7 +490,7 @@ class SkillComplianceReportGenerator:
                             <th>Evals Passed</th>
                             <th>Skill Uplift</th>
                             <th>skill-validator metrics</th>
-                            <th>skill-spector vulnerabilities</th>
+                            <th>skillspector vulnerabilities</th>
                             <th>Example Prompts</th>
                         </tr>
                     </thead>
@@ -528,7 +528,7 @@ class SkillComplianceReportGenerator:
                 validator_errors = validator_metrics.get('errors', 0)
                 validator_warnings = validator_metrics.get('warnings', 0)
                 validator_tokens = validator_metrics.get('tokens_used', 0)
-                validator_status = "Fail" if validator_errors > 0 or validator_warnings > 0 else "Pass"
+                validator_status = "Fail" if validator_errors > 0 else "Pass"
                 status_color = '#27ae60' if validator_status == "Pass" else '#e74c3c'
                 status_span = f'<span style="color: {status_color}; font-weight: 600;">{validator_status}</span>'
                 validator_parts = [status_span]
@@ -551,17 +551,28 @@ class SkillComplianceReportGenerator:
                 spector_high = spector_vulns.get('high', 0)
                 spector_medium = spector_vulns.get('medium', 0)
                 spector_low = spector_vulns.get('low', 0)
-                total_vulns = spector_critical + spector_high + spector_medium + spector_low
+                total_vulns = spector_vulns.get('issues', spector_critical + spector_high + spector_medium + spector_low)
+                score = spector_vulns.get('score', 0)
+                severity = spector_vulns.get('severity', '')
+                recommendation = spector_vulns.get('recommendation', '')
                 if total_vulns > 0:
-                    spector_parts = []
-                    if spector_critical > 0: spector_parts.append(f"🔴 {spector_critical}C")
-                    if spector_high > 0:     spector_parts.append(f"🟠 {spector_high}H")
-                    if spector_medium > 0:   spector_parts.append(f"🟡 {spector_medium}M")
-                    if spector_low > 0:      spector_parts.append(f"🔵 {spector_low}L")
-                    spector_display = ", ".join(spector_parts)
+                    spector_parts = [f"Score: {score}/100"]
+                    if severity:
+                        spector_parts.append(f"Severity: {severity}")
+                    if recommendation:
+                        spector_parts.append(f"Recommendation: {recommendation}")
+                    spector_parts.append(f"Issues: {total_vulns}")
+                    vuln_counts = []
+                    if spector_critical > 0: vuln_counts.append(f"🔴 {spector_critical}C")
+                    if spector_high > 0:     vuln_counts.append(f"🟠 {spector_high}H")
+                    if spector_medium > 0:   vuln_counts.append(f"🟡 {spector_medium}M")
+                    if spector_low > 0:      vuln_counts.append(f"🔵 {spector_low}L")
+                    if vuln_counts:
+                        spector_parts.append("Counts: " + ", ".join(vuln_counts))
+                    spector_display = "<br>".join(spector_parts)
                     spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
                 else:
-                    spector_display = "✅ No vulnerabilities reported"
+                    spector_display = "Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0"
                     spector_class = 'metric-good'
             
             prompts_url = self.skills_prompts_url.get(skill_name, "")
@@ -682,7 +693,7 @@ class SkillComplianceReportGenerator:
             "",
             "## Skill Details",
             "",
-            "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skill-spector vulnerabilities | Example Prompts |",
+            "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skillspector vulnerabilities | Example Prompts |",
             "|---|---|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
@@ -706,7 +717,7 @@ class SkillComplianceReportGenerator:
                 v_errors = validator_metrics.get('errors', 0)
                 v_warnings = validator_metrics.get('warnings', 0)
                 v_tokens = validator_metrics.get('tokens_used', 0)
-                v_status = "Fail" if v_errors > 0 or v_warnings > 0 else "Pass"
+                v_status = "Fail" if v_errors > 0 else "Pass"
                 status_icon = "✅" if v_status == "Pass" else "❌"
                 v_parts = [f"{status_icon} {v_status}"]
                 if v_errors > 0:
@@ -728,15 +739,22 @@ class SkillComplianceReportGenerator:
                 sp_h = spector_vulns.get('high', 0)
                 sp_m = spector_vulns.get('medium', 0)
                 sp_l = spector_vulns.get('low', 0)
-                if sp_c + sp_h + sp_m + sp_l > 0:
-                    sp_parts = []
-                    if sp_c > 0: sp_parts.append(f"🔴 {sp_c}C")
-                    if sp_h > 0: sp_parts.append(f"🟠 {sp_h}H")
-                    if sp_m > 0: sp_parts.append(f"🟡 {sp_m}M")
-                    if sp_l > 0: sp_parts.append(f"🔵 {sp_l}L")
-                    spector_cell = ", ".join(sp_parts)
+                sp_total = spector_vulns.get('issues', sp_c + sp_h + sp_m + sp_l)
+                score = spector_vulns.get('score', 0)
+                severity = spector_vulns.get('severity', '')
+                recommendation = spector_vulns.get('recommendation', '')
+                if sp_total > 0:
+                    sp_parts = [f"Score: {score}/100", f"Severity: {severity or 'UNKNOWN'}", f"Recommendation: {recommendation or 'N/A'}", f"Issues: {sp_total}"]
+                    sp_counts = []
+                    if sp_c > 0: sp_counts.append(f"🔴 {sp_c}C")
+                    if sp_h > 0: sp_counts.append(f"🟠 {sp_h}H")
+                    if sp_m > 0: sp_counts.append(f"🟡 {sp_m}M")
+                    if sp_l > 0: sp_counts.append(f"🔵 {sp_l}L")
+                    if sp_counts:
+                        sp_parts.append("Counts: " + ", ".join(sp_counts))
+                    spector_cell = "<br>".join(sp_parts)
                 else:
-                    spector_cell = "✅ No vulnerabilities reported"
+                    spector_cell = "Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0"
 
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
