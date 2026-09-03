@@ -265,6 +265,60 @@ class SkillComplianceReportGenerator:
                 if numeric_uplifts:
                     data['avg_uplift'] = sum(numeric_uplifts) / len(numeric_uplifts)
 
+    def format_spector_vulnerabilities(self, spector_vulns: Optional[Dict], inline_styles: bool = False) -> Tuple[str, str]:
+        """Format SkillSpector results for an HTML or Markdown report cell."""
+        if spector_vulns is None:
+            return "N/A", "metric-neutral"
+
+        critical = spector_vulns.get('critical', 0)
+        high = spector_vulns.get('high', 0)
+        medium = spector_vulns.get('medium', 0)
+        low = spector_vulns.get('low', 0)
+        total = spector_vulns.get('issues', critical + high + medium + low)
+        score = spector_vulns.get('score', 0)
+        severity = spector_vulns.get('severity', '')
+        recommendation = spector_vulns.get('recommendation', '')
+        severity_display = severity or 'UNKNOWN'
+        recommendation_display = recommendation or 'N/A'
+
+        severity_colors = {
+            'LOW': '#27ae60',
+            'MEDIUM': '#f39c12',
+            'HIGH': '#e67e22',
+            'CRITICAL': '#e74c3c',
+        }
+        recommendation_colors = {
+            'SAFE': '#27ae60',
+            'CAUTION': '#f39c12',
+            'DO NOT INSTALL': '#e74c3c',
+        }
+
+        if inline_styles:
+            severity_text = f'<span style="color: {severity_colors.get(severity, "#7f8c8d")}; font-weight: 600;">{severity_display}</span>'
+            recommendation_text = f'<span style="color: {recommendation_colors.get(recommendation, "#7f8c8d")}; font-weight: 600;">{recommendation_display}</span>'
+        else:
+            severity_class = f"severity-{severity.lower()}" if severity else 'metric-neutral'
+            recommendation_class = (
+                f"recommendation-{recommendation.lower().replace(' ', '-')}"
+                if recommendation else 'metric-neutral'
+            )
+            severity_text = f'<span class="{severity_class}">{severity_display}</span>'
+            recommendation_text = f'<span class="{recommendation_class}">{recommendation_display}</span>'
+
+        parts = [
+            f"Score: {score}/100",
+            f"Severity: {severity_text}",
+            f"Recommendation: {recommendation_text}",
+            f"Issues: {total}",
+        ]
+        counts = [(critical, '🔴', 'C'), (high, '🟠', 'H'), (medium, '🟡', 'M'), (low, '🔵', 'L')]
+        count_display = [f"{icon} {count}{label}" for count, icon, label in counts if count > 0]
+        if count_display:
+            parts.append("Counts: " + ", ".join(count_display))
+
+        display_class = 'metric-warning' if critical > 0 or high > 0 else 'metric-good'
+        return "<br>".join(parts), display_class
+
     def generate_html_report(self) -> str:
         """Generate comprehensive HTML report with industry standards"""
         self.calculate_component_metrics()
@@ -547,40 +601,9 @@ class SkillComplianceReportGenerator:
                 validator_class = 'metric-good' if validator_status == "Pass" else 'metric-warning'
             
             # Get spector vulnerabilities — distinguish no-data (None) from a clean scan
-            spector_vulns = self.spector_data.get(skill_name)
-            if spector_vulns is None:
-                spector_display = "N/A"
-                spector_class = 'metric-neutral'
-            else:
-                spector_critical = spector_vulns.get('critical', 0)
-                spector_high = spector_vulns.get('high', 0)
-                spector_medium = spector_vulns.get('medium', 0)
-                spector_low = spector_vulns.get('low', 0)
-                total_vulns = spector_vulns.get('issues', spector_critical + spector_high + spector_medium + spector_low)
-                score = spector_vulns.get('score', 0)
-                severity = spector_vulns.get('severity', '')
-                recommendation = spector_vulns.get('recommendation', '')
-                if total_vulns > 0:
-                    spector_parts = [f"Score: {score}/100"]
-                    if severity:
-                        severity_class = f"severity-{severity.lower()}"
-                        spector_parts.append(f"Severity: <span class=\"{severity_class}\">{severity}</span>")
-                    if recommendation:
-                        recommendation_class = f"recommendation-{recommendation.lower().replace(' ', '-')}"
-                        spector_parts.append(f"Recommendation: <span class=\"{recommendation_class}\">{recommendation}</span>")
-                    spector_parts.append(f"Issues: {total_vulns}")
-                    vuln_counts = []
-                    if spector_critical > 0: vuln_counts.append(f"🔴 {spector_critical}C")
-                    if spector_high > 0:     vuln_counts.append(f"🟠 {spector_high}H")
-                    if spector_medium > 0:   vuln_counts.append(f"🟡 {spector_medium}M")
-                    if spector_low > 0:      vuln_counts.append(f"🔵 {spector_low}L")
-                    if vuln_counts:
-                        spector_parts.append("Counts: " + ", ".join(vuln_counts))
-                    spector_display = "<br>".join(spector_parts)
-                    spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
-                else:
-                    spector_display = "Score: 0/100<br>Severity: <span class=\"severity-low\">LOW</span><br>Recommendation: <span class=\"recommendation-safe\">SAFE</span><br>Issues: 0"
-                    spector_class = 'metric-good'
+            spector_display, spector_class = self.format_spector_vulnerabilities(
+                self.spector_data.get(skill_name)
+            )
             
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f'<a href="{prompts_url}">View</a>' if prompts_url else "N/A"
@@ -738,46 +761,9 @@ class SkillComplianceReportGenerator:
                 validator_cell = "N/A"
 
             # Match HTML spector display — distinguish no-data (None) from a clean scan
-            spector_vulns = self.spector_data.get(skill_name)
-            if spector_vulns is None:
-                spector_cell = "N/A"
-            else:
-                sp_c = spector_vulns.get('critical', 0)
-                sp_h = spector_vulns.get('high', 0)
-                sp_m = spector_vulns.get('medium', 0)
-                sp_l = spector_vulns.get('low', 0)
-                sp_total = spector_vulns.get('issues', sp_c + sp_h + sp_m + sp_l)
-                score = spector_vulns.get('score', 0)
-                severity = spector_vulns.get('severity', '')
-                recommendation = spector_vulns.get('recommendation', '')
-                severity_display = severity or 'UNKNOWN'
-                recommendation_display = recommendation or 'N/A'
-                severity_color = {
-                    'LOW': '#27ae60',
-                    'MEDIUM': '#f39c12',
-                    'HIGH': '#e67e22',
-                    'CRITICAL': '#e74c3c',
-                }.get(severity, '#7f8c8d')
-                recommendation_color = {
-                    'SAFE': '#27ae60',
-                    'CAUTION': '#f39c12',
-                    'DO NOT INSTALL': '#e74c3c',
-                }.get(recommendation, '#7f8c8d')
-                sp_parts = [
-                    f"Score: {score}/100",
-                    f"Severity: <span style=\"color: {severity_color}; font-weight: 600;\">{severity_display}</span>",
-                    f"Recommendation: <span style=\"color: {recommendation_color}; font-weight: 600;\">{recommendation_display}</span>",
-                    f"Issues: {sp_total}",
-                ]
-                if sp_total > 0:
-                    sp_counts = []
-                    if sp_c > 0: sp_counts.append(f"🔴 {sp_c}C")
-                    if sp_h > 0: sp_counts.append(f"🟠 {sp_h}H")
-                    if sp_m > 0: sp_counts.append(f"🟡 {sp_m}M")
-                    if sp_l > 0: sp_counts.append(f"🔵 {sp_l}L")
-                    if sp_counts:
-                        sp_parts.append("Counts: " + ", ".join(sp_counts))
-                spector_cell = "<br>".join(sp_parts)
+            spector_cell, _ = self.format_spector_vulnerabilities(
+                self.spector_data.get(skill_name), inline_styles=True
+            )
 
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
