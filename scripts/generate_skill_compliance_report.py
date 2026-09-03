@@ -750,12 +750,26 @@ class SkillComplianceReportGenerator:
                 score = spector_vulns.get('score', 0)
                 severity = spector_vulns.get('severity', '')
                 recommendation = spector_vulns.get('recommendation', '')
+                severity_display = severity or 'UNKNOWN'
+                recommendation_display = recommendation or 'N/A'
+                severity_color = {
+                    'LOW': '#27ae60',
+                    'MEDIUM': '#f39c12',
+                    'HIGH': '#e67e22',
+                    'CRITICAL': '#e74c3c',
+                }.get(severity, '#7f8c8d')
+                recommendation_color = {
+                    'SAFE': '#27ae60',
+                    'CAUTION': '#f39c12',
+                    'DO NOT INSTALL': '#e74c3c',
+                }.get(recommendation, '#7f8c8d')
+                sp_parts = [
+                    f"Score: {score}/100",
+                    f"Severity: <span style=\"color: {severity_color}; font-weight: 600;\">{severity_display}</span>",
+                    f"Recommendation: <span style=\"color: {recommendation_color}; font-weight: 600;\">{recommendation_display}</span>",
+                    f"Issues: {sp_total}",
+                ]
                 if sp_total > 0:
-                    severity_display = severity or 'UNKNOWN'
-                    recommendation_display = recommendation or 'N/A'
-                    severity_class = f"severity-{severity.lower()}" if severity else "metric-neutral"
-                    recommendation_class = f"recommendation-{recommendation.lower().replace(' ', '-')}" if recommendation else "metric-neutral"
-                    sp_parts = [f"Score: {score}/100", f"Severity: <span class=\"{severity_class}\">{severity_display}</span>", f"Recommendation: <span class=\"{recommendation_class}\">{recommendation_display}</span>", f"Issues: {sp_total}"]
                     sp_counts = []
                     if sp_c > 0: sp_counts.append(f"🔴 {sp_c}C")
                     if sp_h > 0: sp_counts.append(f"🟠 {sp_h}H")
@@ -763,9 +777,7 @@ class SkillComplianceReportGenerator:
                     if sp_l > 0: sp_counts.append(f"🔵 {sp_l}L")
                     if sp_counts:
                         sp_parts.append("Counts: " + ", ".join(sp_counts))
-                    spector_cell = "<br>".join(sp_parts)
-                else:
-                    spector_cell = "Score: 0/100<br>Severity: <span style=\"color: #27ae60; font-weight: 600;\">LOW</span><br>Recommendation: <span style=\"color: #27ae60; font-weight: 600;\">SAFE</span><br>Issues: 0"
+                spector_cell = "<br>".join(sp_parts)
 
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
