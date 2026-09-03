@@ -1,6 +1,6 @@
 # Skill Compliance Report
 
-**Generated:** 2026-09-03 10:28:32 UTC &nbsp;|&nbsp; **Run:** [33744214383](https://github.com/open-edge-platform/skills/actions/runs/33744214383)
+**Generated:** 2026-09-03 10:56:40 UTC &nbsp;|&nbsp; **Run:** [33746774609](https://github.com/open-edge-platform/skills/actions/runs/33746774609)
 
 ## Executive Summary
 
@@ -45,7 +45,7 @@
 | **getitune-discovering-models** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 634 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **getitune-exporting-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 764 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **getitune-optimizing-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 673 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
-| **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | Score: 8/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 2<br>Counts: 🟡 1M | N/A |
+| **getitune-preparing-datasets** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 784 | Score: 8/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 1<br>Counts: 🟡 1M | N/A |
 | **getitune-running-inference** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 619 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **getitune-training-a-model** | Geti | N/A | N/A | ✅ Pass<br>Total Tokens: 1330 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **metro-ai-app-builder** | Metro AI Suite - Prompt Library | 6/6 | +62pp | ✅ Pass<br>Total Tokens: 6183 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/metro-ai-app-builder/example-prompts) |
@@ -60,7 +60,7 @@
 | **physicalai-runtime-running-policy-on-robot** | Physical AI Runtime | N/A | N/A | ✅ Pass<br>Total Tokens: 548 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **physicalai-train-adding-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1496 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **physicalai-train-benchmarking-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1015 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
-| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1351 | Score: 7/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 2<br>Counts: 🟡 1M | N/A |
+| **physicalai-train-exporting-and-validating** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1351 | Score: 7/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 1<br>Counts: 🟡 1M | N/A |
 | **physicalai-train-training-a-policy** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 1449 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **physicalai-train-working-with-datasets** | Physical AI Train | N/A | N/A | ✅ Pass<br>Total Tokens: 975 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | N/A |
 | **scenescape-setup** | Scenescape | N/A | N/A | ✅ Pass<br>Total Tokens: 29694 | Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0 | [View](https://github.com/open-edge-platform/skills/tree/feature/vkb1/update-compliance-report/.agents/skills/scenescape-setup/example-prompts) |
