@@ -304,6 +304,10 @@ class SkillComplianceReportGenerator:
         .metric-good {{ color: #27ae60; font-weight: 600; }}
         .metric-warning {{ color: #f39c12; font-weight: 600; }}
         .metric-neutral {{ color: #7f8c8d; }}
+        .severity-low, .recommendation-safe {{ color: #27ae60; font-weight: 600; }}
+        .severity-medium, .recommendation-caution {{ color: #f39c12; font-weight: 600; }}
+        .severity-high {{ color: #e67e22; font-weight: 600; }}
+        .severity-critical, .recommendation-do-not-install {{ color: #e74c3c; font-weight: 600; }}
         .stat-card {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: inline-block; margin-right: 15px; }}
         .stat-card h3 {{ font-size: 2em; margin-bottom: 5px; }}
         .stat-card p {{ font-size: 0.9em; opacity: 0.9; }}
@@ -323,6 +327,7 @@ class SkillComplianceReportGenerator:
         .badge-info {{ background: #d1ecf1; color: #0c5460; }}
         .benchmark-section {{ background: #f8f9fa; border-left: 4px solid #667eea; padding: 16px; border-radius: 4px; margin-bottom: 20px; }}
         .footer {{ background: #f8f9fa; border-top: 1px solid #e0e0e0; padding: 20px 40px; text-align: center; color: #7f8c8d; font-size: 0.9em; }}
+        .skill-details-table th:nth-child(1), .skill-details-table th:nth-child(2), .skill-details-table td:nth-child(1), .skill-details-table td:nth-child(2) {{ text-align: center; }}
         @media (max-width: 768px) {{ header h1 {{ font-size: 1.8em; }} .report-meta {{ flex-direction: column; align-items: flex-start; }} .skill-details {{ grid-template-columns: 1fr; }} }}
     </style>
 </head>
@@ -482,7 +487,7 @@ class SkillComplianceReportGenerator:
         html = """
             <div class="section">
                 <h2 class="section-title">📋 Skill Details</h2>
-                <table>
+                <table class="skill-details-table">
                     <thead>
                         <tr>
                             <th>Skill Name</th>
@@ -558,9 +563,11 @@ class SkillComplianceReportGenerator:
                 if total_vulns > 0:
                     spector_parts = [f"Score: {score}/100"]
                     if severity:
-                        spector_parts.append(f"Severity: {severity}")
+                        severity_class = f"severity-{severity.lower()}"
+                        spector_parts.append(f"Severity: <span class=\"{severity_class}\">{severity}</span>")
                     if recommendation:
-                        spector_parts.append(f"Recommendation: {recommendation}")
+                        recommendation_class = f"recommendation-{recommendation.lower().replace(' ', '-')}"
+                        spector_parts.append(f"Recommendation: <span class=\"{recommendation_class}\">{recommendation}</span>")
                     spector_parts.append(f"Issues: {total_vulns}")
                     vuln_counts = []
                     if spector_critical > 0: vuln_counts.append(f"🔴 {spector_critical}C")
@@ -572,7 +579,7 @@ class SkillComplianceReportGenerator:
                     spector_display = "<br>".join(spector_parts)
                     spector_class = 'metric-warning' if spector_critical > 0 or spector_high > 0 else 'metric-good'
                 else:
-                    spector_display = "Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0"
+                    spector_display = "Score: 0/100<br>Severity: <span class=\"severity-low\">LOW</span><br>Recommendation: <span class=\"recommendation-safe\">SAFE</span><br>Issues: 0"
                     spector_class = 'metric-good'
             
             prompts_url = self.skills_prompts_url.get(skill_name, "")
@@ -694,7 +701,7 @@ class SkillComplianceReportGenerator:
             "## Skill Details",
             "",
             "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skillspector vulnerabilities | Example Prompts |",
-            "|---|---|:---:|:---:|:---:|:---:|:---:|",
+            "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
             skill = self.skills_data[skill_name]
@@ -744,7 +751,11 @@ class SkillComplianceReportGenerator:
                 severity = spector_vulns.get('severity', '')
                 recommendation = spector_vulns.get('recommendation', '')
                 if sp_total > 0:
-                    sp_parts = [f"Score: {score}/100", f"Severity: {severity or 'UNKNOWN'}", f"Recommendation: {recommendation or 'N/A'}", f"Issues: {sp_total}"]
+                    severity_display = severity or 'UNKNOWN'
+                    recommendation_display = recommendation or 'N/A'
+                    severity_class = f"severity-{severity.lower()}" if severity else "metric-neutral"
+                    recommendation_class = f"recommendation-{recommendation.lower().replace(' ', '-')}" if recommendation else "metric-neutral"
+                    sp_parts = [f"Score: {score}/100", f"Severity: <span class=\"{severity_class}\">{severity_display}</span>", f"Recommendation: <span class=\"{recommendation_class}\">{recommendation_display}</span>", f"Issues: {sp_total}"]
                     sp_counts = []
                     if sp_c > 0: sp_counts.append(f"🔴 {sp_c}C")
                     if sp_h > 0: sp_counts.append(f"🟠 {sp_h}H")
@@ -754,7 +765,7 @@ class SkillComplianceReportGenerator:
                         sp_parts.append("Counts: " + ", ".join(sp_counts))
                     spector_cell = "<br>".join(sp_parts)
                 else:
-                    spector_cell = "Score: 0/100<br>Severity: LOW<br>Recommendation: SAFE<br>Issues: 0"
+                    spector_cell = "Score: 0/100<br>Severity: <span style=\"color: #27ae60; font-weight: 600;\">LOW</span><br>Recommendation: <span style=\"color: #27ae60; font-weight: 600;\">SAFE</span><br>Issues: 0"
 
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
