@@ -461,18 +461,11 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
         # Use the canonical repo from config if available; fall back to lock source
         canonical_repo = cfg.get("repo") or repo
         print(f"  + [{product}] {fm['name']}", file=sys.stderr)
-        has_prompts = (local_skills_dir / skill_name / "example-prompts").is_dir()
-        prompts_url = (
-            f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{skill_name}/example-prompts"
-            if has_prompts else None
-        )
         rows.append({
             "product": product,
             "repo_url": f"https://github.com/{canonical_repo}",
             "skill_name": fm["name"],
             "skill_url": f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{skill_name}",
-            "description": fm.get("description", ""),
-            "prompts_url": prompts_url,
         })
 
     rows.sort(key=lambda r: (r["product"], r["skill_name"]))
@@ -485,25 +478,14 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     lines = [
         f"{SKILLS_INDEX_BEGIN}",
         f"<!-- Last updated: {now} -->",
-        "| Product | Skill | Skill Description |",
-        "|---------|-------|-------------------|",
+        "| Product | Skills |",
+        "|---------|--------|",
     ]
     for product, group in product_groups.items():
         repo_url = group[0]["repo_url"]
-        for i, r in enumerate(group):
-            # First skill shows the linked product name; subsequent skills use
-            # a continuation marker so readers know they belong to the same product.
-            product_cell = f"[{product}]({repo_url})" if i == 0 else f"↳"
-            skill_cell = (
-                f"[{r['skill_name']}]({r['skill_url']}) ([Prompts]({r['prompts_url']}))"
-                if r["prompts_url"]
-                else f"[{r['skill_name']}]({r['skill_url']})"
-            )
-            lines.append(
-                f"| {product_cell} "
-                f"| {skill_cell} "
-                f"| {r['description']} |"
-            )
+        skills_cell = ", ".join(f"[{r['skill_name']}]({r['skill_url']})" for r in group)
+        lines.append(f"| [{product}]({repo_url}) | {skills_cell} |")
+    lines.append(f"| **Total** | **{len(product_groups)} products, {len(rows)} skills** |")
     lines.append(SKILLS_INDEX_END)
     return "\n".join(lines)
 

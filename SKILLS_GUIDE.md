@@ -766,15 +766,6 @@ reported.
 
 > Tool: [github.com/NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector)
 
-### Background
-
-Research on 42,447 public skills found:
-- **26.1%** contain at least one vulnerability
-- **5.2%** show likely malicious intent
-- Skills with executable scripts are **2.12× more likely** to be vulnerable
-
-Always scan skills before installing from external sources.
-
 ### Install
 
 ```bash
