@@ -97,8 +97,8 @@ To add a skill to the org index:
 
    Go through some of the guidelines documented at [SKILLS_GUIDE.md](./SKILLS_GUIDE.md) for defining, creating, validating and managing skills.
 
-2. Run [skill validator](https://github.com/open-edge-platform/skills/blob/release-2026.2.0/SKILLS_GUIDE.md#6-validation) 
-   and [skillspector](https://github.com/open-edge-platform/skills/blob/release-2026.2.0/SKILLS_GUIDE.md#7-security-scanning) against your skills to have a clean report.
+2. Run [skill validator](https://github.com/open-edge-platform/skills/blob/main/SKILLS_GUIDE.md#6-validation) 
+   and [skillspector](https://github.com/open-edge-platform/skills/blob/main/SKILLS_GUIDE.md#7-security-scanning) against your skills to have a clean report.
 
    ```bash
    # Run skill-validator tool
@@ -121,7 +121,7 @@ To add a skill to the org index:
    including how to run multiple coding agents CLIs, pin specific models, skip grading,
    or point at non-default CLI binary paths.
 
-4. Add an entry to `skills-config.json` in this repo and open a PR against `release-2026.2.0`.
+4. Add an entry to `skills-config.json` in this repo and open a PR against `main`.
 
    **On every PR that touches `skills-config.json`**, the
    [`Check Skills Config`](.github/workflows/check-skills-config.yml) workflow
@@ -132,7 +132,7 @@ To add a skill to the org index:
 
    Once the PR is merged, the
    [`Update Skills Index`](.github/workflows/update-skills-index.yml) workflow
-   triggers automatically on the push to `release-2026.2.0`. It installs or updates each
+   triggers automatically on the push to `main`. It installs or updates each
    skill via `npx skills add/update` and rebuilds the skills table in this
    README. The workflow also runs on a daily schedule to pick up upstream skill
    changes, and can be triggered manually via `workflow_dispatch` for on-demand
