@@ -28,14 +28,13 @@ npx skills -v  # 1.5.23
 > ```
 
 Once Node.js is installed, `npx skills` works without any extra install step.
--
--There are two installation modes:
--
--| Mode | Flag | Effect |
--|------|------|--------|
--| **Symlink** *(default)* | *(none)* | Creates symlinks in agent directories pointing to a shared location 
-— updates propagate automatically |
--| **Copy** | `--copy` | Copies files directly into each agent directory — self-contained, no shared state |
+
+There are two installation modes:
+
+| Mode | Flag | Effect |
+|------|------|--------|
+| **Symlink** *(default)* | *(none)* | Creates symlinks in agent directories pointing to a shared location — updates propagate automatically |
+| **Copy** | `--copy` | Copies files directly into each agent directory — self-contained, no shared state |
 
 ## Install all skills from this repo
 
