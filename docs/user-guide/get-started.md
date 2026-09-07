@@ -41,16 +41,16 @@ Once Node.js is installed, `npx skills` works without any extra install step.
 
 ```bash
 # Symlink — interactive (recommended for local development)
-npx skills add open-edge-platform/skills#main
+npx skills add open-edge-platform/skills
 
 # Symlink — non-interactive, all agents
-npx skills add open-edge-platform/skills#main --all
+npx skills add open-edge-platform/skills --all
 
 # Copy — non-interactive, all agents (portable, no symlinks)
-npx skills add open-edge-platform/skills#main --all --copy
+npx skills add open-edge-platform/skills --all --copy
 
 # Copy — specific agent only (e.g. Claude Code)
-npx skills add open-edge-platform/skills#main --agent claude-code --copy --yes
+npx skills add open-edge-platform/skills --agent claude-code --copy --yes
 ```
 
 ## Install a specific skill
@@ -59,10 +59,10 @@ npx skills add open-edge-platform/skills#main --agent claude-code --copy --yes
 
 ```bash
 # Symlink a single skill (interactive agent selection)
-npx skills add open-edge-platform/skills#main --skill dlstreamer-coding-agent
+npx skills add open-edge-platform/skills --skill dlstreamer-coding-agent
 
 # Copy a single skill to a specific agent
-npx skills add open-edge-platform/skills#main --skill dlstreamer-coding-agent --agent claude-code --copy --yes
+npx skills add open-edge-platform/skills --skill dlstreamer-coding-agent --agent claude-code --copy --yes
 ```
 
 ## List installed skills
