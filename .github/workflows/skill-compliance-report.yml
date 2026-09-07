@@ -127,13 +127,42 @@ jobs:
             m = re.match(r'^Skill\s*:\s*.+/\.agents/skills/([^/\s]+)', line)
             if m:
               current_skill = m.group(1).strip()
-              spector_data[current_skill] = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+              spector_data[current_skill] = {
+                'score': 0,
+                'critical': 0,
+                'high': 0,
+                'medium': 0,
+                'low': 0,
+                'severity': '',
+                'recommendation': '',
+                'issues': 0,
+              }
             elif current_skill:
+              skill_level_score = re.match(r'^Score\s*:\s*(\d+)\s*/\s*\d+\s*$', line)
+              if skill_level_score:
+                spector_data[current_skill]['score'] = int(skill_level_score.group(1))
+                continue
+
+              skill_level_severity = re.match(r'^Severity\s*:\s*(CRITICAL|HIGH|MEDIUM|LOW)\b', line)
+              if skill_level_severity:
+                spector_data[current_skill]['severity'] = skill_level_severity.group(1).upper()
+                continue
+
+              skill_level_recommendation = re.match(r'^Recommendation\s*:\s*(.+?)\s*$', line)
+              if skill_level_recommendation:
+                spector_data[current_skill]['recommendation'] = skill_level_recommendation.group(1).strip()
+                continue
+
+              skill_level_issues = re.match(r'^Issues\s*:\s*(\d+)', line)
+              if skill_level_issues:
+                spector_data[current_skill]['issues'] = int(skill_level_issues.group(1))
+                continue
+
               # Per-issue line (indented): "  Severity    : HIGH (confidence: 0.8)"
-              # Top-level skill severity (not indented) is intentionally skipped
               sev = re.match(r'^\s+Severity\s*:\s*(CRITICAL|HIGH|MEDIUM|LOW)\b', line)
               if sev:
-                spector_data[current_skill][sev.group(1).lower()] += 1
+                severity_key = sev.group(1).lower()
+                spector_data[current_skill][severity_key] += 1
 
           total_critical = sum(s['critical'] for s in spector_data.values())
           total_high = sum(s['high'] for s in spector_data.values())
