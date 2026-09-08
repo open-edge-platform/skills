@@ -6,7 +6,7 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-09-07 14:13 UTC -->
+<!-- Last updated: 2026-09-08 00:04 UTC -->
 | Product | Skills |
 |---------|--------|
 | [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-training) |
