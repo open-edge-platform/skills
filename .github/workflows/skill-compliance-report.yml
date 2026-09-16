@@ -39,7 +39,7 @@ jobs:
     name: Run Skill Validators
     needs: check-paths
     if: needs.check-paths.outputs.run == 'true'
-    uses: ./.github/workflows/skill-scan.yml
+    uses: $/.github/workflows/skill-scan.yml
     permissions:
       contents: read
     with:
