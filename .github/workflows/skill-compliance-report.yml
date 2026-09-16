@@ -30,7 +30,7 @@ jobs:
         uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
         with:
           files_yaml: |
-            check:
+            test:
               - ".agents/skills/**"
               - ".github/workflows/skill-compliance-report.yml"
               - "scripts/generate_skill_compliance_report.py"
