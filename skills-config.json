@@ -1,6 +1,17 @@
 {
   "products": [
     {
+      "product": "OEP CLI Installer",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "frameworks/oep-installer-cli/.github/skills",
+      "skills": [
+        {
+          "name": "openedge-cli"
+        }
+      ]
+    },
+    {
       "product": "DL Streamer",
       "repo": "open-edge-platform/dlstreamer",
       "ref": "main",
@@ -214,17 +225,6 @@
       "skills": [
         {
           "name": "metro-ai-app-recipe"
-        }
-      ]
-    },
-    {
-      "product": "Time Series Analytics Microservice",
-      "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
-      "path": "microservices/time-series-analytics/.github/skills",
-      "skills": [
-        {
-          "name": "time-series-analytics-user"
         }
       ]
     },
