@@ -2,9 +2,6 @@ name: Skill Scanner
 
 on:
   pull_request:
-    paths:
-      - ".agents/skills/**"
-      - ".github/workflows/skill-scan.yml"
   push:
     branches: ["main", "release-*"]
   schedule:
@@ -33,8 +30,32 @@ on:
 permissions: {}
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
+        with:
+          files_yaml: |
+            test:
+              - ".agents/skills/**"
+              - ".github/workflows/skill-scan.yml"
+
   skillspector-scan:
     name: SkillSpector security scan
+    needs: check-paths
+    if: needs.check-paths.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -45,7 +66,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true # FIXME use false once repo make public
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Run SkillSpector scan
@@ -67,6 +88,8 @@ jobs:
 
   skill-validator-scan:
     name: skill-validator scan
+    needs: check-paths
+    if: needs.check-paths.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -77,7 +100,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true # FIXME use false once repo make public
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Run skill-validator
@@ -97,3 +120,24 @@ jobs:
           path: ${{ steps.skill-validator.outputs.report_path }}
           retention-days: 30
           overwrite: true
+
+  required-check:
+    name: Required Check Skill Scanner
+    needs:
+      - check-paths
+      - skillspector-scan
+      - skill-validator-scan
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
