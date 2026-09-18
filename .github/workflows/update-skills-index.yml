@@ -19,7 +19,7 @@ on:
         required: false
         default: "true"
       dry_run:
-        description: "Preview changes without writing or committing (true/false)"
+        description: "Preview changes without writing files or opening a pull request (true/false)"
         required: false
         default: "false"
       branch:
@@ -82,26 +82,50 @@ jobs:
           fi
           python3 scripts/update_skills_index.py $FLAGS
 
-      - name: Commit and push if anything changed
-        # Skip on dry-run; also safe when inputs are empty (scheduled run)
+      # github.event.repository is unset on schedule triggers, so use the stable
+      # github.repository context to keep the token scoped to this repo.
+      - name: Get GitHub App token
         if: ${{ inputs.dry_run != 'true' }}
-        env:
-          SKILLS_PAT: ${{ secrets.SKILLS_PAT }}
-        run: |
-          git config user.name  "sys-siv-oep"
-          git config user.email "sys-siv-oep@intel.com"
-          git remote set-url origin "https://x-access-token:${SKILLS_PAT}@github.com/${{ github.repository }}.git"
+        id: get-github-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.SKILLS_APP_ID }}
+          private-key: ${{ secrets.SKILLS_APP_PEM }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.repository }}
+          # Repository permissions: only what's needed to push a branch and open a PR
+          permission-contents: write
+          permission-pull-requests: write
 
-          git add README.md .agents/skills/
+      - name: Compute date
+        if: ${{ inputs.dry_run != 'true' }}
+        id: date
+        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
 
-          if git diff --cached --quiet; then
-            echo "Nothing changed — skipping commit."
-            exit 0
-          fi
+      - name: Create pull request if anything changed
+        if: ${{ inputs.dry_run != 'true' }}
+        id: create-pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.get-github-app-token.outputs.token }}
+          author: oep-skills[bot] <330355342+oep-skills[bot]@users.noreply.github.com>
+          committer: oep-skills[bot] <330355342+oep-skills[bot]@users.noreply.github.com>
+          add-paths: |
+            README.md
+            .agents/skills/
+          commit-message: |
+            chore: sync skills and update README index
 
-          git commit -m "chore: sync skills and update README index \
-          Installed/updated selected skills from skills-config.json and rebuilt README."
-          git push
+            Installed/updated selected skills from skills-config.json and rebuilt README.
+          title: "chore: sync skills and update README index (${{ steps.date.outputs.date }})"
+          body: |
+            Automated sync of `.agents/skills/` and `README.md` from `skills-config.json`
+            (triggered by `${{ github.event_name }}`).
+          # Stable per-base name so reruns update the existing PR instead of opening duplicates.
+          branch: "update-skills-index-${{ github.ref_name }}"
+          base: ${{ github.ref_name }}
+          delete-branch: true
+          reviewers: sys-siv-oep
 
       - name: Verify skills installation
         env:
@@ -117,3 +141,14 @@ jobs:
           fi
           npx skills add "$SOURCE" --list
           npx skills add "$SOURCE" --skill '*' --agent claude-code --agent github-copilot --agent codex --global --yes
+
+      - name: Enable auto-merge
+        if: ${{ inputs.dry_run != 'true' && steps.create-pr.outputs.pull-request-number }}
+        env:
+          GH_TOKEN: ${{ steps.get-github-app-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        run: |
+          gh pr merge --auto --squash \
+            --repo "$REPOSITORY" \
+            "$PR_NUMBER"

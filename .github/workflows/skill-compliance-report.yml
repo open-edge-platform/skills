@@ -22,7 +22,7 @@ permissions:
 jobs:
   run-validators:
     name: Run Skill Validators
-    uses: ./.github/workflows/skill-scan.yml
+    uses: $/.github/workflows/skill-scan.yml
     permissions:
       contents: read
     with:
