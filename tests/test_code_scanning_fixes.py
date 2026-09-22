@@ -59,6 +59,12 @@ class UpdateSkillsIndexValidationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             update_skills_index.validate_config_entries(entries)
 
+    def test_validate_config_entries_rejects_explicit_empty_ref(self):
+        entries = [{"repo": "open-edge-platform/skills", "ref": "", "skills": ["safe-skill"]}]
+
+        with self.assertRaises(ValueError):
+            update_skills_index.validate_config_entries(entries)
+
 
 class RunMultiCliEvalPathSafetyTests(unittest.TestCase):
     def test_eval_dir_name_slugifies_untrusted_fields(self):

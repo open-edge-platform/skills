@@ -97,7 +97,10 @@ def validate_config_entries(config_entries: list[dict]) -> None:
         repo = entry.get("repo", "")
         if not _REPO_RE.fullmatch(repo):
             raise ValueError(f"unsafe repo value: {repo!r}")
-        entry["ref"] = _validate_git_ref(entry.get("ref", "main") or "main")
+        if "ref" in entry:
+            entry["ref"] = _validate_git_ref(entry["ref"])
+        else:
+            entry["ref"] = "main"
         if entry.get("path"):
             entry["path"] = _validate_skill_path(entry["path"])
         for skill in entry.get("skills", []):
