@@ -98,7 +98,7 @@ def validate_config_entries(config_entries: list[dict]) -> None:
         if not _REPO_RE.fullmatch(repo):
             raise ValueError(f"unsafe repo value: {repo!r}")
         if "ref" in entry:
-            entry["ref"] = _validate_git_ref(entry["ref"])
+            entry["ref"] = "main" if entry["ref"] is None else _validate_git_ref(entry["ref"])
         else:
             entry["ref"] = "main"
         if entry.get("path"):
