@@ -221,6 +221,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      issues: write
 
     steps:
       - name: Checkout code
@@ -272,24 +273,48 @@ jobs:
           path: skill_summary_output.html
           retention-days: 30
 
-      - name: Commit report to repository
+      - name: Update tracking issue
         if: github.event_name != 'pull_request'
         env:
-          SKILLS_PAT: ${{ secrets.SKILLS_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
         run: |
-          git config user.name  "sys-siv-oep"
-          git config user.email "sys-siv-oep@intel.com"
-          git remote set-url origin "https://x-access-token:${SKILLS_PAT}@github.com/${{ github.repository }}.git"
+          set -euo pipefail
+          ISSUE_TITLE="Skill Compliance Report - Scheduled Summary"
 
-          git add skill-compliance-report.md
+          # Prepend run metadata to the generated report
+          {
+            echo ""
+            echo "Last updated: $(date -u '+%Y-%m-%d %H:%M UTC') ([run #${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}))"
+            echo ""
+            cat skill-compliance-report.md
+          } > /tmp/issue_body.md
 
-          if git diff --cached --quiet; then
-            echo "Nothing changed — skipping commit."
-            exit 0
+          # Find existing issue (open or closed) by exact title
+          issue_number=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --search "in:title ${ISSUE_TITLE}" \
+            --state all \
+            --json number,title \
+            | jq --arg title "$ISSUE_TITLE" -r \
+                '.[] | select(.title == $title) | .number' \
+            | head -n 1)
+
+          if [ -n "$issue_number" ]; then
+            gh issue edit "$issue_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body-file /tmp/issue_body.md
+            gh issue reopen "$issue_number" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+            echo "Updated issue #${issue_number}"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$ISSUE_TITLE" \
+              --body-file /tmp/issue_body.md
+            echo "Created new issue"
           fi
-
-          git commit -m "chore: update skill compliance report"
-          git push
 
       - name: Display Report Summary
         run: |
