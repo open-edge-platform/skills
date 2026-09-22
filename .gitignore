@@ -3,3 +3,4 @@ __pycache__/
 *.py[cod]
 *$py.class
 skills-lock.json
+skill-compliance-report.md
