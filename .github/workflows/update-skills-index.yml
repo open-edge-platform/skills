@@ -73,14 +73,24 @@ jobs:
           npx --version
           echo "skills version:"
           npx skills --version
-          FLAGS=""
-          if [ "$DRY_RUN" = "true" ]; then
-            FLAGS="$FLAGS --dry-run"
-          fi
-          if [ "$INSTALL" = "false" ]; then
-            FLAGS="$FLAGS --no-install"
-          fi
-          python3 scripts/update_skills_index.py $FLAGS
+          args=()
+          case "$DRY_RUN" in
+            true) args+=(--dry-run) ;;
+            false) ;;
+            *)
+              echo "::error::Invalid dry_run input"
+              exit 1
+              ;;
+          esac
+          case "$INSTALL" in
+            true) ;;
+            false) args+=(--no-install) ;;
+            *)
+              echo "::error::Invalid install input"
+              exit 1
+              ;;
+          esac
+          python3 scripts/update_skills_index.py "${args[@]}"
 
       # github.event.repository is unset on schedule triggers, so use the stable
       # github.repository context to keep the token scoped to this repo.
@@ -133,6 +143,12 @@ jobs:
           NPM_CONFIG_YES: "true"
           DISABLE_TELEMETRY: "1"
         run: |
+          if [[ "$VERIFY_BRANCH" != "main" ]]; then
+            if [[ "$VERIFY_BRANCH" =~ ^[-/.] || "$VERIFY_BRANCH" =~ [[:space:]~^:?*\[\\]] || "$VERIFY_BRANCH" =~ (@\{|\.\.|//|[/.]$) ]]; then
+              echo "::error::Invalid branch input"
+              exit 1
+            fi
+          fi
           REPO="open-edge-platform/skills"
           if [ "${VERIFY_BRANCH}" = "main" ]; then
             SOURCE="$REPO"
