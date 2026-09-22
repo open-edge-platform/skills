@@ -4,17 +4,38 @@ on:
   pull_request:
     branches:
       - "main"
-    paths:
-      - "skills-config.json"
-      - "skills-config.schema.json"
-      - "scripts/update_skills_index.py"
-      - ".github/workflows/check-skills-config.yml"
 
 permissions: {}
 
 jobs:
+  check-paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check_paths.outputs.run }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check paths
+        id: check_paths
+        uses: open-edge-platform/geti-ci/actions/check-paths@2ed3ce382d1dbd6db52c7c6b93ffdae280a1c06f # check-paths/v0.1.0
+        with:
+          files_yaml: |
+            test:
+              - "skills-config.json"
+              - "skills-config.schema.json"
+              - "scripts/update_skills_index.py"
+              - ".github/workflows/check-skills-config.yml"
+
   check-skills:
     name: Check configured skills
+    needs: check-paths
+    if: needs.check-paths.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -50,3 +71,23 @@ jobs:
           python3 scripts/update_skills_index.py
           --check-only
           --base-config "${RUNNER_TEMP}/skills-config.base.json"
+
+  required-check:
+    name: Required Check Skills Config
+    needs:
+      - check-paths
+      - check-skills
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

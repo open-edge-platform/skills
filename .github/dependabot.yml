@@ -4,48 +4,43 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    exclude-paths:
+      - ".agents/skills/**"
     cooldown:
       default-days: 7
+    open-pull-requests-limit: 1
     groups:
       github-actions-dependency:
         applies-to: version-updates
         patterns:
           - "*"
-    target-branch: "main"
 
-  - package-ecosystem: "github-actions"
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    exclude-paths:
+      - ".agents/skills/**"
     cooldown:
       default-days: 7
+    open-pull-requests-limit: 1
     groups:
-      github-actions-dependency:
+      npm-updates:
         applies-to: version-updates
         patterns:
           - "*"
-    target-branch: "release-2026.2.0"
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "main"
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "release-2026.2.0"
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    target-branch: "main"
-
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "release-2026.2.0"
+    exclude-paths:
+      - ".agents/skills/**"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
+    groups:
+      pip-updates:
+        applies-to: version-updates
+        patterns:
+          - "*"

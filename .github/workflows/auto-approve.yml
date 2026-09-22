@@ -1,0 +1,143 @@
+name: Auto Approve Skills Update PR
+
+on:
+  pull_request:
+    types:
+      - review_requested
+
+# No permissions by default
+permissions: {}
+
+jobs:
+  pre-approve:
+    name: Pre-Approve
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.capture_sha.outputs.sha }}
+    # Only run for PRs that could plausibly be an auto-approvable skills-sync PR:
+    # - running in the upstream open-edge-platform/skills repo, not a fork of it
+    # - not a fork PR (head repo is this repo)
+    # - opened by the oep-skills GitHub App bot (same app update-skills-index.yml uses to open the PR)
+    # - review was requested from sys-siv-oep, by the bot itself
+    # - head/base branches match the exact naming update-skills-index.yml uses
+    if: ${{
+      github.repository_owner == 'open-edge-platform' &&
+      github.repository == github.event.pull_request.head.repo.full_name &&
+      github.event.pull_request.user.login == 'oep-skills[bot]' &&
+      github.event.requested_reviewer.login == 'sys-siv-oep' &&
+      github.event.sender.login == 'oep-skills[bot]' &&
+      github.event.pull_request.head.ref == format('update-skills-index-{0}', github.event.pull_request.base.ref)
+      }}
+    steps:
+      - name: Capture Commit SHA
+        id: capture_sha
+        run: |
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          echo "Captured commit SHA: ${{ github.event.pull_request.head.sha }}"
+
+      - name: Debug
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REQUESTED_REVIEWER: ${{ github.event.requested_reviewer.login }}
+          SENDER_LOGIN: ${{ github.event.sender.login }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "PR Author: $PR_AUTHOR"
+          echo "Requested Reviewer: $REQUESTED_REVIEWER"
+          echo "Review Requested By (sender): $SENDER_LOGIN"
+          echo "PR Head SHA: $PR_HEAD_SHA"
+
+  approve:
+    name: Approve
+    needs: pre-approve
+    environment:
+      name: auto-approve
+      deployment: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REQUESTED_REVIEWER: ${{ github.event.requested_reviewer.login }}
+          SENDER_LOGIN: ${{ github.event.sender.login }}
+          ORIGINAL_COMMIT_SHA: ${{ needs.pre-approve.outputs.commit_sha }}
+        run: |
+          echo "PR Author: $PR_AUTHOR"
+          echo "Requested Reviewer: $REQUESTED_REVIEWER"
+          echo "Review Requested By (sender): $SENDER_LOGIN"
+          echo "Original Commit SHA: $ORIGINAL_COMMIT_SHA"
+
+      - name: Validate and Approve PR
+        # Re-check every condition at approval time (defense in depth) — the
+        # job-level `if` above already filtered these once, but state can
+        # change between event delivery and this job running:
+        # - running in the upstream open-edge-platform/skills repo, not a fork of it
+        # - PR is not from a fork
+        # - PR was opened by the skills-sync GitHub App bot
+        # - sys-siv-oep is currently a requested reviewer
+        # - the head commit SHA has not changed since the review was requested
+        # - head/base branches match the exact naming update-skills-index.yml uses
+        if: ${{
+          github.repository_owner == 'open-edge-platform' &&
+          github.repository == github.event.pull_request.head.repo.full_name &&
+          github.event.pull_request.user.login == 'oep-skills[bot]' &&
+          github.event.requested_reviewer.login == 'sys-siv-oep' &&
+          github.event.sender.login == 'oep-skills[bot]' &&
+          github.event.pull_request.head.ref == format('update-skills-index-{0}', github.event.pull_request.base.ref)
+          }}
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_APPROVE_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          ORIGINAL_SHA: ${{ needs.pre-approve.outputs.commit_sha }}
+          EXPECTED_BOT: "oep-skills[bot]"
+          EXPECTED_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          EXPECTED_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          echo "Verifying PR author..."
+          pr_author=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '.user.login')
+          if [ "$pr_author" != "$EXPECTED_BOT" ]; then
+            echo "Error: PR author is not ${EXPECTED_BOT}, actual: ${pr_author}"
+            exit 1
+          fi
+
+          echo "Verifying sys-siv-oep is a requested reviewer..."
+          is_reviewer=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '[.requested_reviewers[].login] | contains(["sys-siv-oep"])')
+          if [ "$is_reviewer" != "true" ]; then
+            echo "Error: sys-siv-oep is not a requested reviewer"
+            exit 1
+          fi
+
+          echo "Verifying commit SHA has not changed..."
+          current_sha=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}" --jq '.head.sha')
+          if [ "$current_sha" != "$ORIGINAL_SHA" ]; then
+            echo "Error: PR has been modified since review request"
+            echo "Original SHA: ${ORIGINAL_SHA}"
+            echo "Current SHA:  ${current_sha}"
+            exit 1
+          fi
+          echo "Commit SHA verified: ${current_sha}"
+
+          echo "Verifying head branch name matches the skills-sync convention..."
+          if [ "$EXPECTED_HEAD_REF" != "update-skills-index-${EXPECTED_BASE_REF}" ]; then
+            echo "Error: head ref ${EXPECTED_HEAD_REF} does not match update-skills-index-${EXPECTED_BASE_REF}"
+            exit 1
+          fi
+
+          echo "Verifying changed files are limited to the skills-sync paths..."
+          changed_files=$(gh api "/repos/${REPO}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename')
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            case "$file" in
+              README.md|.agents/skills/*) ;;
+              *)
+                echo "Error: PR touches unexpected file: ${file}"
+                exit 1
+                ;;
+            esac
+          done <<< "$changed_files"
+
+          echo "All security checks passed. Approving PR #${PR_NUMBER}..."
+          gh pr review "${PR_NUMBER}" \
+            --repo "${REPO}" \
+            --approve
