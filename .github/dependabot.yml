@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    exclude-paths:
+      - ".agents/skills/**"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
@@ -17,6 +19,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    exclude-paths:
+      - ".agents/skills/**"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
@@ -30,6 +34,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    exclude-paths:
+      - ".agents/skills/**"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 1
