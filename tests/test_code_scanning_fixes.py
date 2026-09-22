@@ -40,6 +40,13 @@ class UpdateSkillsIndexValidationTests(unittest.TestCase):
         self.assertEqual(entries[0]["path"], "nested/skills")
         self.assertEqual(entries[0]["skills"][0]["path"], "deeper/path")
 
+    def test_validate_config_entries_defaults_missing_ref_to_main(self):
+        entries = [{"repo": "open-edge-platform/skills", "skills": ["safe-skill"]}]
+
+        update_skills_index.validate_config_entries(entries)
+
+        self.assertEqual(entries[0]["ref"], "main")
+
     def test_validate_config_entries_rejects_unsafe_values(self):
         entries = [
             {
