@@ -290,7 +290,7 @@ jobs:
             echo "::error::Invalid GITHUB_REPOSITORY"
             exit 1
           fi
-          if [ "$GITHUB_SERVER_URL" != "https://github.com" ]; then
+          if ! [[ "$GITHUB_SERVER_URL" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]]; then
             echo "::error::Invalid GITHUB_SERVER_URL"
             exit 1
           fi

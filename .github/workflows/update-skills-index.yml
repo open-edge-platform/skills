@@ -143,12 +143,23 @@ jobs:
           NPM_CONFIG_YES: "true"
           DISABLE_TELEMETRY: "1"
         run: |
-          if [[ "$VERIFY_BRANCH" != "main" ]]; then
-            if [[ "$VERIFY_BRANCH" =~ ^[-/.] || "$VERIFY_BRANCH" =~ [[:space:]~^:?*\[\\]] || "$VERIFY_BRANCH" =~ (@\{|\.\.|//|[/.]$) ]]; then
-              echo "::error::Invalid branch input"
-              exit 1
-            fi
-          fi
+          python3 - <<'PY'
+          import os
+          import sys
+
+          branch = os.environ["VERIFY_BRANCH"]
+          if branch != "main":
+              invalid = (
+                  branch.startswith(("-", "/", "."))
+                  or branch.endswith(("/", "."))
+                  or any(char.isspace() or char in "~^:?*'[]\\" for char in branch)
+                  or "@{" in branch
+                  or ".." in branch
+                  or "//" in branch
+              )
+              if invalid:
+                  sys.exit("::error::Invalid branch input")
+          PY
           REPO="open-edge-platform/skills"
           if [ "${VERIFY_BRANCH}" = "main" ]; then
             SOURCE="$REPO"
