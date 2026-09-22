@@ -63,7 +63,7 @@ _SKILL_PATH_SEGMENT_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 def _validate_git_ref(ref: str) -> str:
     """Reject ref names that are unsafe to pass to git/GitHub tooling."""
-    ref = ref.strip()
+    ref = str(ref).strip()
     if not ref:
         raise ValueError("ref must not be empty")
     if (
@@ -80,7 +80,7 @@ def _validate_git_ref(ref: str) -> str:
 
 def _validate_skill_path(path: str) -> str:
     """Reject path traversal and option-like path components."""
-    cleaned = path.strip().strip("/")
+    cleaned = str(path).strip().strip("/")
     if not cleaned:
         raise ValueError("path must not be empty")
     segments = cleaned.split("/")
@@ -98,17 +98,18 @@ def validate_config_entries(config_entries: list[dict]) -> None:
         if not _REPO_RE.fullmatch(repo):
             raise ValueError(f"unsafe repo value: {repo!r}")
         if "ref" in entry:
-            entry["ref"] = "main" if entry["ref"] is None else _validate_git_ref(entry["ref"])
+            ref = entry["ref"]
+            entry["ref"] = "main" if ref is None or (isinstance(ref, str) and not ref.strip()) else _validate_git_ref(ref)
         else:
             entry["ref"] = "main"
-        if entry.get("path"):
+        if "path" in entry:
             entry["path"] = _validate_skill_path(entry["path"])
         for skill in entry.get("skills", []):
             if isinstance(skill, dict):
                 name = skill.get("name", "")
                 if not _SKILL_NAME_RE.fullmatch(name):
                     raise ValueError(f"unsafe skill name: {name!r}")
-                if skill.get("path"):
+                if "path" in skill:
                     skill["path"] = _validate_skill_path(skill["path"])
             elif not _SKILL_NAME_RE.fullmatch(skill):
                 raise ValueError(f"unsafe skill name: {skill!r}")

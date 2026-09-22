@@ -54,6 +54,13 @@ class UpdateSkillsIndexValidationTests(unittest.TestCase):
 
         self.assertEqual(entries[0]["ref"], "main")
 
+    def test_validate_config_entries_defaults_whitespace_ref_to_main(self):
+        entries = [{"repo": "open-edge-platform/skills", "ref": "   ", "skills": ["safe-skill"]}]
+
+        update_skills_index.validate_config_entries(entries)
+
+        self.assertEqual(entries[0]["ref"], "main")
+
     def test_validate_config_entries_rejects_unsafe_values(self):
         entries = [
             {
@@ -66,8 +73,15 @@ class UpdateSkillsIndexValidationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             update_skills_index.validate_config_entries(entries)
 
-    def test_validate_config_entries_rejects_explicit_empty_ref(self):
+    def test_validate_config_entries_defaults_explicit_empty_ref_to_main(self):
         entries = [{"repo": "open-edge-platform/skills", "ref": "", "skills": ["safe-skill"]}]
+
+        update_skills_index.validate_config_entries(entries)
+
+        self.assertEqual(entries[0]["ref"], "main")
+
+    def test_validate_config_entries_rejects_explicit_empty_path(self):
+        entries = [{"repo": "open-edge-platform/skills", "ref": "main", "path": "", "skills": ["safe-skill"]}]
 
         with self.assertRaises(ValueError):
             update_skills_index.validate_config_entries(entries)
