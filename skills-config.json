@@ -235,7 +235,7 @@
       "path": "federal-and-aerospace-ai-suite/uav-mission-compute-sdk/skills",
       "skills": [
         {
-          "name": "uav-mission-compute-user"
+          "name": "uav-mission-compute-sdk"
         }
       ]
     },
