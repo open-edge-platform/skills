@@ -6,7 +6,7 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-09-22 08:52 UTC -->
+<!-- Last updated: 2026-09-23 00:04 UTC -->
 | Product | Skills |
 |---------|--------|
 | [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-training) |
@@ -24,8 +24,9 @@ to build solutions with Open Edge Platform products.
 | [Physical AI Train](https://github.com/open-edge-platform/physical-ai-studio) | [physicalai-train-adding-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-adding-a-policy), [physicalai-train-benchmarking-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-benchmarking-a-policy), [physicalai-train-exporting-and-validating](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-exporting-and-validating), [physicalai-train-training-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-training-a-policy), [physicalai-train-working-with-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-working-with-datasets) |
 | [Scenescape](https://github.com/open-edge-platform/scenescape) | [scenescape-setup](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup) |
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user) |
+| [UAV Mission Compute SDK](https://github.com/open-edge-platform/edge-ai-suites) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk) |
 | [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video) |
-| **Total** | **16 products, 38 skills** |
+| **Total** | **17 products, 39 skills** |
 <!-- END SKILLS INDEX -->
 
 ---
