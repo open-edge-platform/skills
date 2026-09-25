@@ -18,11 +18,17 @@ EXAMPLE_PROMPTS_DIR = "example-prompts"
 
 
 class SkillComplianceReportGenerator:
-    def __init__(self, skills_root: Path, validator_json: Optional[str] = None, spector_json: Optional[str] = None, skills_config_path: Optional[str] = None):
+    def __init__(self, skills_root: Path, validator_json: Optional[str] = None, spector_json: Optional[str] = None,
+                 skills_config_path: Optional[str] = None, bandit_json: Optional[str] = None,
+                 zizmor_json: Optional[str] = None, scorecard_json: Optional[str] = None):
         self.skills_root = skills_root
         self.skills_data = {}
         self.validator_data = {}
         self.spector_data = {}
+        self.bandit_data = {}
+        self.bandit_repo_totals = None
+        self.zizmor_data = None
+        self.scorecard_data = None
         self.skills_config = {}
         self.skills_prompts_url = {}
         self.github_run_id = os.getenv('GITHUB_RUN_ID', '')
@@ -46,6 +52,12 @@ class SkillComplianceReportGenerator:
             self.load_validator_data(validator_json)
         if spector_json and Path(spector_json).exists():
             self.load_spector_data(spector_json)
+        if bandit_json and Path(bandit_json).exists():
+            self.load_bandit_data(bandit_json)
+        if zizmor_json and Path(zizmor_json).exists():
+            self.load_zizmor_data(zizmor_json)
+        if scorecard_json and Path(scorecard_json).exists():
+            self.load_scorecard_data(scorecard_json)
 
     def load_skills_config(self, config_path: str) -> None:
         """Load skills configuration mapping skills to components"""
@@ -103,6 +115,52 @@ class SkillComplianceReportGenerator:
                 print(f"✅ Loaded spector data: {len(self.spector_data)} skills")
         except Exception as e:
             print(f"⚠️ Error loading spector data: {e}")
+
+    def load_bandit_data(self, bandit_json: str) -> None:
+        """Load Bandit security scan results (repo-wide + per-skill) from JSON file"""
+        try:
+            with open(bandit_json, 'r') as f:
+                data = json.load(f)
+            if not data.get('available', False):
+                print("⚠️ Bandit data not available")
+                return
+            self.bandit_data = data.get('skills', {})
+            self.bandit_repo_totals = {
+                'high': data.get('total_high', 0),
+                'medium': data.get('total_medium', 0),
+                'low': data.get('total_low', 0),
+                'issues': data.get('total_issues', 0),
+            }
+            print(f"✅ Loaded Bandit data: {len(self.bandit_data)} skills with findings, "
+                  f"{self.bandit_repo_totals['issues']} total issues repo-wide")
+        except Exception as e:
+            print(f"⚠️ Error loading Bandit data: {e}")
+
+    def load_zizmor_data(self, zizmor_json: str) -> None:
+        """Load Zizmor GitHub Actions workflow scan results from JSON file"""
+        try:
+            with open(zizmor_json, 'r') as f:
+                data = json.load(f)
+            if not data.get('available', False):
+                print("⚠️ Zizmor data not available")
+                return
+            self.zizmor_data = data
+            print(f"✅ Loaded Zizmor data: {data.get('total_issues', 0)} findings")
+        except Exception as e:
+            print(f"⚠️ Error loading Zizmor data: {e}")
+
+    def load_scorecard_data(self, scorecard_json: str) -> None:
+        """Load OpenSSF Scorecard results from JSON file"""
+        try:
+            with open(scorecard_json, 'r') as f:
+                data = json.load(f)
+            if not data.get('available', False):
+                print("⚠️ Scorecard data not available")
+                return
+            self.scorecard_data = data
+            print(f"✅ Loaded OpenSSF Scorecard data: score {data.get('score', 'N/A')}/10")
+        except Exception as e:
+            print(f"⚠️ Error loading Scorecard data: {e}")
 
     def parse_benchmark_file(self, skill_path: Path) -> Dict:
         """Parse benchmark/benchmark.md file"""
@@ -320,6 +378,30 @@ class SkillComplianceReportGenerator:
         display_class = 'metric-warning' if critical > 0 or high > 0 else 'metric-good'
         return "<br>".join(parts), display_class
 
+    def format_bandit_findings(self, bandit_findings: Optional[Dict]) -> Tuple[str, str]:
+        """Format per-skill Bandit results for an HTML/Markdown report cell."""
+        if self.bandit_repo_totals is None:
+            return "N/A", "metric-neutral"
+
+        if bandit_findings is None:
+            return "✅ 0 issues", "metric-good"
+
+        high = bandit_findings.get('high', 0)
+        medium = bandit_findings.get('medium', 0)
+        low = bandit_findings.get('low', 0)
+        issues = bandit_findings.get('issues', high + medium + low)
+
+        counts = [(high, '🟠', 'H'), (medium, '🟡', 'M'), (low, '🔵', 'L')]
+        count_display = [f"{icon} {count}{label}" for count, icon, label in counts if count > 0]
+
+        status_icon = "❌" if high > 0 or medium > 0 else ("⚠️" if issues > 0 else "✅")
+        parts = [f"{status_icon} {issues} issues"]
+        if count_display:
+            parts.append("Counts: " + ", ".join(count_display))
+
+        display_class = 'metric-warning' if high > 0 or medium > 0 else ('metric-neutral' if issues > 0 else 'metric-good')
+        return "<br>".join(parts), display_class
+
     def generate_html_report(self) -> str:
         """Generate comprehensive HTML report with industry standards"""
         self.calculate_component_metrics()
@@ -423,6 +505,9 @@ class SkillComplianceReportGenerator:
         
         # Skills Detail Report
         html += self._generate_skills_detail()
+        
+        # Repository-wide security scans
+        html += self._generate_security_scans_section()
         
         # Footer
         html += """
@@ -551,6 +636,7 @@ class SkillComplianceReportGenerator:
                             <th>Skill Uplift</th>
                             <th>skill-validator metrics</th>
                             <th>skillspector vulnerabilities</th>
+                            <th>Bandit scan</th>
                             <th>Example Prompts</th>
                         </tr>
                     </thead>
@@ -605,6 +691,11 @@ class SkillComplianceReportGenerator:
             spector_display, spector_class = self.format_spector_vulnerabilities(
                 self.spector_data.get(skill_name)
             )
+
+            # Get Bandit findings for this skill — distinguish no-data (None) from a clean scan
+            bandit_display, bandit_class = self.format_bandit_findings(
+                self.bandit_data.get(skill_name)
+            )
             
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f'<a href="{prompts_url}">View</a>' if prompts_url else "N/A"
@@ -617,10 +708,143 @@ class SkillComplianceReportGenerator:
                             <td class="{uplift_class}">{uplift_display}</td>
                             <td class="{validator_class}">{validator_display}</td>
                             <td class="{spector_class}">{spector_display}</td>
+                            <td class="{bandit_class}">{bandit_display}</td>
                             <td>{prompts_cell}</td>
                         </tr>
 """
         
+        html += """
+                    </tbody>
+                </table>
+            </div>
+"""
+        return html
+
+    def _generate_security_scans_section(self) -> str:
+        """Generate the repository-wide security scans section (Bandit, Zizmor, OpenSSF Scorecard, CodeQL, Secret Scanning)"""
+        repo = self.github_repo or "open-edge-platform/skills"
+        actions_url = f"https://github.com/{repo}/actions/workflows"
+        security_tab_url = f"https://github.com/{repo}/security"
+
+        html = """
+            <div class="section">
+                <h2 class="section-title">🔐 Repository Security Scans</h2>
+                <p style="margin-bottom: 16px; color: #7f8c8d;">
+                    These scans cover the entire repository (not just individual skills) and reflect the latest
+                    results at the time this report was generated.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scan</th>
+                            <th>Status</th>
+                            <th>Findings</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+"""
+
+        # Bandit (repo-wide)
+        if self.bandit_repo_totals is not None:
+            t = self.bandit_repo_totals
+            if t['issues'] == 0:
+                bandit_status, bandit_class = "✅ Clean", "metric-good"
+            elif t['high'] or t['medium']:
+                bandit_status, bandit_class = "❌ Findings", "metric-warning"
+            else:
+                bandit_status, bandit_class = "⚠️ Low severity only", "metric-neutral"
+            bandit_findings = f"🟠 {t['high']}H, 🟡 {t['medium']}M, 🔵 {t['low']}L ({t['issues']} total)"
+        else:
+            bandit_status, bandit_class = "N/A", "metric-neutral"
+            bandit_findings = "N/A"
+
+        html += f"""
+                        <tr>
+                            <td><strong>Bandit</strong> (Python SAST)</td>
+                            <td class="{bandit_class}">{bandit_status}</td>
+                            <td>{bandit_findings}</td>
+                            <td><a href="{actions_url}/security-scan.yml">Workflow</a> &middot; <a href="{security_tab_url}/code-scanning?query=tool%3ABandit">Security tab</a></td>
+                        </tr>
+"""
+
+        # Zizmor (repo-wide)
+        if self.zizmor_data is not None:
+            z = self.zizmor_data
+            z_total = z.get('total_issues', 0)
+            if z_total == 0:
+                zizmor_status, zizmor_class = "✅ Clean", "metric-good"
+            elif z.get('total_high') or z.get('total_medium'):
+                zizmor_status, zizmor_class = "❌ Findings", "metric-warning"
+            else:
+                zizmor_status, zizmor_class = "⚠️ Low severity only", "metric-neutral"
+            zizmor_findings = f"🟠 {z.get('total_high', 0)}H, 🟡 {z.get('total_medium', 0)}M, 🔵 {z.get('total_low', 0)}L ({z_total} total)"
+        else:
+            zizmor_status, zizmor_class = "N/A", "metric-neutral"
+            zizmor_findings = "N/A"
+
+        html += f"""
+                        <tr>
+                            <td><strong>Zizmor</strong> (GitHub Actions SAST)</td>
+                            <td class="{zizmor_class}">{zizmor_status}</td>
+                            <td>{zizmor_findings}</td>
+                            <td><a href="{actions_url}/security-scan.yml">Workflow</a> &middot; <a href="{security_tab_url}/code-scanning?query=tool%3Azizmor">Security tab</a></td>
+                        </tr>
+"""
+
+        # OpenSSF Scorecard
+        if self.scorecard_data is not None:
+            score = self.scorecard_data.get('score', -1)
+            if isinstance(score, (int, float)) and score >= 0:
+                score_display = f"{score:.1f}/10"
+                if score >= 7:
+                    scorecard_status, scorecard_class = "✅ Good", "metric-good"
+                else:
+                    scorecard_status, scorecard_class = "⚠️ Needs attention", "metric-warning"
+            else:
+                score_display = "N/A"
+                scorecard_status, scorecard_class = "N/A", "metric-neutral"
+            low_checks = [
+                c['name'] for c in self.scorecard_data.get('checks', [])
+                if isinstance(c.get('score'), (int, float)) and 0 <= c['score'] < 5
+            ]
+            scorecard_findings = f"Lowest checks: {', '.join(low_checks[:5])}" if low_checks else "No low-scoring checks"
+        else:
+            score_display = "N/A"
+            scorecard_status, scorecard_class = "N/A", "metric-neutral"
+            scorecard_findings = "N/A"
+
+        html += f"""
+                        <tr>
+                            <td><strong>OpenSSF Scorecard</strong></td>
+                            <td class="{scorecard_class}">{scorecard_status}</td>
+                            <td>{score_display}<br>{scorecard_findings}</td>
+                            <td><a href="{actions_url}/scorecards.yml">Workflow</a> &middot; <a href="https://scorecard.dev/viewer/?uri=github.com/{repo}">scorecard.dev</a></td>
+                        </tr>
+"""
+
+        # CodeQL and Secret Scanning: badge-based status, per-alert counts live in the Security tab
+        html += f"""
+                        <tr>
+                            <td><strong>CodeQL</strong></td>
+                            <td><img src="{actions_url}/codeql.yml/badge.svg" alt="CodeQL status"></td>
+                            <td>See Security tab</td>
+                            <td><a href="{actions_url}/codeql.yml">Workflow</a> &middot; <a href="{security_tab_url}/code-scanning?query=tool%3ACodeQL">Security tab</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Secret Scanning</strong></td>
+                            <td><img src="{actions_url}/secret-scan.yml/badge.svg" alt="Secret scan status"></td>
+                            <td>See Security tab</td>
+                            <td><a href="{actions_url}/secret-scan.yml">Workflow</a> &middot; <a href="{security_tab_url}/secret-scanning">Secret scanning alerts</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>SkillSpector / skill-validator</strong></td>
+                            <td><img src="{actions_url}/skill-scan.yml/badge.svg" alt="Skill scanner status"></td>
+                            <td>See Skill Details table above</td>
+                            <td><a href="{actions_url}/skill-scan.yml">Workflow</a></td>
+                        </tr>
+"""
+
         html += """
                     </tbody>
                 </table>
@@ -724,8 +948,8 @@ class SkillComplianceReportGenerator:
             "",
             "## Skill Details",
             "",
-            "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skillspector vulnerabilities | Example Prompts |",
-            "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+            "| Skill Name | Component | Evals Passed | Skill Uplift | skill-validator metrics | skillspector vulnerabilities | Bandit scan | Example Prompts |",
+            "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
         ]
         for skill_name in sorted(self.skills_data.keys()):
             skill = self.skills_data[skill_name]
@@ -766,16 +990,103 @@ class SkillComplianceReportGenerator:
                 self.spector_data.get(skill_name), inline_styles=True
             )
 
+            # Match HTML Bandit display — distinguish no-data (None) from a clean scan
+            bandit_cell, _ = self.format_bandit_findings(self.bandit_data.get(skill_name))
+
             prompts_url = self.skills_prompts_url.get(skill_name, "")
             prompts_cell = f"[View]({prompts_url})" if prompts_url else "N/A"
 
             lines.append(
                 f"| **{skill_name}** | {skill['component']} "
                 f"| {pass_rate_display} | {uplift_display} "
-                f"| {validator_cell} | {spector_cell} | {prompts_cell} |"
+                f"| {validator_cell} | {spector_cell} | {bandit_cell} | {prompts_cell} |"
             )
 
+        # Repository-wide security scans (Bandit, Zizmor, OpenSSF Scorecard)
+        lines += self._generate_security_scans_markdown()
+
         return "\n".join(lines) + "\n"
+
+    def _generate_security_scans_markdown(self) -> List[str]:
+        """Generate the repository-wide security scans section for the Markdown summary"""
+        repo = self.github_repo or "open-edge-platform/skills"
+        actions_url = f"https://github.com/{repo}/actions/workflows"
+        security_tab_url = f"https://github.com/{repo}/security"
+
+        lines = [
+            "",
+            "## Repository Security Scans",
+            "",
+            "These scans cover the entire repository (not just individual skills) and reflect the latest results "
+            "at the time this report was generated.",
+            "",
+            "| Scan | Status | Findings | Details |",
+            "|---|:---:|:---:|---|",
+        ]
+
+        # Bandit (repo-wide)
+        if self.bandit_repo_totals is not None:
+            t = self.bandit_repo_totals
+            bandit_status = "✅ Clean" if t['issues'] == 0 else ("❌ Findings" if (t['high'] or t['medium']) else "⚠️ Low severity only")
+            bandit_findings = f"🟠 {t['high']}H, 🟡 {t['medium']}M, 🔵 {t['low']}L ({t['issues']} total)"
+        else:
+            bandit_status = "N/A"
+            bandit_findings = "N/A"
+        lines.append(
+            f"| **Bandit** (Python SAST) | {bandit_status} | {bandit_findings} | "
+            f"[Workflow]({actions_url}/security-scan.yml) · [Security tab]({security_tab_url}/code-scanning?query=tool%3ABandit) |"
+        )
+
+        # Zizmor (repo-wide)
+        if self.zizmor_data is not None:
+            z = self.zizmor_data
+            z_total = z.get('total_issues', 0)
+            zizmor_status = "✅ Clean" if z_total == 0 else ("❌ Findings" if (z.get('total_high') or z.get('total_medium')) else "⚠️ Low severity only")
+            zizmor_findings = f"🟠 {z.get('total_high', 0)}H, 🟡 {z.get('total_medium', 0)}M, 🔵 {z.get('total_low', 0)}L ({z_total} total)"
+        else:
+            zizmor_status = "N/A"
+            zizmor_findings = "N/A"
+        lines.append(
+            f"| **Zizmor** (GitHub Actions SAST) | {zizmor_status} | {zizmor_findings} | "
+            f"[Workflow]({actions_url}/security-scan.yml) · [Security tab]({security_tab_url}/code-scanning?query=tool%3Azizmor) |"
+        )
+
+        # OpenSSF Scorecard
+        if self.scorecard_data is not None:
+            score = self.scorecard_data.get('score', -1)
+            score_display = f"{score:.1f}/10" if isinstance(score, (int, float)) and score >= 0 else "N/A"
+            low_checks = [c['name'] for c in self.scorecard_data.get('checks', []) if isinstance(c.get('score'), (int, float)) and 0 <= c['score'] < 5]
+            scorecard_status = "✅ Good" if isinstance(score, (int, float)) and score >= 7 else ("⚠️ Needs attention" if isinstance(score, (int, float)) and score >= 0 else "N/A")
+            scorecard_findings = f"Lowest checks: {', '.join(low_checks[:5])}" if low_checks else "No low-scoring checks"
+        else:
+            score_display = "N/A"
+            scorecard_status = "N/A"
+            scorecard_findings = "N/A"
+        lines.append(
+            f"| **OpenSSF Scorecard** | {scorecard_status} | {score_display} | "
+            f"[Workflow]({actions_url}/scorecards.yml) · [scorecard.dev](https://scorecard.dev/viewer/?uri=github.com/{repo}) |"
+        )
+
+        # CodeQL (badge-based status; per-alert counts are in the Security tab)
+        lines.append(
+            f"| **CodeQL** | ![CodeQL]({actions_url}/codeql.yml/badge.svg) | See Security tab | "
+            f"[Workflow]({actions_url}/codeql.yml) · [Security tab]({security_tab_url}/code-scanning?query=tool%3ACodeQL) |"
+        )
+
+        # Secret scanning (badge-based status)
+        lines.append(
+            f"| **Secret Scanning** | ![Secret scan]({actions_url}/secret-scan.yml/badge.svg) | See Security tab | "
+            f"[Workflow]({actions_url}/secret-scan.yml) · [Secret scanning alerts]({security_tab_url}/secret-scanning) |"
+        )
+
+        # Skill scanners (per-skill results are already in the Skill Details table above)
+        lines.append(
+            f"| **SkillSpector / skill-validator** | ![Skill Scanner]({actions_url}/skill-scan.yml/badge.svg) | "
+            f"See Skill Details table above | [Workflow]({actions_url}/skill-scan.yml) |"
+        )
+
+        lines.append("")
+        return lines
 
 
 def main():
@@ -788,6 +1099,9 @@ def main():
     # Check for validator and spector JSON files
     validator_json = Path("validator_results.json") if Path("validator_results.json").exists() else None
     spector_json = Path("spector_results.json") if Path("spector_results.json").exists() else None
+    bandit_json = Path("bandit_results.json") if Path("bandit_results.json").exists() else None
+    zizmor_json = Path("zizmor_results.json") if Path("zizmor_results.json").exists() else None
+    scorecard_json = Path("scorecard_results.json") if Path("scorecard_results.json").exists() else None
 
     print(f"🔍 Scanning skills from: {skills_root}")
     print(f"📝 Report will be written to: {output_file}")
@@ -807,11 +1121,29 @@ def main():
     else:
         print(f"⚠️ No spector JSON data found")
 
+    if bandit_json:
+        print(f"🐍 Using Bandit data from: {bandit_json}")
+    else:
+        print(f"⚠️ No Bandit JSON data found")
+
+    if zizmor_json:
+        print(f"⚙️ Using Zizmor data from: {zizmor_json}")
+    else:
+        print(f"⚠️ No Zizmor JSON data found")
+
+    if scorecard_json:
+        print(f"📊 Using Scorecard data from: {scorecard_json}")
+    else:
+        print(f"⚠️ No Scorecard JSON data found")
+
     generator = SkillComplianceReportGenerator(
         skills_root,
         str(validator_json) if validator_json else None,
         str(spector_json) if spector_json else None,
-        str(skills_config_path)
+        str(skills_config_path),
+        str(bandit_json) if bandit_json else None,
+        str(zizmor_json) if zizmor_json else None,
+        str(scorecard_json) if scorecard_json else None,
     )
     generator.scan_skills()
     
