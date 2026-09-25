@@ -51,10 +51,68 @@ SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
 
 logger = logging.getLogger(__name__)
 
+_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_SKILL_PATH_SEGMENT_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+
 
 # ---------------------------------------------------------------------------
 # Config / lock helpers
 # ---------------------------------------------------------------------------
+
+
+def _validate_git_ref(ref: str) -> str:
+    """Reject ref names that are unsafe to pass to git/GitHub tooling."""
+    ref = str(ref).strip()
+    if not ref:
+        raise ValueError("ref must not be empty")
+    if (
+        ref.startswith(("-", "/", "."))
+        or ref.endswith(("/", "."))
+        or ".." in ref
+        or "//" in ref
+        or "@{" in ref
+        or any(char in ref for char in (" ", "~", "^", ":", "?", "*", "[", "\\"))
+    ):
+        raise ValueError(f"unsafe ref value: {ref!r}")
+    return ref
+
+
+def _validate_skill_path(path: str) -> str:
+    """Reject path traversal and option-like path components."""
+    cleaned = str(path).strip().strip("/")
+    if not cleaned:
+        raise ValueError("path must not be empty")
+    segments = cleaned.split("/")
+    if any(segment in {"", ".", ".."} for segment in segments):
+        raise ValueError(f"unsafe path value: {path!r}")
+    if any(not _SKILL_PATH_SEGMENT_RE.fullmatch(segment) for segment in segments):
+        raise ValueError(f"unsafe path value: {path!r}")
+    return cleaned
+
+
+def validate_config_entries(config_entries: list[dict]) -> None:
+    """Validate config values before using them in subprocesses or API requests."""
+    for entry in config_entries:
+        repo = entry.get("repo", "")
+        if not _REPO_RE.fullmatch(repo):
+            raise ValueError(f"unsafe repo value: {repo!r}")
+        if "ref" in entry:
+            ref = entry["ref"]
+            entry["ref"] = "main" if ref is None or (isinstance(ref, str) and not ref.strip()) else _validate_git_ref(ref)
+        else:
+            entry["ref"] = "main"
+        if "path" in entry:
+            entry["path"] = _validate_skill_path(entry["path"])
+        for skill in entry.get("skills", []):
+            if isinstance(skill, dict):
+                name = skill.get("name", "")
+                if not _SKILL_NAME_RE.fullmatch(name):
+                    raise ValueError(f"unsafe skill name: {name!r}")
+                if "path" in skill:
+                    skill["path"] = _validate_skill_path(skill["path"])
+            elif not _SKILL_NAME_RE.fullmatch(skill):
+                raise ValueError(f"unsafe skill name: {skill!r}")
 
 def load_skills_config(config_path: Path) -> list[dict]:
     """
@@ -537,8 +595,17 @@ def main():
     args = parser.parse_args()
 
     entries = load_skills_config(Path(args.config))
+    try:
+        validate_config_entries(entries)
+    except ValueError as error:
+        sys.exit(f"Error: {error}")
     if args.check_only:
         base_entries = load_skills_config(Path(args.base_config)) if args.base_config else None
+        if base_entries:
+            try:
+                validate_config_entries(base_entries)
+            except ValueError as error:
+                sys.exit(f"Error: {error}")
         if not check_skills_exist(entries, os.environ.get("GITHUB_TOKEN", ""), base_entries):
             sys.exit(1)
         return

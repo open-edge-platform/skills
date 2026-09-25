@@ -667,6 +667,16 @@ def slugify(text: str, max_len: int = 40) -> str:
     return out.strip("-")[:max_len]
 
 
+def _safe_path_component(value: object, fallback: str, max_len: int = 40) -> str:
+    """Normalize untrusted path fragments before using them in local output paths."""
+    normalized = slugify(str(value), max_len=max_len)
+    return normalized or fallback
+
+
+def _config_dir_name(config: str) -> str:
+    return _safe_path_component(config, "config")
+
+
 def eval_dir_name(ev: dict) -> str:
     # Prefer eval_name, then the stem of prompt_file (e.g. "01-upload-and-index-new-clip"
     # → "01-upload-and-index-new-clip"), then a slug of the prompt text.
@@ -676,7 +686,9 @@ def eval_dir_name(ev: dict) -> str:
         or (Path(ev["prompt_file"]).stem if ev.get("prompt_file") else None)
         or slugify(ev["prompt"], max_len=30)
     )
-    return f"eval-{ev['id']}-{name}"
+    safe_eval_id = _safe_path_component(ev.get("id", "unknown"), "unknown", max_len=20)
+    safe_name = _safe_path_component(name, "eval", max_len=80)
+    return f"eval-{safe_eval_id}-{safe_name}"
 
 
 def run_one(
@@ -691,8 +703,9 @@ def run_one(
 ) -> tuple[str, dict, str, RunResult]:
     # Pre-create the real outputs dir for all configs so the agent writes files there.
     outputs_dir: Path | None = None
+    config_dir = _config_dir_name(config)
     if workspace:
-        outputs_dir = workspace / cli / eval_dir_name(ev) / config / "run-1" / "outputs"
+        outputs_dir = workspace / cli / eval_dir_name(ev) / config_dir / "run-1" / "outputs"
         outputs_dir.mkdir(parents=True, exist_ok=True)
     prompt = build_prompt(
         ev["prompt"],
@@ -700,7 +713,15 @@ def run_one(
         outputs_dir=outputs_dir,
         baseline_skill_path=skill_path if config != "with_skill" else None,
     )
-    scratch = Path(tempfile.mkdtemp(prefix=f"skilleval-{cli}-{ev['id']}-{config}-"))
+    scratch = Path(
+        tempfile.mkdtemp(
+            prefix=(
+                f"skilleval-{_safe_path_component(cli, 'cli')}-"
+                f"{_safe_path_component(ev.get('id', 'unknown'), 'unknown', max_len=20)}-"
+                f"{_safe_path_component(config, 'config')}-"
+            )
+        )
+    )
     try:
         runner = CLI_RUNNERS[cli]
         try:
@@ -722,7 +743,7 @@ def run_one(
 
 
 def save_run(workspace: Path, cli: str, ev: dict, config: str, result: RunResult) -> Path:
-    run_dir = workspace / cli / eval_dir_name(ev) / config / "run-1"
+    run_dir = workspace / cli / eval_dir_name(ev) / _config_dir_name(config) / "run-1"
     outputs_dir = run_dir / "outputs"
     outputs_dir.mkdir(parents=True, exist_ok=True)
 
