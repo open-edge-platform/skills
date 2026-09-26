@@ -2,6 +2,7 @@
 
 import copy
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -217,6 +218,26 @@ class GroupedCatalogTests(unittest.TestCase):
         self.assertIn("/<product-slug>/<name>/SKILL.md", text)
         index.relocate_catalog_references(self.root, self.config)
         self.assertEqual(text, markdown.read_text())
+
+    def test_cli_disables_symlink_checkout_and_preserves_git_config(self):
+        with patch.dict(os.environ, {
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "protocol.version",
+            "GIT_CONFIG_VALUE_0": "2",
+        }), patch.object(Path, "is_file", return_value=True), \
+                patch.object(index.subprocess, "run") as run:
+            run.return_value.returncode = 0
+            self.assertEqual(index._run(["npx", "skills", "--version"], self.root), 0)
+        args, kwargs = run.call_args
+        self.assertEqual(args[0][0], "node")
+        self.assertTrue(Path(args[0][1]).is_absolute())
+        self.assertEqual(kwargs["cwd"], str(self.root))
+        env = kwargs["env"]
+        self.assertEqual(env["GIT_CONFIG_COUNT"], "2")
+        self.assertEqual(env["GIT_CONFIG_KEY_0"], "protocol.version")
+        self.assertEqual(env["GIT_CONFIG_VALUE_0"], "2")
+        self.assertEqual(env["GIT_CONFIG_KEY_1"], "core.symlinks")
+        self.assertEqual(env["GIT_CONFIG_VALUE_1"], "false")
 
 
 if __name__ == "__main__":

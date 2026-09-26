@@ -183,11 +183,20 @@ def _run(cmd: list[str], cwd: Path, retries: int = 2, retry_delay: float = 5.0) 
             logger.error("Run npm ci before syncing skills.")
             return 1
         cmd = ["node", str(cli), *cmd[2:]]
+    env = {**os.environ, "DISABLE_TELEMETRY": "1"}
+    # The CLI dereferences links when copying. Prevent Git from checking out
+    # source symlinks, which could otherwise expose files outside the checkout.
+    config_count = int(env.get("GIT_CONFIG_COUNT", "0"))
+    env.update({
+        "GIT_CONFIG_COUNT": str(config_count + 1),
+        f"GIT_CONFIG_KEY_{config_count}": "core.symlinks",
+        f"GIT_CONFIG_VALUE_{config_count}": "false",
+    })
     attempts = retries + 1
     for attempt in range(1, attempts + 1):
         suffix = f" (attempt {attempt}/{attempts})" if attempts > 1 else ""
         logger.info("$ %s%s", " ".join(cmd), suffix)
-        rc = subprocess.run(cmd, cwd=str(cwd), env={**os.environ, "DISABLE_TELEMETRY": "1"}).returncode
+        rc = subprocess.run(cmd, cwd=str(cwd), env=env).returncode
         if rc == 0:
             return rc
         if attempt < attempts:

@@ -73,6 +73,11 @@ The generated `skills-lock.json` remains untracked and retains upstream paths.
 README-only regeneration also works without that lock file. Imported Markdown
 links targeting this catalog are relocated during synchronization; links to
 upstream products are unchanged.
+
+For safety, synchronization disables Git symlink checkout: upstream symlinks are
+materialized as link-target text, never followed into the runner's filesystem.
+Any remaining staged symlinks are rejected. Skills must ship their required
+resources as regular files rather than relying on symlink resolution.
 ---
 
 ## Contributing a Skill
