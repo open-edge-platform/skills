@@ -5,7 +5,7 @@ Load **only when `{{SCENESCAPE}}=yes`**. Replaces default MediaMTX/WebRTC + Node
 **Do not reproduce Scenescape orchestration by hand.** Delegate to its deployer skill; it gathers streams/camera-ids/scene-name and runs bootstrap → calibrate → scene → tracking verification:
 
 > External skill:
-> `https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup`
+> `https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape/scenescape-setup`
 > (`SKILL.md` — orchestrator `scripts/deploy_scenescape.sh`).
 
 If available, **invoke it** with parameters below; otherwise use smart-intersection service shapes here.

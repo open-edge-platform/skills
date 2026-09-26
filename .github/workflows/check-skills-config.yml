@@ -30,6 +30,7 @@ jobs:
               - "skills-config.json"
               - "skills-config.schema.json"
               - "scripts/update_skills_index.py"
+              - "scripts/test_update_skills_index.py"
               - ".github/workflows/check-skills-config.yml"
 
   check-skills:
@@ -58,6 +59,9 @@ jobs:
 
       - name: Validate skills config
         run: check-jsonschema --schemafile skills-config.schema.json skills-config.json
+
+      - name: Test catalog synchronization
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Read base skills config
         env:

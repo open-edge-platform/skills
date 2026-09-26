@@ -90,8 +90,8 @@ jobs:
           warnings = 0
 
           for line in content.split('\n'):
-            # Header: "## Validating skill: /path/.agents/skills/skill-name"
-            m = re.match(r'^## Validating skill:\s+.+/\.agents/skills/([^/\s]+)', line)
+            # Capture the leaf name in flat or product-grouped skill paths.
+            m = re.match(r'^## Validating skill:\s+(?:.*/)?\.agents/skills/(?:[^/\s]+/)*([^/\s]+)/?\s*$', line)
             if m:
               current_skill = m.group(1).strip()
               validator_data[current_skill] = {'errors': 0, 'warnings': 0, 'tokens_used': 0, 'findings': []}
@@ -140,8 +140,8 @@ jobs:
           current_skill = None
 
           for line in content.split('\n'):
-            # Header: "Skill          : /path/.agents/skills/skill-name"
-            m = re.match(r'^Skill\s*:\s*.+/\.agents/skills/([^/\s]+)', line)
+            # Capture the leaf name in flat or product-grouped skill paths.
+            m = re.match(r'^Skill\s*:\s*(?:.*/)?\.agents/skills/(?:[^/\s]+/)*([^/\s]+)/?\s*$', line)
             if m:
               current_skill = m.group(1).strip()
               spector_data[current_skill] = {

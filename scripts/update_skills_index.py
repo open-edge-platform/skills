@@ -36,8 +36,10 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -91,9 +93,20 @@ def _validate_skill_path(path: str) -> str:
     return cleaned
 
 
-def validate_config_entries(config_entries: list[dict]) -> None:
+def validate_config_entries(config_entries: list[dict], require_slug: bool = True) -> None:
     """Validate config values before using them in subprocesses or API requests."""
+    if not config_entries:
+        raise ValueError("at least one product is required")
+    slugs = set()
+    names = set()
     for entry in config_entries:
+        slug = entry.get("slug")
+        if require_slug or slug is not None:
+            if not isinstance(slug, str) or not _SKILL_NAME_RE.fullmatch(slug):
+                raise ValueError(f"unsafe product slug: {slug!r}")
+            if slug in slugs:
+                raise ValueError(f"duplicate product slug: {slug!r}")
+            slugs.add(slug)
         repo = entry.get("repo", "")
         if not _REPO_RE.fullmatch(repo):
             raise ValueError(f"unsafe repo value: {repo!r}")
@@ -104,6 +117,8 @@ def validate_config_entries(config_entries: list[dict]) -> None:
             entry["ref"] = "main"
         if "path" in entry:
             entry["path"] = _validate_skill_path(entry["path"])
+        if not entry.get("skills"):
+            raise ValueError("each product must contain at least one skill")
         for skill in entry.get("skills", []):
             if isinstance(skill, dict):
                 name = skill.get("name", "")
@@ -113,13 +128,17 @@ def validate_config_entries(config_entries: list[dict]) -> None:
                     skill["path"] = _validate_skill_path(skill["path"])
             elif not _SKILL_NAME_RE.fullmatch(skill):
                 raise ValueError(f"unsafe skill name: {skill!r}")
+            name = _skill_name(skill)
+            if name in names:
+                raise ValueError(f"duplicate skill name: {name!r}")
+            names.add(name)
 
 def load_skills_config(config_path: Path) -> list[dict]:
     """
     Read skills-config.json.  Each product must have:
       repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
       skills — list of skill objects with name and optional path
-                (each skill is installed as .agents/skills/<name>)
+                (each skill is published as .agents/skills/<slug>/<name>)
     """
     if not config_path.exists():
         sys.exit(f"Error: skills-config.json not found at {config_path}")
@@ -131,7 +150,7 @@ def load_skills_config(config_path: Path) -> list[dict]:
         if "repo" in entry and "skills" in entry:
             valid.append(entry)
         else:
-            print(f"  [warn] skipping malformed entry (needs repo+skills): {entry}", file=sys.stderr)
+            raise ValueError("malformed product entry (needs repo+skills)")
     return valid
 
 
@@ -146,22 +165,6 @@ def load_skills_lock(lock_path: Path) -> dict:
         return json.load(f).get("skills", {})
 
 
-def remove_skills_from_lock(lock_path: Path, skill_names: list[str]) -> None:
-    """Remove project skills from the lock file after the CLI removes them."""
-    if not lock_path.exists():
-        return
-    with lock_path.open(encoding="utf-8") as f:
-        data = json.load(f)
-
-    skills = data.get("skills", {})
-    for skill_name in skill_names:
-        if skills.pop(skill_name, None) is not None:
-            logger.info("skills-lock.json: removed entry for '%s'", skill_name)
-
-    lock_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    logger.debug("skills-lock.json written to %s", lock_path)
-
-
 # ---------------------------------------------------------------------------
 # Installation via `npx skills`
 # ---------------------------------------------------------------------------
@@ -174,6 +177,12 @@ def _run(cmd: list[str], cwd: Path, retries: int = 2, retry_delay: float = 5.0) 
     transient network errors ("Recv failure: Connection reset by peer") during
     that clone, so failures are retried a few times before being reported.
     """
+    if cmd[:2] == ["npx", "skills"]:
+        cli = Path(__file__).resolve().parent.parent / "node_modules/skills/dist/cli.mjs"
+        if not cli.is_file():
+            logger.error("Run npm ci before syncing skills.")
+            return 1
+        cmd = ["node", str(cli), *cmd[2:]]
     attempts = retries + 1
     for attempt in range(1, attempts + 1):
         suffix = f" (attempt {attempt}/{attempts})" if attempts > 1 else ""
@@ -214,22 +223,6 @@ def _skill_path(entry: dict, skill: str | dict) -> str:
     if isinstance(skill, dict) and skill.get("path"):
         return skill["path"].strip().strip("/")
     return entry.get("path", "").strip().strip("/")
-
-
-def _lock_source_matches(lock_meta: dict, entry: dict, skill: str | dict) -> bool:
-    """Return whether an installed skill still has its configured source."""
-    if lock_meta.get("source") != entry["repo"]:
-        return False
-    expected_ref = entry.get("ref", "main").strip() or "main"
-    if (lock_meta.get("ref") or "main") != expected_ref:
-        return False
-
-    source_path = _skill_path(entry, skill)
-    if not source_path:
-        return True
-
-    expected_path = f"{source_path}/{_skill_name(skill)}/SKILL.md"
-    return lock_meta.get("skillPath") == expected_path
 
 
 def check_skills_exist(
@@ -286,11 +279,105 @@ def check_skills_exist(
 
 
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
+    """Stage a complete catalog before replacing the managed skills tree."""
+    validate_config_entries(config_entries)
+    if dry_run:
+        for entry in config_entries:
+            for skill in entry["skills"]:
+                logger.info("[dry-run] Publish %s/%s", entry["slug"], _skill_name(skill))
+        return _install_flat_skills(config_entries, repo_root, dry_run=True)
+
+    with tempfile.TemporaryDirectory(prefix="skills-sync-") as temporary:
+        workspace = Path(temporary)
+        staging = workspace / "install"
+        staging.mkdir()
+        if not _install_flat_skills(config_entries, staging):
+            return False
+        grouped = workspace / "grouped"
+        grouped.mkdir()
+        try:
+            for entry in config_entries:
+                for skill in entry["skills"]:
+                    name = _skill_name(skill)
+                    source = staging / ".agents/skills" / name
+                    if source.is_symlink() or any(p.is_symlink() for p in source.rglob("*")):
+                        raise ValueError(f"Skill contains symlinks: {name}")
+                    if parse_frontmatter(source / "SKILL.md").get("name") != name:
+                        raise ValueError(f"Missing or mismatched skill: {name}")
+                    shutil.copytree(source, grouped / entry["slug"] / name)
+            relocate_catalog_references(grouped, config_entries)
+        except (OSError, ValueError) as error:
+            logger.error("Staged catalog rejected: %s", error)
+            return False
+
+        target = repo_root / ".agents/skills"
+        lock = repo_root / "skills-lock.json"
+        backup = workspace / "previous"
+        had_target = target.exists()
+        old_lock = lock.read_bytes() if lock.exists() else None
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if had_target:
+            shutil.copytree(target, backup, symlinks=True)
+        try:
+            if had_target:
+                shutil.rmtree(target)
+            shutil.copytree(grouped, target)
+            shutil.copyfile(staging / "skills-lock.json", lock)
+        except OSError:
+            if target.exists():
+                shutil.rmtree(target)
+            if had_target:
+                shutil.copytree(backup, target, symlinks=True)
+            if old_lock is None:
+                lock.unlink(missing_ok=True)
+            else:
+                lock.write_bytes(old_lock)
+            logger.exception("Publishing failed; restored previous catalog")
+            return False
+    return True
+
+
+def relocate_catalog_references(skills_root: Path, config_entries: list[dict]) -> None:
+    """Keep imported Markdown links to this catalog valid after upstream sync."""
+    slugs = {
+        _skill_name(skill): entry["slug"]
+        for entry in config_entries
+        for skill in entry["skills"]
+    }
+    pattern = re.compile(
+        r"(https://(?:github\.com/open-edge-platform/skills/tree/|"
+        r"raw\.githubusercontent\.com/open-edge-platform/skills/)"
+        r"[^ \n`]+?/\.agents/skills/)([^/ \n`)#]+)(?=[/ \n`)#]|$)"
+    )
+
+    def replace(match: re.Match) -> str:
+        name = match[2]
+        if name == "<name>":
+            return f"{match[1]}<product-slug>/{name}"
+        if name in slugs:
+            # A slug may equal its skill name; do not nest already-grouped links.
+            remainder = match.string[match.end():]
+            if remainder.startswith(f"/{name}"):
+                return match[0]
+            return f"{match[1]}{slugs[name]}/{name}"
+        return match[0]
+
+    for markdown in skills_root.rglob("*.md"):
+        original = markdown.read_text(encoding="utf-8")
+        updated = pattern.sub(replace, original)
+        updated = re.sub(
+            r"npx skills@[\d.]+ add open-edge-platform/skills\b",
+            "npx skills@1.7.0 add open-edge-platform/skills",
+            updated,
+        )
+        if updated != original:
+            markdown.write_text(updated, encoding="utf-8")
+
+
+def _install_flat_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
-    Reconcile installed skills with skills-config.json:
-      - remove skills that are no longer configured, plus any whose
-        configured source (repo/ref/path) changed
-      - (re)add every configured skill, batched per (repo, ref) so each
+    Install configured skills into a fresh staging workspace:
+      - add every configured skill, batched per (repo, ref) so each
         source repo is cloned only once per run no matter how many skills —
         or product entries — pull from it (e.g. edge-ai-libraries spans 5
         entries / 8 skills but is cloned exactly once)
@@ -303,43 +390,7 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
     Returns True if all skills synced successfully, False if any failed.
     """
     lock_path = repo_root / "skills-lock.json"
-    installed = load_skills_lock(lock_path)
-    configured = {
-        _skill_name(skill): (entry, skill)
-        for entry in config_entries
-        for skill in entry["skills"]
-    }
     has_error = False
-
-    # Detect stale skills from disk so removal works even when skills-lock.json
-    # is not committed (i.e., starts absent and is written fresh each CI run).
-    local_skills_dir = repo_root / ".agents" / "skills"
-    installed_on_disk = {d.name for d in local_skills_dir.iterdir() if d.is_dir()} if local_skills_dir.is_dir() else set()
-    stale_skills = sorted(installed_on_disk - set(configured))
-    relocated_skills = sorted(
-        name
-        for name, (entry, skill) in configured.items()
-        if name in installed and not _lock_source_matches(installed[name], entry, skill)
-    )
-    to_remove = sorted(set(stale_skills) | set(relocated_skills))
-
-    if to_remove:
-        logger.info(
-            "Removing %d skill(s) before (re)install (%d stale, %d relocated): %s",
-            len(to_remove), len(stale_skills), len(relocated_skills), ", ".join(to_remove),
-        )
-        cmd = ["npx", "skills", "remove", *to_remove, "--agent", "universal", "--yes"]
-        if dry_run:
-            logger.info("[dry-run] %s", " ".join(cmd))
-        elif _run(cmd, repo_root) != 0:
-            logger.error("Failed to remove skill(s): %s", ", ".join(to_remove))
-            has_error = True
-        elif stale_skills:
-            # skills CLI 1.5.11 removes project files but only prunes its
-            # global lock, so reconcile the project lock explicitly.
-            # Relocated skills keep their (stale) lock entry until the add
-            # below overwrites it with the corrected one.
-            remove_skills_from_lock(lock_path, stale_skills)
 
     # Group every configured skill by (repo, ref) across ALL config entries,
     # so one product repo referenced from several entries (e.g.
@@ -404,11 +455,18 @@ def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = 
                 logger.error("Skill '%s' missing from skills-lock.json after add", name)
                 has_error = True
                 continue
+            if lock_meta.get("source") != entry["repo"]:
+                logger.error("Skill '%s' installed from unexpected repository", name)
+                has_error = True
+            if (lock_meta.get("ref") or "main") != entry["ref"]:
+                logger.error("Skill '%s' installed from unexpected revision", name)
+                has_error = True
             source_path = _skill_path(entry, skill)
             expected_path = f"{source_path}/{name}/SKILL.md" if source_path else None
             actual_path = lock_meta.get("skillPath")
             if expected_path and actual_path != expected_path:
-                logger.warning(
+                has_error = True
+                logger.error(
                     "Skill '%s' installed from unexpected path %r (expected %r) — possible name collision",
                     name, actual_path, expected_path,
                 )
@@ -497,33 +555,21 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
             config_by_skill[skill_name] = {**e}
 
     rows: list[dict] = []
-    for skill_name, lock_meta in skills_lock.items():
-        if skill_name not in config_by_skill:
-            print(f"  [skip] {skill_name} — not present in skills-config.json", file=sys.stderr)
-            continue
-
-        repo = lock_meta.get("source", "")
-        skill_path = lock_meta.get("skillPath", "")
-        if not repo or not skill_path:
-            print(f"  [skip] {skill_name} — missing source/skillPath in lock", file=sys.stderr)
-            continue
-
-        local_skill_md = local_skills_dir / skill_name / "SKILL.md"
+    for skill_name, cfg in config_by_skill.items():
+        repo = cfg["repo"]
+        local_skill_md = local_skills_dir / cfg["slug"] / skill_name / "SKILL.md"
         fm = parse_frontmatter(local_skill_md)
         if not fm.get("name"):
             print(f"  [skip] {skill_name} — no name in frontmatter", file=sys.stderr)
             continue
 
-        cfg = config_by_skill.get(skill_name, {})
         product = cfg.get("product") or repo.split("/")[-1]
-        # Use the canonical repo from config if available; fall back to lock source
-        canonical_repo = cfg.get("repo") or repo
         print(f"  + [{product}] {fm['name']}", file=sys.stderr)
         rows.append({
             "product": product,
-            "repo_url": f"https://github.com/{canonical_repo}",
+            "repo_url": f"https://github.com/{repo}",
             "skill_name": fm["name"],
-            "skill_url": f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{skill_name}",
+            "skill_url": f"https://github.com/open-edge-platform/skills/tree/{skills_branch}/.agents/skills/{cfg['slug']}/{skill_name}",
         })
 
     rows.sort(key=lambda r: (r["product"], r["skill_name"]))
@@ -594,8 +640,8 @@ def main():
                         help="Path to skills-config.json.")
     args = parser.parse_args()
 
-    entries = load_skills_config(Path(args.config))
     try:
+        entries = load_skills_config(Path(args.config))
         validate_config_entries(entries)
     except ValueError as error:
         sys.exit(f"Error: {error}")
@@ -603,7 +649,7 @@ def main():
         base_entries = load_skills_config(Path(args.base_config)) if args.base_config else None
         if base_entries:
             try:
-                validate_config_entries(base_entries)
+                validate_config_entries(base_entries, require_slug=False)
             except ValueError as error:
                 sys.exit(f"Error: {error}")
         if not check_skills_exist(entries, os.environ.get("GITHUB_TOKEN", ""), base_entries):
@@ -619,11 +665,7 @@ def main():
 
     # Step 2 — update only the skills index section in README.md
     skills_lock = load_skills_lock(repo_root / "skills-lock.json")
-    if not skills_lock:
-        print("skills-lock.json is empty or missing — README not updated.", file=sys.stderr)
-        sys.exit(0)
-
-    print(f"Updating README skills index from {len(skills_lock)} installed skill(s) …", file=sys.stderr)
+    print("Updating README skills index from the configured catalog …", file=sys.stderr)
     readme_path = repo_root / "README.md"
 
     if args.dry_run:

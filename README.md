@@ -6,26 +6,26 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-09-25 00:04 UTC -->
+<!-- Last updated: 2026-09-26 10:08 UTC -->
 | Product | Skills |
 |---------|--------|
-| [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-training) |
-| [Chat Question and Answer](https://github.com/open-edge-platform/edge-ai-libraries) | [chatqna-docker-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-docker-deploy), [chatqna-helm-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-helm-deploy) |
-| [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent) |
-| [DL Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries) | [dlsps-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user) |
-| [Geti](https://github.com/open-edge-platform/geti) | [geti-using-the-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti-using-the-pipeline), [getitune-discovering-models](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-discovering-models), [getitune-exporting-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-exporting-a-model), [getitune-optimizing-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-optimizing-a-model), [getitune-preparing-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-preparing-datasets), [getitune-running-inference](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-running-inference), [getitune-training-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-training-a-model) |
-| [Metro AI Suite - AI App Builder](https://github.com/open-edge-platform/edge-ai-suites) | [metro-ai-app-builder](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-builder) |
-| [Metro AI Suite - Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites) | [metro-ai-app-recipe](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-recipe) |
-| [Model Download](https://github.com/open-edge-platform/edge-ai-libraries) | [model-download-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user) |
-| [Multimodal DataPrep microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [multimodal-dataprep-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep-user) |
-| [Multimodal Embedding Serving Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [multimodal-embedding-serving-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving-user) |
-| [OEP CLI Installer](https://github.com/open-edge-platform/edge-ai-libraries) | [openedge-cli](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/openedge-cli) |
-| [Physical AI Runtime](https://github.com/openvinotoolkit/physicalai) | [physicalai-runtime-adding-a-camera-backend](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime-adding-a-camera-backend), [physicalai-runtime-adding-a-robot-integration](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime-adding-a-robot-integration), [physicalai-runtime-configuring-inference-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime-configuring-inference-pipeline), [physicalai-runtime-loading-exported-policies](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime-loading-exported-policies), [physicalai-runtime-running-policy-on-robot](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime-running-policy-on-robot) |
-| [Physical AI Train](https://github.com/open-edge-platform/physical-ai-studio) | [physicalai-train-adding-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-adding-a-policy), [physicalai-train-benchmarking-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-benchmarking-a-policy), [physicalai-train-exporting-and-validating](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-exporting-and-validating), [physicalai-train-training-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-training-a-policy), [physicalai-train-working-with-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train-working-with-datasets) |
-| [Scenescape](https://github.com/open-edge-platform/scenescape) | [scenescape-setup](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup) |
-| [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user) |
-| [UAV Mission Compute SDK](https://github.com/open-edge-platform/edge-ai-suites) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk) |
-| [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video) |
+| [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib/anomalib-training) |
+| [Chat Question and Answer](https://github.com/open-edge-platform/edge-ai-libraries) | [chatqna-docker-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna/chatqna-docker-deploy), [chatqna-helm-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna/chatqna-helm-deploy) |
+| [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer/dlstreamer-coding-agent) |
+| [DL Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries) | [dlsps-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-pipeline-server/dlsps-user) |
+| [Geti](https://github.com/open-edge-platform/geti) | [geti-using-the-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/geti-using-the-pipeline), [getitune-discovering-models](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-discovering-models), [getitune-exporting-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-exporting-a-model), [getitune-optimizing-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-optimizing-a-model), [getitune-preparing-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-preparing-datasets), [getitune-running-inference](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-running-inference), [getitune-training-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti/getitune-training-a-model) |
+| [Metro AI Suite - AI App Builder](https://github.com/open-edge-platform/edge-ai-suites) | [metro-ai-app-builder](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-builder/metro-ai-app-builder) |
+| [Metro AI Suite - Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites) | [metro-ai-app-recipe](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-recipe/metro-ai-app-recipe) |
+| [Model Download](https://github.com/open-edge-platform/edge-ai-libraries) | [model-download-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download/model-download-user) |
+| [Multimodal DataPrep microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [multimodal-dataprep-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-dataprep/multimodal-dataprep-user) |
+| [Multimodal Embedding Serving Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [multimodal-embedding-serving-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/multimodal-embedding-serving/multimodal-embedding-serving-user) |
+| [OEP CLI Installer](https://github.com/open-edge-platform/edge-ai-libraries) | [openedge-cli](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/openedge-cli/openedge-cli) |
+| [Physical AI Runtime](https://github.com/openvinotoolkit/physicalai) | [physicalai-runtime-adding-a-camera-backend](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime/physicalai-runtime-adding-a-camera-backend), [physicalai-runtime-adding-a-robot-integration](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime/physicalai-runtime-adding-a-robot-integration), [physicalai-runtime-configuring-inference-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime/physicalai-runtime-configuring-inference-pipeline), [physicalai-runtime-loading-exported-policies](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime/physicalai-runtime-loading-exported-policies), [physicalai-runtime-running-policy-on-robot](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-runtime/physicalai-runtime-running-policy-on-robot) |
+| [Physical AI Train](https://github.com/open-edge-platform/physical-ai-studio) | [physicalai-train-adding-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train/physicalai-train-adding-a-policy), [physicalai-train-benchmarking-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train/physicalai-train-benchmarking-a-policy), [physicalai-train-exporting-and-validating](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train/physicalai-train-exporting-and-validating), [physicalai-train-training-a-policy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train/physicalai-train-training-a-policy), [physicalai-train-working-with-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/physicalai-train/physicalai-train-working-with-datasets) |
+| [Scenescape](https://github.com/open-edge-platform/scenescape) | [scenescape-setup](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape/scenescape-setup) |
+| [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics/time-series-analytics-user) |
+| [UAV Mission Compute SDK](https://github.com/open-edge-platform/edge-ai-suites) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk/uav-mission-compute-sdk) |
+| [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss/vss-summarize-video) |
 | **Total** | **17 products, 39 skills** |
 <!-- END SKILLS INDEX -->
 
@@ -56,9 +56,23 @@ The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow 
 
 On each run the workflow:
 
-1. **Removes** skills that are no longer in `skills-config.json` or whose configured source (repo / ref / path) has changed.
-2. **Batches** remaining installs/updates by `(repo, ref)` so each source repository is cloned only once per run, regardless of how many skills it contains.
-3. **Verifies** each installed skill appears in `skills-lock.json` at the expected path; falls back to a path-scoped retry if a skill is nested too deeply for the CLI's default scan depth.
+1. **Stages** all configured skills in an isolated temporary workspace, leaving the current catalog untouched if a download or verification fails.
+2. **Batches** installs by `(repo, ref)` to minimize upstream downloads.
+3. **Verifies** each skill's upstream lock path and frontmatter name; falls back to a path-scoped retry for skills not discovered by the batch install.
+4. **Publishes** the complete catalog under `.agents/skills/<product-slug>/<skill-name>/`, removing stale skills and old product locations only after staging succeeds. Publication errors restore the previous catalog and lock.
+
+Each product has a unique, stable `slug` in `skills-config.json`; existing `path`
+fields still refer to upstream source directories. Skill names remain globally
+unique and unchanged. Product folders are containers, not skills.
+
+The grouped tree is a source catalog, not a universally supported installed-agent
+layout. Use the pinned `skills` CLI (1.7.0) from a separate consumer project to
+install skills into the agent's normal flat layout. Do not run `skills update`
+directly against this managed catalog; use the index synchronization script.
+The generated `skills-lock.json` remains untracked and retains upstream paths.
+README-only regeneration also works without that lock file. Imported Markdown
+links targeting this catalog are relocated during synchronization; links to
+upstream products are unchanged.
 ---
 
 ## Contributing a Skill
@@ -103,6 +117,9 @@ To add a skill to the org index:
    or point at non-default CLI binary paths.
 
 4. Add an entry to `skills-config.json` in this repo and open a PR against `main`.
+   Reuse the existing product entry or choose a unique lowercase, hyphenated
+   `slug` for a new product. Validate the schema and run
+   `python3 -m unittest discover -s scripts -p 'test_*.py'` before submitting.
 
    **On every PR that touches `skills-config.json`**, the
    [`Check Skills Config`](.github/workflows/check-skills-config.yml) workflow

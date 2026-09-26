@@ -56,15 +56,16 @@ class SkillComplianceReportGenerator:
             # Build a mapping of skill name to product/component
             for product_entry in config.get('products', []):
                 product_name = product_entry.get('product', '')
-                product_ref = product_entry.get('ref', 'main')
+                product_slug = product_entry.get('slug', '')
                 for skill in product_entry.get('skills', []):
                     skill_name = skill.get('name', '')
                     if skill_name:
                         self.skills_config[skill_name] = product_name
                         ref = os.getenv("GITHUB_REF_NAME") or "main"
-                        has_prompts = (self.skills_root / skill_name / EXAMPLE_PROMPTS_DIR).is_dir()
+                        skill_path = Path(product_slug) / skill_name
+                        has_prompts = (self.skills_root / skill_path / EXAMPLE_PROMPTS_DIR).is_dir()
                         self.skills_prompts_url[skill_name] = (
-                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{EXAMPLE_PROMPTS_DIR}"
+                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_path.as_posix()}/{EXAMPLE_PROMPTS_DIR}"
                             if has_prompts else ""
                         )
             
@@ -199,11 +200,14 @@ class SkillComplianceReportGenerator:
         return metadata
 
     def scan_skills(self):
-        """Scan all skills directories"""
-        for skill_dir in self.skills_root.iterdir():
-            if not skill_dir.is_dir() or skill_dir.name.startswith('.'):
+        """Discover skills recursively by their SKILL.md entry point."""
+        for skill_file in sorted(self.skills_root.rglob('SKILL.md')):
+            if not skill_file.is_file() or any(
+                part.startswith('.') for part in skill_file.relative_to(self.skills_root).parts
+            ):
                 continue
-                
+
+            skill_dir = skill_file.parent
             skill_name = skill_dir.name
             component = self.extract_component_name(skill_name)
             

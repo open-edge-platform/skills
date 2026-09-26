@@ -2,6 +2,7 @@
   "products": [
     {
       "product": "OEP CLI Installer",
+      "slug": "openedge-cli",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "frameworks/oep-installer-cli/.github/skills",
@@ -13,6 +14,7 @@
     },
     {
       "product": "DL Streamer",
+      "slug": "dlstreamer",
       "repo": "open-edge-platform/dlstreamer",
       "ref": "main",
       "path": ".github/skills",
@@ -24,6 +26,7 @@
     },
     {
       "product": "Chat Question and Answer",
+      "slug": "chatqna",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "sample-applications/chat-question-and-answer-core/.github/skills",
@@ -38,6 +41,7 @@
     },
     {
       "product": "Video Search and Summarization",
+      "slug": "vss",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
@@ -58,6 +62,7 @@
     },
     {
       "product": "Multimodal Embedding Serving Microservice",
+      "slug": "multimodal-embedding-serving",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/multimodal-embedding-serving/.github/skills",
@@ -69,6 +74,7 @@
     },
     {
       "product": "Multimodal DataPrep microservice",
+      "slug": "multimodal-dataprep",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
@@ -80,6 +86,7 @@
     },
     {
       "product": "Model Download",
+      "slug": "model-download",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/model-download/.github/skills",
@@ -91,6 +98,7 @@
     },
     {
       "product": "DL Streamer Pipeline Server",
+      "slug": "dlstreamer-pipeline-server",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/dlstreamer-pipeline-server/.github/skills",
@@ -102,6 +110,7 @@
     },
     {
       "product": "Time Series Analytics Microservice",
+      "slug": "time-series-analytics",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
       "path": "microservices/time-series-analytics/.github/skills",
@@ -113,6 +122,7 @@
     },
     {
       "product": "Physical AI Train",
+      "slug": "physicalai-train",
       "repo": "open-edge-platform/physical-ai-studio",
       "ref": "main",
       "path": "skills/library",
@@ -136,6 +146,7 @@
     },
     {
       "product": "Physical AI Runtime",
+      "slug": "physicalai-runtime",
       "repo": "openvinotoolkit/physicalai",
       "ref": "main",
       "path": "skills/runtime",
@@ -162,6 +173,7 @@
     },
     {
       "product": "Geti",
+      "slug": "geti",
       "repo": "open-edge-platform/geti",
       "ref": "develop",
       "path": "skills/application",
@@ -197,6 +209,7 @@
     },
     {
       "product": "Scenescape",
+      "slug": "scenescape",
       "repo": "open-edge-platform/scenescape",
       "ref": "main",
       "path": ".github/skills",
@@ -208,6 +221,7 @@
     },
     {
       "product": "Metro AI Suite - AI App Builder",
+      "slug": "metro-ai-app-builder",
       "repo": "open-edge-platform/edge-ai-suites",
       "ref": "main",
       "path": "metro-ai-suite/prompt-library/.github/skills",
@@ -219,6 +233,7 @@
     },
     {
       "product": "Metro AI Suite - Vision AI App Recipe",
+      "slug": "metro-ai-app-recipe",
       "repo": "open-edge-platform/edge-ai-suites",
       "ref": "main",
       "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
@@ -230,6 +245,7 @@
     },
     {
       "product": "UAV Mission Compute SDK",
+      "slug": "uav-mission-compute-sdk",
       "repo": "open-edge-platform/edge-ai-suites",
       "ref": "main",
       "path": "federal-and-aerospace-ai-suite/uav-mission-compute-sdk/skills",
@@ -241,6 +257,7 @@
     },
     {
       "product": "Anomalib",
+      "slug": "anomalib",
       "repo": "open-edge-platform/anomalib",
       "ref": "main",
       "path": ".agents/skills",

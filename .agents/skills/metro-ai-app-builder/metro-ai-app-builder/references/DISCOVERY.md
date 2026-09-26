@@ -47,7 +47,7 @@ Read a candidate skill's `description` (its `SKILL.md` frontmatter) to confirm i
 fits the objective before you commit to it in the plan:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/open-edge-platform/skills/main/.agents/skills/<name>/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/skills/main/.agents/skills/<product-slug>/<name>/SKILL.md \
   | sed -n '1,25p'
 ```
 
@@ -61,7 +61,7 @@ plan, add each not-yet-installed delegate:
 
 ```bash
 # Add one skill from the catalog repo
-npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
+npx skills@1.7.0 add open-edge-platform/skills --skill <skill-name>
 
 # Some products live in their own repos (see skills-config.json "repo"/"path"),
 # e.g. DL Streamer's coding agent:
