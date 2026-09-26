@@ -49,14 +49,14 @@ The [`update-skills-index`](.github/workflows/update-skills-index.yml) workflow 
 
 - Runs on a **daily schedule** to pick up upstream skill changes.
 - Can be triggered **manually** via `workflow_dispatch` for on-demand syncs or dry-run previews.
-- Reads [`skills-config.json`](../../skills-config.json) as the **single source of truth** for which skills to install.
+- Reads [`skills-config.yaml`](skills-config.yaml) as the **single source of truth** for which skills to install.
 - Installs or updates each skill via `npx skills add/update`, then rebuilds the skills table in the README between the `<!-- BEGIN SKILLS INDEX -->` / `<!-- END SKILLS INDEX -->` sentinels.
 
 ### Reconciliation Logic
 
 On each run the workflow:
 
-1. **Removes** skills that are no longer in `skills-config.json` or whose configured source (repo / ref / path) has changed.
+1. **Removes** skills that are no longer in `skills-config.yaml` or whose configured source (repo / ref / path) has changed.
 2. **Batches** remaining installs/updates by `(repo, ref)` so each source repository is cloned only once per run, regardless of how many skills it contains.
 3. **Verifies** each installed skill appears in `skills-lock.json` at the expected path; falls back to a path-scoped retry if a skill is nested too deeply for the CLI's default scan depth.
 ---
@@ -102,11 +102,13 @@ To add a skill to the org index:
    including how to run multiple coding agents CLIs, pin specific models, skip grading,
    or point at non-default CLI binary paths.
 
-4. Add an entry to `skills-config.json` in this repo and open a PR against `main`.
+4. Add an entry to `skills-config.yaml` in this repo and open a PR against `main`.
+   Follow the [catalog authoring and validation rules](docs/user-guide/how-it-works.md#skills-catalog).
 
-   **On every PR that touches `skills-config.json`**, the
+   **On every PR that touches `skills-config.yaml`**, the
    [`Check Skills Config`](.github/workflows/check-skills-config.yml) workflow
-   runs automatically. It validates the config against its JSON schema and
+   runs automatically. It validates the YAML config against its JSON schema,
+   rejects ambiguous or unsafe catalog values, runs regression tests, and
    verifies that every newly added skill actually exists at the declared path in
    its source repository. **This check is a required status check — the PR
    cannot be merged until it passes.**

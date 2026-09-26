@@ -34,6 +34,11 @@ jobs:
               - ".agents/skills/**"
               - ".github/workflows/skill-compliance-report.yml"
               - "scripts/generate_skill_compliance_report.py"
+              - "scripts/skills_config.py"
+              - "skills-config.yaml"
+              - "skills-config.json"
+              - "skills-config.schema.json"
+              - "requirements.txt"
 
   run-validators:
     name: Run Skill Validators
@@ -252,7 +257,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install markdown pyyaml
+          pip install markdown -r requirements.txt
 
       - name: Generate Skill Compliance Report
         env:

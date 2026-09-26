@@ -1,1 +1,3 @@
 check-jsonschema==0.38.0
+jsonschema==4.25.1
+PyYAML==6.0.3

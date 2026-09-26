@@ -33,9 +33,70 @@ Skills installed by `npx skills` land in `.agents/skills/<skill-name>/SKILL.md` 
     └── ...
 ```
 
+## Skills Catalog
+
+[`skills-config.yaml`](../../skills-config.yaml) is the single source of truth for
+which upstream skills this repository synchronizes. It is separate from the YAML
+frontmatter in each `SKILL.md`, which describes the skill to an agent.
+
+Each product specifies `product`, `repo`, `ref`, `skills`, and an optional `path`.
+Each skill specifies `name` and optionally its own `path`, which overrides the
+product path. Paths identify the directory containing skill directories, not the
+`SKILL.md` file itself. Skill names must be unique across the whole catalog.
+
+### Authoring rules
+
+- Preserve the existing list structure and use spaces, not tabs, for indentation.
+- Comments are allowed; the first comment associates the catalog with
+  [`skills-config.schema.json`](../../skills-config.schema.json) for compatible editors.
+- Use a single document. Duplicate keys, anchors, aliases, merge keys, explicit
+  YAML tags, and unknown fields are rejected.
+- All names, refs, and paths must be strings. Quote numeric-looking refs,
+  date-like values, and YAML boolean/null words such as `"on"`, `"yes"`, or `"null"`.
+- Empty catalogs and malformed entries fail validation before any skills are
+  removed or installed. Repository names, refs, and paths also undergo safety checks.
+- Do not store credentials in the catalog.
+
+### Local validation
+
+From a checkout at `/home/runner/work/skills/skills`:
+
+```bash
+python3 -m pip install -r /home/runner/work/skills/skills/requirements.txt
+python3 /home/runner/work/skills/skills/scripts/skills_config.py
+python3 -m unittest discover -s /home/runner/work/skills/skills/tests -v
+python3 /home/runner/work/skills/skills/scripts/update_skills_index.py --dry-run
+```
+
+Adjust the checkout prefix for your machine. The shared validator enforces both
+the JSON Schema and the stricter catalog rules. The existing `check-jsonschema`
+command also accepts this YAML file, but does not replace the shared validator.
+Index sync and compliance reporting use the same loader and pinned dependencies.
+Dry runs do not install or write files; README preview requires an existing
+`skills-lock.json`, otherwise table generation is skipped.
+
+### Legacy JSON compatibility
+
+The default catalog is YAML; no second editable JSON catalog is maintained.
+The readers still accept explicit `.json` paths (and custom `.yaml`/`.yml` paths).
+The index updater's `--config` and `--base-config` options retain this support so
+historical JSON base commits can be compared with YAML changes without reporting
+every skill as newly added. CI selects the catalog format actually present at the
+base commit and fails if neither or both canonical files exist.
+
+Downstream automation that downloaded the old JSON catalog must switch to YAML
+or explicitly convert the parsed data to JSON for its own use. Runtime loaders
+reject coexisting canonical JSON and YAML files rather than silently choosing one.
+Keep legacy JSON reading until historical comparisons and downstream consumers no
+longer require it. To roll back the format switch, restore the JSON catalog and
+its workflow/default paths together; dual-format readers can remain.
+
 ## skills-lock.json
 
 Each `npx skills add` or `npx skills update` writes a `skills-lock.json` alongside the installed skills. This file records the source repository, branch/ref, and exact skill path for every installed skill.
+
+This machine-managed file stays JSON and remains ignored by Git. Evaluation and
+validator JSON artifacts are also unchanged by the catalog migration.
 
 ## Supporting Resources
 

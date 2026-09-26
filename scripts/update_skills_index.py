@@ -9,8 +9,8 @@
 """
 Sync selected skills into .agents/skills/ and regenerate skills index section in README.md.
 
-skills-config.json is the single source of truth.  The script:
-  1. Reads skills-config.json, removes unconfigured skills, updates existing
+skills-config.yaml is the single source of truth.  The script:
+  1. Reads skills-config.yaml, removes unconfigured skills, updates existing
      skills, and adds new or relocated skills. Explicit GitHub tree URLs built
      from repo/ref/path/name let product repos use different skill layouts.
   2. Reads the installed SKILL.md files from .agents/skills/ directly to
@@ -45,94 +45,19 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
+if __package__:
+    from .skills_config import DEFAULT_CONFIG, load_skills_config
+else:
+    from skills_config import DEFAULT_CONFIG, load_skills_config
 
 SKILLS_INDEX_BEGIN = "<!-- BEGIN SKILLS INDEX -->"
 SKILLS_INDEX_END = "<!-- END SKILLS INDEX -->"
 
 logger = logging.getLogger(__name__)
 
-_REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
-_SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-_SKILL_PATH_SEGMENT_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
-
-
 # ---------------------------------------------------------------------------
 # Config / lock helpers
 # ---------------------------------------------------------------------------
-
-
-def _validate_git_ref(ref: str) -> str:
-    """Reject ref names that are unsafe to pass to git/GitHub tooling."""
-    ref = str(ref).strip()
-    if not ref:
-        raise ValueError("ref must not be empty")
-    if (
-        ref.startswith(("-", "/", "."))
-        or ref.endswith(("/", "."))
-        or ".." in ref
-        or "//" in ref
-        or "@{" in ref
-        or any(char in ref for char in (" ", "~", "^", ":", "?", "*", "[", "\\"))
-    ):
-        raise ValueError(f"unsafe ref value: {ref!r}")
-    return ref
-
-
-def _validate_skill_path(path: str) -> str:
-    """Reject path traversal and option-like path components."""
-    cleaned = str(path).strip().strip("/")
-    if not cleaned:
-        raise ValueError("path must not be empty")
-    segments = cleaned.split("/")
-    if any(segment in {"", ".", ".."} for segment in segments):
-        raise ValueError(f"unsafe path value: {path!r}")
-    if any(not _SKILL_PATH_SEGMENT_RE.fullmatch(segment) for segment in segments):
-        raise ValueError(f"unsafe path value: {path!r}")
-    return cleaned
-
-
-def validate_config_entries(config_entries: list[dict]) -> None:
-    """Validate config values before using them in subprocesses or API requests."""
-    for entry in config_entries:
-        repo = entry.get("repo", "")
-        if not _REPO_RE.fullmatch(repo):
-            raise ValueError(f"unsafe repo value: {repo!r}")
-        if "ref" in entry:
-            ref = entry["ref"]
-            entry["ref"] = "main" if ref is None or (isinstance(ref, str) and not ref.strip()) else _validate_git_ref(ref)
-        else:
-            entry["ref"] = "main"
-        if "path" in entry:
-            entry["path"] = _validate_skill_path(entry["path"])
-        for skill in entry.get("skills", []):
-            if isinstance(skill, dict):
-                name = skill.get("name", "")
-                if not _SKILL_NAME_RE.fullmatch(name):
-                    raise ValueError(f"unsafe skill name: {name!r}")
-                if "path" in skill:
-                    skill["path"] = _validate_skill_path(skill["path"])
-            elif not _SKILL_NAME_RE.fullmatch(skill):
-                raise ValueError(f"unsafe skill name: {skill!r}")
-
-def load_skills_config(config_path: Path) -> list[dict]:
-    """
-    Read skills-config.json.  Each product must have:
-      repo   — full "org/repo" name  (e.g. "open-edge-platform/dlstreamer")
-      skills — list of skill objects with name and optional path
-                (each skill is installed as .agents/skills/<name>)
-    """
-    if not config_path.exists():
-        sys.exit(f"Error: skills-config.json not found at {config_path}")
-    with config_path.open(encoding="utf-8") as f:
-        data = json.load(f)
-    entries = data.get("products", [])
-    valid = []
-    for entry in entries:
-        if "repo" in entry and "skills" in entry:
-            valid.append(entry)
-        else:
-            print(f"  [warn] skipping malformed entry (needs repo+skills): {entry}", file=sys.stderr)
-    return valid
 
 
 def load_skills_lock(lock_path: Path) -> dict:
@@ -287,7 +212,7 @@ def check_skills_exist(
 
 def install_skills(config_entries: list[dict], repo_root: Path, dry_run: bool = False) -> bool:
     """
-    Reconcile installed skills with skills-config.json:
+    Reconcile installed skills with skills-config.yaml:
       - remove skills that are no longer configured, plus any whose
         configured source (repo/ref/path) changed
       - (re)add every configured skill, batched per (repo, ref) so each
@@ -499,7 +424,7 @@ def build_skills_table(skills_lock: dict, local_skills_dir: Path, config_entries
     rows: list[dict] = []
     for skill_name, lock_meta in skills_lock.items():
         if skill_name not in config_by_skill:
-            print(f"  [skip] {skill_name} — not present in skills-config.json", file=sys.stderr)
+            print(f"  [skip] {skill_name} — not present in skills-config.yaml", file=sys.stderr)
             continue
 
         repo = lock_meta.get("source", "")
@@ -590,22 +515,16 @@ def main():
                         help="Check that configured skills contain a SKILL.md on GitHub, then exit.")
     parser.add_argument("--base-config",
                         help="With --check-only, only check skills added or relocated relative to this config.")
-    parser.add_argument("--config", default=str(repo_root / "skills-config.json"),
-                        help="Path to skills-config.json.")
+    parser.add_argument("--config", default=str(DEFAULT_CONFIG),
+                        help="Path to the YAML catalog (or an explicit legacy JSON catalog).")
     args = parser.parse_args()
 
-    entries = load_skills_config(Path(args.config))
     try:
-        validate_config_entries(entries)
+        entries = load_skills_config(Path(args.config))
+        base_entries = load_skills_config(Path(args.base_config)) if args.check_only and args.base_config else None
     except ValueError as error:
         sys.exit(f"Error: {error}")
     if args.check_only:
-        base_entries = load_skills_config(Path(args.base_config)) if args.base_config else None
-        if base_entries:
-            try:
-                validate_config_entries(base_entries)
-            except ValueError as error:
-                sys.exit(f"Error: {error}")
         if not check_skills_exist(entries, os.environ.get("GITHUB_TOKEN", ""), base_entries):
             sys.exit(1)
         return

@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=./skills-config.schema.json
+# This catalog selects upstream skills; per-skill paths override product paths.
+products:
+- product: OEP CLI Installer
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: frameworks/oep-installer-cli/.github/skills
+  skills:
+  - name: openedge-cli
+- product: DL Streamer
+  repo: open-edge-platform/dlstreamer
+  ref: main
+  path: .github/skills
+  skills:
+  - name: dlstreamer-coding-agent
+- product: Chat Question and Answer
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: sample-applications/chat-question-and-answer-core/.github/skills
+  skills:
+  - name: chatqna-docker-deploy
+  - name: chatqna-helm-deploy
+- product: Video Search and Summarization
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: sample-applications/video-search-and-summarization/.github/skills
+  skills:
+  - name: vss-deploy
+  - name: vss-deploy-helm
+  - name: vss-search-index
+  - name: vss-summarize-video
+- product: Multimodal Embedding Serving Microservice
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: microservices/multimodal-embedding-serving/.github/skills
+  skills:
+  - name: multimodal-embedding-serving-user
+- product: Multimodal DataPrep microservice
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills
+  skills:
+  - name: multimodal-dataprep-user
+- product: Model Download
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: microservices/model-download/.github/skills
+  skills:
+  - name: model-download-user
+- product: DL Streamer Pipeline Server
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: microservices/dlstreamer-pipeline-server/.github/skills
+  skills:
+  - name: dlsps-user
+- product: Time Series Analytics Microservice
+  repo: open-edge-platform/edge-ai-libraries
+  ref: main
+  path: microservices/time-series-analytics/.github/skills
+  skills:
+  - name: time-series-analytics-user
+- product: Physical AI Train
+  repo: open-edge-platform/physical-ai-studio
+  ref: main
+  path: skills/library
+  skills:
+  - name: physicalai-train-adding-a-policy
+  - name: physicalai-train-benchmarking-a-policy
+  - name: physicalai-train-exporting-and-validating
+  - name: physicalai-train-training-a-policy
+  - name: physicalai-train-working-with-datasets
+- product: Physical AI Runtime
+  repo: openvinotoolkit/physicalai
+  ref: main
+  path: skills/runtime
+  skills:
+  - name: physicalai-runtime-adding-a-robot-integration
+  - name: physicalai-runtime-running-policy-on-robot
+  - name: physicalai-runtime-configuring-inference-pipeline
+    path: skills/inference
+  - name: physicalai-runtime-loading-exported-policies
+    path: skills/inference
+  - name: physicalai-runtime-adding-a-camera-backend
+    path: skills/capture
+- product: Geti
+  repo: open-edge-platform/geti
+  ref: develop
+  path: skills/application
+  skills:
+  - name: geti-using-the-pipeline
+  - name: getitune-discovering-models
+    path: skills/library
+  - name: getitune-preparing-datasets
+    path: skills/library
+  - name: getitune-training-a-model
+    path: skills/library
+  - name: getitune-running-inference
+    path: skills/library
+  - name: getitune-exporting-a-model
+    path: skills/library
+  - name: getitune-optimizing-a-model
+    path: skills/library
+- product: Scenescape
+  repo: open-edge-platform/scenescape
+  ref: main
+  path: .github/skills
+  skills:
+  - name: scenescape-setup
+- product: Metro AI Suite - AI App Builder
+  repo: open-edge-platform/edge-ai-suites
+  ref: main
+  path: metro-ai-suite/prompt-library/.github/skills
+  skills:
+  - name: metro-ai-app-builder
+- product: Metro AI Suite - Vision AI App Recipe
+  repo: open-edge-platform/edge-ai-suites
+  ref: main
+  path: metro-ai-suite/metro-vision-ai-app-recipe/.github/skills
+  skills:
+  - name: metro-ai-app-recipe
+- product: UAV Mission Compute SDK
+  repo: open-edge-platform/edge-ai-suites
+  ref: main
+  path: federal-and-aerospace-ai-suite/uav-mission-compute-sdk/skills
+  skills:
+  - name: uav-mission-compute-sdk
+- product: Anomalib
+  repo: open-edge-platform/anomalib
+  ref: main
+  path: .agents/skills
+  skills:
+  - name: anomalib-adding-a-model
+  - name: anomalib-adding-a-datamodule
+  - name: anomalib-training
+  - name: anomalib-tiled-ensemble
+  - name: anomalib-benchmarking

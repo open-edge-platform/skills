@@ -8,11 +8,16 @@ Outputs comprehensive HTML report with improved organization
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 
+if __package__:
+    from .skills_config import DEFAULT_CONFIG, load_skills_config
+else:
+    from skills_config import DEFAULT_CONFIG, load_skills_config
 
 EXAMPLE_PROMPTS_DIR = "example-prompts"
 
@@ -37,8 +42,8 @@ class SkillComplianceReportGenerator:
             'total_loc': 0
         })
         
-        # Load skills-config.json for component mapping
-        if skills_config_path and Path(skills_config_path).exists():
+        # Load the catalog for component mapping
+        if skills_config_path is not None:
             self.load_skills_config(skills_config_path)
         
         # Load validator and spector data if available
@@ -49,31 +54,24 @@ class SkillComplianceReportGenerator:
 
     def load_skills_config(self, config_path: str) -> None:
         """Load skills configuration mapping skills to components"""
-        try:
-            with open(config_path, 'r') as f:
-                config = json.load(f)
-                
-            # Build a mapping of skill name to product/component
-            for product_entry in config.get('products', []):
-                product_name = product_entry.get('product', '')
-                product_ref = product_entry.get('ref', 'main')
-                for skill in product_entry.get('skills', []):
-                    skill_name = skill.get('name', '')
-                    if skill_name:
-                        self.skills_config[skill_name] = product_name
-                        ref = os.getenv("GITHUB_REF_NAME") or "main"
-                        has_prompts = (self.skills_root / skill_name / EXAMPLE_PROMPTS_DIR).is_dir()
-                        self.skills_prompts_url[skill_name] = (
-                            f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{EXAMPLE_PROMPTS_DIR}"
-                            if has_prompts else ""
-                        )
-            
-            print(f"✅ Loaded skills config: {len(self.skills_config)} skills mapped")
-        except Exception as e:
-            print(f"⚠️ Error loading skills config: {e}")
+        entries = load_skills_config(Path(config_path))
+        # Build a mapping of skill name to product/component
+        for product_entry in entries:
+            product_name = product_entry['product']
+            for skill in product_entry['skills']:
+                skill_name = skill['name']
+                self.skills_config[skill_name] = product_name
+                ref = os.getenv("GITHUB_REF_NAME") or "main"
+                has_prompts = (self.skills_root / skill_name / EXAMPLE_PROMPTS_DIR).is_dir()
+                self.skills_prompts_url[skill_name] = (
+                    f"https://github.com/open-edge-platform/skills/tree/{ref}/.agents/skills/{skill_name}/{EXAMPLE_PROMPTS_DIR}"
+                    if has_prompts else ""
+                )
+
+        print(f"✅ Loaded skills config: {len(self.skills_config)} skills mapped")
 
     def extract_component_name(self, skill_name: str) -> str:
-        """Extract component name from skills-config.json or fallback to deriving from skill name"""
+        """Extract component name from the catalog or fallback to deriving from skill name"""
         # First try to get component from skills-config
         if skill_name in self.skills_config:
             return self.skills_config[skill_name]
@@ -783,7 +781,7 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent
     skills_root = repo_root / ".agents/skills"
     output_file = repo_root / "skill_summary_output.html"
-    skills_config_path = repo_root / "skills-config.json"
+    skills_config_path = DEFAULT_CONFIG
 
     # Check for validator and spector JSON files
     validator_json = Path("validator_results.json") if Path("validator_results.json").exists() else None
@@ -792,10 +790,7 @@ def main():
     print(f"🔍 Scanning skills from: {skills_root}")
     print(f"📝 Report will be written to: {output_file}")
 
-    if skills_config_path.exists():
-        print(f"📋 Using skills config from: {skills_config_path}")
-    else:
-        print(f"⚠️ Skills config not found, will fallback to name-based component extraction")
+    print(f"📋 Using skills config from: {skills_config_path}")
 
     if validator_json:
         print(f"📋 Using validator data from: {validator_json}")
@@ -833,4 +828,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except ValueError as error:
+        sys.exit(f"Error: {error}")

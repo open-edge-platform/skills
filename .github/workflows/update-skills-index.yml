@@ -7,7 +7,12 @@ on:
       - "release-*"
     paths:
       - "skills-config.json"
+      - "skills-config.yaml"
       - "skills-config.schema.json"
+      - "scripts/skills_config.py"
+      - "scripts/update_skills_index.py"
+      - "requirements.txt"
+      - ".github/workflows/update-skills-index.yml"
   # Run every day at midnight
   schedule:
     - cron: "0 0 * * *"
@@ -54,11 +59,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install JSON schema validator
+      - name: Install catalog dependencies
         run: python3 -m pip install -r requirements.txt
 
       - name: Validate skills config
-        run: check-jsonschema --schemafile skills-config.schema.json skills-config.json
+        run: |
+          check-jsonschema --schemafile skills-config.schema.json skills-config.yaml
+          python3 scripts/skills_config.py
 
       - name: Sync skills and update README index
         env:
@@ -126,10 +133,10 @@ jobs:
           commit-message: |
             chore: sync skills and update README index
 
-            Installed/updated selected skills from skills-config.json and rebuilt README.
+            Installed/updated selected skills from skills-config.yaml and rebuilt README.
           title: "chore: sync skills and update README index (${{ steps.date.outputs.date }})"
           body: |
-            Automated sync of `.agents/skills/` and `README.md` from `skills-config.json`
+            Automated sync of `.agents/skills/` and `README.md` from `skills-config.yaml`
             (triggered by `${{ github.event_name }}`).
           # Stable per-base name so reruns update the existing PR instead of opening duplicates.
           branch: "update-skills-index-${{ github.ref_name }}"
