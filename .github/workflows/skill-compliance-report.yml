@@ -36,7 +36,6 @@ jobs:
               - "scripts/generate_skill_compliance_report.py"
               - "scripts/skills_config.py"
               - "skills-config.yaml"
-              - "skills-config.json"
               - "skills-config.schema.json"
               - "requirements.txt"
 

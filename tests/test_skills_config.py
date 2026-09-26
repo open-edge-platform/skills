@@ -39,7 +39,7 @@ class CatalogTests(unittest.TestCase):
             }],
         }
         self.yaml_path = self.write("catalog.yaml", yaml.safe_dump(self.data))
-        self.json_path = self.write("catalog.json", json.dumps(self.data))
+        self.yml_path = self.write("catalog.yml", yaml.safe_dump(self.data))
 
     def write(self, name, content):
         path = self.root / name
@@ -48,15 +48,15 @@ class CatalogTests(unittest.TestCase):
 
     def test_formats_and_comments_are_equivalent(self):
         expected = self.data["products"]
-        for suffix in ("yaml", "yml", "json"):
-            text = json.dumps(self.data) if suffix == "json" else "# Comment\n" + yaml.safe_dump(self.data)
+        for suffix in ("yaml", "yml"):
+            text = "# Comment\n" + yaml.safe_dump(self.data)
             with self.subTest(suffix=suffix):
                 self.assertEqual(catalog.load_skills_config(self.write(f"input.{suffix}", text)), expected)
 
     def test_repository_catalog_round_trip(self):
         entries = catalog.load_skills_config(catalog.DEFAULT_CONFIG)
-        legacy = self.write("historical.json", json.dumps({"products": entries}))
-        self.assertEqual(catalog.load_skills_config(legacy), entries)
+        round_trip = self.write("round-trip.yaml", yaml.safe_dump({"products": entries}))
+        self.assertEqual(catalog.load_skills_config(round_trip), entries)
         paths = {
             skill["name"]: index._skill_path(entry, skill)
             for entry in entries for skill in entry["skills"]
@@ -144,29 +144,27 @@ class CatalogTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     catalog.load_skills_config(self.write("unquoted.yaml", text))
 
-    def test_legacy_json_duplicate_keys_are_rejected(self):
-        with self.assertRaisesRegex(ValueError, "Duplicate catalog key"):
-            catalog.load_skills_config(self.write("duplicate.json", '{"products": [], "products": []}'))
+    def test_json_catalogs_are_rejected_by_both_consumers(self):
+        path = self.write("catalog.json", json.dumps(self.data))
+        with self.assertRaisesRegex(ValueError, "Catalog extension must be .yaml or .yml"):
+            index.load_skills_config(path)
+        with self.assertRaisesRegex(ValueError, "Catalog extension must be .yaml or .yml"):
+            report.SkillComplianceReportGenerator(self.root, skills_config_path=str(path))
 
-    def test_missing_unsupported_and_conflicting_catalogs(self):
+    def test_missing_and_unsupported_catalogs(self):
         for path in (self.root / "missing.yaml", self.write("catalog.txt", self.yaml_path.read_text())):
             with self.subTest(path=path), self.assertRaises(ValueError):
-                catalog.load_skills_config(path)
-        yaml_path = self.write("skills-config.yaml", self.yaml_path.read_text())
-        json_path = self.write("skills-config.json", self.json_path.read_text())
-        for path in (yaml_path, json_path):
-            with self.subTest(path=path), self.assertRaisesRegex(ValueError, "Both canonical"):
                 catalog.load_skills_config(path)
 
     def test_equivalent_base_catalogs_do_not_query_github(self):
         head = catalog.load_skills_config(self.yaml_path)
-        for path in (self.json_path, self.yaml_path):
+        for path in (self.yml_path, self.yaml_path):
             with self.subTest(path=path), patch.object(index, "urlopen") as request, redirect_stderr(io.StringIO()):
                 self.assertTrue(index.check_skills_exist(head, base_entries=catalog.load_skills_config(path)))
                 request.assert_not_called()
 
     def test_added_and_relocated_skills_are_checked(self):
-        base = catalog.load_skills_config(self.json_path)
+        base = catalog.load_skills_config(self.yaml_path)
         head = copy.deepcopy(base)
         head[0]["skills"][1]["path"] = "skills/new"
         head[0]["skills"].append({"name": "third-skill"})
@@ -186,7 +184,8 @@ class CatalogTests(unittest.TestCase):
             ["--config", str(invalid), "--dry-run"],
             ["--config", str(invalid), "--no-install"],
             ["--config", str(self.yaml_path), "--check-only", "--base-config", str(invalid)],
-            ["--config", str(self.yaml_path), "--check-only", "--base-config", str(self.root / "missing.json")],
+            ["--config", str(self.yaml_path), "--check-only", "--base-config", str(self.root / "missing.yaml")],
+            ["--config", str(self.write("catalog.json", json.dumps(self.data)))],
         ]
         for args in cases:
             with (
@@ -242,7 +241,7 @@ class CatalogTests(unittest.TestCase):
             }
         self.write("skills-lock.json", json.dumps({"skills": lock}))
         plans, tables = [], []
-        for path in (self.json_path, self.yaml_path):
+        for path in (self.yml_path, self.yaml_path):
             entries = catalog.load_skills_config(path)
             with patch.object(index, "_run") as run, self.assertLogs(index.logger, level="INFO") as logs:
                 self.assertTrue(index.install_skills(entries, self.root, dry_run=True))
@@ -264,7 +263,7 @@ class CatalogTests(unittest.TestCase):
     def test_compliance_mapping_and_links_are_format_independent(self):
         (self.root / "first-skill" / "example-prompts").mkdir(parents=True)
         with patch.dict("os.environ", {"GITHUB_REF_NAME": "main"}), redirect_stdout(io.StringIO()):
-            old = report.SkillComplianceReportGenerator(self.root, skills_config_path=str(self.json_path))
+            old = report.SkillComplianceReportGenerator(self.root, skills_config_path=str(self.yml_path))
             new = report.SkillComplianceReportGenerator(self.root, skills_config_path=str(self.yaml_path))
         self.assertEqual(old.skills_config, {"first-skill": "Example", "second-skill": "Example"})
         self.assertEqual(old.skills_config, new.skills_config)
@@ -285,47 +284,73 @@ class CatalogTests(unittest.TestCase):
                 report.main()
             scan.assert_not_called()
 
-    def test_base_workflow_selects_actual_format(self):
+    def test_base_workflow_uses_yaml_or_checks_all_skills(self):
         workflow = yaml.safe_load((REPO_ROOT / ".github/workflows/check-skills-config.yml").read_text())
         step = next(step for step in workflow["jobs"]["check-skills"]["steps"] if step.get("id") == "base-config")
         git_mock = """
         git() {
           if [[ "$1" == cat-file ]]; then
             case "$3" in
+              *^{commit}) [[ "$VALID_COMMIT" == true ]];;
               *:skills-config.yaml) [[ "$HAS_YAML" == true ]];;
-              *:skills-config.json) [[ "$HAS_JSON" == true ]];;
               *) return 1;;
             esac
           elif [[ "$1" == show ]]; then
+            [[ "$SHOW_OK" == true ]] || return 1
             printf '%s\\n' "$2"
           else
             return 1
           fi
         }
         """
-        for has_yaml, has_json, expected in [
-            ("true", "false", "yaml"), ("false", "true", "json"),
-            ("true", "true", None), ("false", "false", None),
+        for has_yaml, valid_commit, show_ok, sha, success, has_path in [
+            ("true", "true", "true", "a" * 40, True, True),
+            ("false", "true", "true", "a" * 40, True, False),
+            ("false", "false", "true", "a" * 40, False, False),
+            ("true", "true", "false", "a" * 40, False, False),
+            ("true", "true", "true", "invalid", False, False),
         ]:
-            with self.subTest(yaml=has_yaml, json=has_json):
+            with self.subTest(yaml=has_yaml, commit=valid_commit, show=show_ok, sha=sha):
                 output = self.write("output", "")
                 result = subprocess.run(
                     ["bash", "-e", "-c", git_mock + step["run"]],
                     env={
-                        "BASE_SHA": "a" * 40, "RUNNER_TEMP": str(self.root),
-                        "GITHUB_OUTPUT": str(output), "HAS_YAML": has_yaml, "HAS_JSON": has_json,
+                        "BASE_SHA": sha, "RUNNER_TEMP": str(self.root),
+                        "GITHUB_OUTPUT": str(output), "HAS_YAML": has_yaml,
+                        "VALID_COMMIT": valid_commit, "SHOW_OK": show_ok,
                     },
                     capture_output=True, text=True, check=False,
                 )
-                self.assertEqual(result.returncode == 0, expected is not None, result.stderr)
-                if expected:
-                    self.assertEqual(output.read_text().strip(), f"path={self.root}/skills-config.base.{expected}")
+                self.assertEqual(result.returncode == 0, success, result.stderr)
+                if has_path:
+                    self.assertEqual(output.read_text().strip(), f"path={self.root}/skills-config.base.yaml")
                     self.assertEqual(
-                        (self.root / f"skills-config.base.{expected}").read_text().strip(),
-                        f"{'a' * 40}:skills-config.{expected}",
+                        (self.root / "skills-config.base.yaml").read_text().strip(),
+                        f"{sha}:skills-config.yaml",
                     )
                 else:
                     self.assertEqual(output.read_text(), "")
+
+    def test_workflow_passes_optional_base_config(self):
+        workflow = yaml.safe_load((REPO_ROOT / ".github/workflows/check-skills-config.yml").read_text())
+        step = next(step for step in workflow["jobs"]["check-skills"]["steps"]
+                    if step.get("name") == "Check added skills exist")
+        for base in ("", str(self.root / "base with spaces.yaml")):
+            with self.subTest(base=base):
+                result = subprocess.run(
+                    ["bash", "-e", "-c", 'python3() { printf "%s\\n" "$@"; }\n' + step["run"]],
+                    env={"BASE_CONFIG": base}, capture_output=True, text=True, check=True,
+                )
+                expected = ["scripts/update_skills_index.py", "--check-only"]
+                if base:
+                    expected += ["--base-config", base]
+                self.assertEqual(result.stdout.splitlines(), expected)
+
+    def test_without_base_all_skills_are_checked(self):
+        with patch.object(index, "urlopen") as request, redirect_stderr(io.StringIO()):
+            request.return_value.__enter__.return_value.status = 200
+            self.assertTrue(index.check_skills_exist(catalog.load_skills_config(self.yaml_path)))
+            self.assertEqual(request.call_count, 2)
 
 
 if __name__ == "__main__":

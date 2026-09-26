@@ -6,7 +6,6 @@ on:
       - "main"
       - "release-*"
     paths:
-      - "skills-config.json"
       - "skills-config.yaml"
       - "skills-config.schema.json"
       - "scripts/skills_config.py"

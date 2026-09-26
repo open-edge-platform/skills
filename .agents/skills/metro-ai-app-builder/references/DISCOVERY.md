@@ -32,11 +32,11 @@ always available — no install needed to delegate to it.
 ## 3. Refresh the live index (when the catalog may be stale)
 
 The authoritative index of open-edge-platform skills is the repo's
-`skills-config.json` plus the `.agents/skills/` directory:
+`skills-config.yaml` plus the `.agents/skills/` directory:
 
 ```bash
 # Machine-readable product/skill index
-curl -fsSL https://raw.githubusercontent.com/open-edge-platform/skills/main/skills-config.json
+curl -fsSL https://raw.githubusercontent.com/open-edge-platform/skills/main/skills-config.yaml
 
 # Human index (README) and per-skill folders
 gh api repos/open-edge-platform/skills/contents/.agents/skills --jq '.[].name' 2>/dev/null \
@@ -63,12 +63,12 @@ plan, add each not-yet-installed delegate:
 # Add one skill from the catalog repo
 npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
 
-# Some products live in their own repos (see skills-config.json "repo"/"path"),
+# Some products live in their own repos (see skills-config.yaml "repo"/"path"),
 # e.g. DL Streamer's coding agent:
 npx skills@1.5.23 add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent
 ```
 
-Use the `repo` + `path` fields from `skills-config.json` when a skill is **not**
+Use the `repo` + `path` fields from `skills-config.yaml` when a skill is **not**
 in the main skills repo (chatqna, vss, multimodal-embedding, vdms, model-download
 live in `open-edge-platform/edge-ai-libraries`; getitune/geti and physicalai in
 their own repos).
@@ -85,6 +85,6 @@ their own repos).
 ## 6. Keeping the catalog in sync
 
 When the upstream index changes, update the rows in
-[`SKILL_CATALOG.md`](SKILL_CATALOG.md) to match `skills-config.json`. Keep the
+[`SKILL_CATALOG.md`](SKILL_CATALOG.md) to match `skills-config.yaml`. Keep the
 mapping **business-objective-first** (what the user says → skill), not
 technology-first.

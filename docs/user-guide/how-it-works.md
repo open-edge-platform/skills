@@ -75,21 +75,21 @@ Index sync and compliance reporting use the same loader and pinned dependencies.
 Dry runs do not install or write files; README preview requires an existing
 `skills-lock.json`, otherwise table generation is skipped.
 
-### Legacy JSON compatibility
+### Catalog format and schema
 
-The default catalog is YAML; no second editable JSON catalog is maintained.
-The readers still accept explicit `.json` paths (and custom `.yaml`/`.yml` paths).
-The index updater's `--config` and `--base-config` options retain this support so
-historical JSON base commits can be compared with YAML changes without reporting
-every skill as newly added. CI selects the catalog format actually present at the
-base commit and fails if neither or both canonical files exist.
+Catalog readers accept only `.yaml` and `.yml` paths, including the index updater's
+`--config` and `--base-config` options. Downstream automation should consume the
+YAML catalog directly.
 
-Downstream automation that downloaded the old JSON catalog must switch to YAML
-or explicitly convert the parsed data to JSON for its own use. Runtime loaders
-reject coexisting canonical JSON and YAML files rather than silently choosing one.
-Keep legacy JSON reading until historical comparisons and downstream consumers no
-longer require it. To roll back the format switch, restore the JSON catalog and
-its workflow/default paths together; dual-format readers can remain.
+The schema remains [`skills-config.schema.json`](../../skills-config.schema.json).
+JSON Schema describes the parsed data structure, not the catalog's file syntax,
+so it validates YAML mappings and lists without a separate YAML schema. Both the
+shared loader and `check-jsonschema` use this same schema.
+
+CI compares the current catalog with the base commit's YAML catalog when present.
+If the base commit predates the YAML catalog, CI checks **all** configured upstream
+skills instead of using a baseline. Invalid base commits or malformed existing
+base catalogs still fail validation.
 
 ## skills-lock.json
 

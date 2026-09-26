@@ -516,7 +516,7 @@ def main():
     parser.add_argument("--base-config",
                         help="With --check-only, only check skills added or relocated relative to this config.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG),
-                        help="Path to the YAML catalog (or an explicit legacy JSON catalog).")
+                        help="Path to the YAML catalog (.yaml or .yml).")
     args = parser.parse_args()
 
     try:

@@ -27,7 +27,6 @@ jobs:
         with:
           files_yaml: |
             test:
-              - "skills-config.json"
               - "skills-config.yaml"
               - "skills-config.schema.json"
               - "scripts/skills_config.py"
@@ -78,33 +77,25 @@ jobs:
             echo "::error::Invalid BASE_SHA"
             exit 1
           fi
-          yaml_exists=false
-          json_exists=false
-          if git cat-file -e "${BASE_SHA}:skills-config.yaml" 2>/dev/null; then yaml_exists=true; fi
-          if git cat-file -e "${BASE_SHA}:skills-config.json" 2>/dev/null; then json_exists=true; fi
-          if [[ "$yaml_exists" == true && "$json_exists" == true ]]; then
-            echo "::error::Base commit contains both YAML and JSON catalogs"
-            exit 1
-          elif [[ "$yaml_exists" == true ]]; then
-            extension=yaml
-          elif [[ "$json_exists" == true ]]; then
-            extension=json
+          git cat-file -e "${BASE_SHA}^{commit}"
+          if git cat-file -e "${BASE_SHA}:skills-config.yaml" 2>/dev/null; then
+            base_config="${RUNNER_TEMP}/skills-config.base.yaml"
+            git show "${BASE_SHA}:skills-config.yaml" > "$base_config"
+            echo "path=$base_config" >> "$GITHUB_OUTPUT"
           else
-            echo "::error::Base commit has no skills catalog"
-            exit 1
+            echo "::notice::Base commit has no YAML catalog; checking all configured skills"
           fi
-          base_config="${RUNNER_TEMP}/skills-config.base.${extension}"
-          git show "${BASE_SHA}:skills-config.${extension}" > "$base_config"
-          echo "path=$base_config" >> "$GITHUB_OUTPUT"
 
       - name: Check added skills exist
         env:
           GITHUB_TOKEN: ${{ github.token }}
           BASE_CONFIG: ${{ steps.base-config.outputs.path }}
-        run: >-
-          python3 scripts/update_skills_index.py
-          --check-only
-          --base-config "$BASE_CONFIG"
+        run: |
+          args=(--check-only)
+          if [[ -n "$BASE_CONFIG" ]]; then
+            args+=(--base-config "$BASE_CONFIG")
+          fi
+          python3 scripts/update_skills_index.py "${args[@]}"
 
   required-check:
     name: Required Check Skills Config

@@ -238,5 +238,5 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
   custom-code vision app. All delegates other than `metro-ai-apps-recipe` live in
   `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
-  in sync with the upstream `skills-config.json` — see
+  in sync with the upstream `skills-config.yaml` — see
   [`references/DISCOVERY.md`](references/DISCOVERY.md).

@@ -3,7 +3,7 @@
 Curated routing table for the `metro-ai-app-builder` orchestrator. Map the
 user's **business objective** (Step 1 answers) to a **primary** skill and any
 **supporting** skills, then plan + delegate. Mirror of the upstream
-`open-edge-platform/skills` `skills-config.json`;
+`open-edge-platform/skills` `skills-config.yaml`;
 refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 
 > All delegate skills except `metro-ai-app-recipe` (which lives in this repo)

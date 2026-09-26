@@ -40,15 +40,6 @@ class _CatalogLoader(yaml.SafeLoader):
         return mapping
 
 
-def _unique_json_object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"Duplicate catalog key: {key!r}")
-        result[key] = value
-    return result
-
-
 def _validate_git_ref(ref: str) -> str:
     """Reject ref names that are unsafe to pass to git/GitHub tooling."""
     ref = ref.strip()
@@ -108,19 +99,13 @@ def validate_config_entries(entries: list[dict]) -> None:
 
 
 def load_skills_config(config_path: Path) -> list[dict]:
-    """Read YAML or explicit legacy JSON, failing before any partial catalog is used."""
+    """Read YAML, failing before any partial catalog is used."""
     config_path = Path(config_path)
     try:
-        if config_path.name in {"skills-config.yaml", "skills-config.json"}:
-            if all((config_path.parent / name).exists() for name in ("skills-config.yaml", "skills-config.json")):
-                raise ValueError("Both canonical YAML and JSON catalogs exist; keep only one")
+        if config_path.suffix not in {".yaml", ".yml"}:
+            raise ValueError("Catalog extension must be .yaml or .yml")
         text = config_path.read_text(encoding="utf-8")
-        if config_path.suffix == ".json":
-            data = json.loads(text, object_pairs_hook=_unique_json_object)
-        elif config_path.suffix in {".yaml", ".yml"}:
-            data = yaml.load(text, Loader=_CatalogLoader)
-        else:
-            raise ValueError("Catalog extension must be .yaml, .yml, or .json")
+        data = yaml.load(text, Loader=_CatalogLoader)
         if not isinstance(data, dict) or set(data) != {"products"}:
             raise ValueError("Catalog must be a mapping containing only 'products'")
         entries = data["products"]
