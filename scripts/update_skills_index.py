@@ -282,6 +282,7 @@ def relocate_catalog_references(skills_root: Path, config_entries: list[dict]) -
     for markdown in skills_root.rglob("*.md"):
         original = markdown.read_text(encoding="utf-8")
         updated = pattern.sub(replace, original)
+        updated = re.sub(r"\bskills-config\.json\b", DEFAULT_CONFIG.name, updated)
         updated = re.sub(
             r"npx skills@[\d.]+ add open-edge-platform/skills\b",
             "npx skills@1.7.0 add open-edge-platform/skills",

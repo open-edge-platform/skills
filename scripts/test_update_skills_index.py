@@ -239,6 +239,27 @@ class GroupedCatalogTests(unittest.TestCase):
         self.assertEqual(env["GIT_CONFIG_KEY_1"], "core.symlinks")
         self.assertEqual(env["GIT_CONFIG_VALUE_1"], "false")
 
+    def test_sync_normalizes_upstream_catalog_references(self):
+        obsolete_catalog = index.DEFAULT_CONFIG.with_suffix(".json").name
+        source = (
+            f"Catalog: `{obsolete_catalog}`\n"
+            f"curl -fsSL https://raw.githubusercontent.com/open-edge-platform/skills/main/{obsolete_catalog}\n"
+            "Schema: skills-config.schema.json\nLock: skills-lock.json\n"
+        )
+
+        def upstream_cli(cmd, cwd, **kwargs):
+            self.fake_cli(cmd, cwd)
+            (cwd / ".agents/skills/example-one/references/guide.md").write_text(source)
+            return 0
+
+        for _ in range(2):
+            with patch.object(index, "_run", side_effect=upstream_cli):
+                self.assertTrue(index.install_skills(self.config, self.root))
+            published = self.root / ".agents/skills/example/example-one/references/guide.md"
+            self.assertEqual(published.read_text(), source.replace(obsolete_catalog, index.DEFAULT_CONFIG.name))
+            index.relocate_catalog_references(published.parent, self.config)
+            self.assertEqual(published.read_text(), source.replace(obsolete_catalog, index.DEFAULT_CONFIG.name))
+
 
 if __name__ == "__main__":
     unittest.main()

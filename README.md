@@ -71,8 +71,9 @@ install skills into the agent's normal flat layout. Do not run `skills update`
 directly against this managed catalog; use the index synchronization script.
 The generated `skills-lock.json` remains untracked and retains upstream paths.
 README-only regeneration also works without that lock file. Imported Markdown
-links targeting this catalog are relocated during synchronization; links to
-upstream products are unchanged.
+links targeting this catalog are relocated during synchronization, and obsolete
+catalog filenames are normalized to `skills-config.yaml`; links to upstream
+products are unchanged.
 
 For safety, synchronization disables Git symlink checkout: upstream symlinks are
 materialized as link-target text, never followed into the runner's filesystem.
