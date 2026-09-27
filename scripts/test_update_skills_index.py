@@ -165,7 +165,7 @@ class GroupedCatalogTests(unittest.TestCase):
             index.validate_config_entries(duplicate)
         duplicate = copy.deepcopy(self.config) + copy.deepcopy(self.config)
         duplicate[1]["slug"] = "different"
-        with self.assertRaisesRegex(ValueError, "duplicate skill name"):
+        with self.assertRaisesRegex(ValueError, "Duplicate skill name"):
             index.validate_config_entries(duplicate)
 
     def test_empty_catalog_or_product_is_rejected(self):

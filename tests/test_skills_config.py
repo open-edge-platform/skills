@@ -29,6 +29,7 @@ class CatalogTests(unittest.TestCase):
         self.data = {
             "products": [{
                 "product": "Example",
+                "slug": "example",
                 "repo": "example/skills",
                 "ref": "main",
                 "path": "skills/runtime",
@@ -94,6 +95,7 @@ class CatalogTests(unittest.TestCase):
 
     def test_schema_and_source_safety(self):
         for field, values in {
+            "slug": ("", "../escape", "/absolute", "-option", "with space", "bad\n", None),
             "repo": ("bad", "-option", "example/repo\n"),
             "ref": ("", " ", None, 123, True, "../main", "-main", "main\nbranch", "main\x00x"),
             "path": ("", "../skills", "skills/../bad", "skills//bad", "-option/skills"),
@@ -110,7 +112,7 @@ class CatalogTests(unittest.TestCase):
 
     def test_required_unknown_and_duplicate_fields(self):
         cases = []
-        for field in ("product", "repo", "ref", "skills"):
+        for field in ("product", "slug", "repo", "ref", "skills"):
             data = copy.deepcopy(self.data)
             del data["products"][0][field]
             cases.append(data)
@@ -231,7 +233,7 @@ class CatalogTests(unittest.TestCase):
         lock = {}
         for skill in entries[0]["skills"]:
             name = skill["name"]
-            directory = skills_root / name
+            directory = skills_root / entries[0]["slug"] / name
             directory.mkdir(parents=True)
             (directory / "SKILL.md").write_text(f"---\nname: {name}\n---\n", encoding="utf-8")
             lock[name] = {
@@ -258,17 +260,17 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(any("npx skills remove" in line for line in plans[0]))
         self.assertEqual(tables[0], tables[1])
         self.assertIn("**1 products, 2 skills**", tables[0])
-        self.assertIn("/tree/main/.agents/skills/second-skill", tables[0])
+        self.assertIn("/tree/main/.agents/skills/example/second-skill", tables[0])
 
     def test_compliance_mapping_and_links_are_format_independent(self):
-        (self.root / "first-skill" / "example-prompts").mkdir(parents=True)
+        (self.root / "example" / "first-skill" / "example-prompts").mkdir(parents=True)
         with patch.dict("os.environ", {"GITHUB_REF_NAME": "main"}), redirect_stdout(io.StringIO()):
             old = report.SkillComplianceReportGenerator(self.root, skills_config_path=str(self.yml_path))
             new = report.SkillComplianceReportGenerator(self.root, skills_config_path=str(self.yaml_path))
         self.assertEqual(old.skills_config, {"first-skill": "Example", "second-skill": "Example"})
         self.assertEqual(old.skills_config, new.skills_config)
         self.assertEqual(old.skills_prompts_url, new.skills_prompts_url)
-        self.assertTrue(new.skills_prompts_url["first-skill"].endswith("/first-skill/example-prompts"))
+        self.assertTrue(new.skills_prompts_url["first-skill"].endswith("/example/first-skill/example-prompts"))
         self.assertEqual(new.skills_prompts_url["second-skill"], "")
 
     def test_compliance_report_rejects_invalid_or_missing_config(self):
@@ -351,6 +353,48 @@ class CatalogTests(unittest.TestCase):
             request.return_value.__enter__.return_value.status = 200
             self.assertTrue(index.check_skills_exist(catalog.load_skills_config(self.yaml_path)))
             self.assertEqual(request.call_count, 2)
+
+    def test_yaml_base_before_grouping_is_only_accepted_for_comparison(self):
+        data = copy.deepcopy(self.data)
+        del data["products"][0]["slug"]
+        base = self.write("base.yaml", yaml.safe_dump(data))
+        with self.assertRaisesRegex(ValueError, "slug"):
+            catalog.load_skills_config(base)
+        with (
+            patch.object(sys, "argv", ["update_skills_index.py", "--check-only",
+                                      "--config", str(self.yaml_path), "--base-config", str(base)]),
+            patch.object(index, "urlopen") as request,
+            redirect_stderr(io.StringIO()),
+        ):
+            index.main()
+            request.assert_not_called()
+        data["products"][0]["repo"] = "invalid"
+        base.write_text(yaml.safe_dump(data))
+        with self.assertRaises(ValueError):
+            catalog.load_skills_config(base, require_slug=False)
+
+    def test_duplicate_slugs_rejected_even_with_distinct_skills(self):
+        data = copy.deepcopy(self.data)
+        other = copy.deepcopy(data["products"][0])
+        other["skills"] = [{"name": "third-skill"}]
+        data["products"].append(other)
+        with self.assertRaisesRegex(ValueError, "duplicate product slug"):
+            catalog.load_skills_config(self.write("duplicates.yaml", yaml.safe_dump(data)))
+
+    def test_repository_grouped_catalog_matches_configuration(self):
+        entries = catalog.load_skills_config(catalog.DEFAULT_CONFIG)
+        skills_root = REPO_ROOT / ".agents" / "skills"
+        expected = {
+            f"{entry['slug']}/{skill['name']}/SKILL.md"
+            for entry in entries for skill in entry["skills"]
+        }
+        actual = {path.relative_to(skills_root).as_posix() for path in skills_root.rglob("SKILL.md")}
+        self.assertEqual(actual, expected)
+        with patch.object(index, "_skills_repo_branch", return_value="main"), redirect_stderr(io.StringIO()):
+            table = index.build_skills_table({}, skills_root, entries)
+        self.assertIn(f"**{len(entries)} products, {len(expected)} skills**", table)
+        for path in expected:
+            self.assertIn(f"/.agents/skills/{path.removesuffix('/SKILL.md')}", table)
 
 
 if __name__ == "__main__":
