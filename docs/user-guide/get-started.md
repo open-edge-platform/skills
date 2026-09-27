@@ -38,6 +38,20 @@ There are two installation modes:
 
 ## Install all skills from this repo
 
+Run these commands from a **separate consumer project**, not from this skills
+catalog checkout:
+
+```bash
+cd /path/to/your-project
+```
+
+The source catalog uses
+`.agents/skills/<product-slug>/<skill-name>/SKILL.md`. `npx skills` discovers
+those skills and installs them by unchanged name in a flat layout such as
+`.agents/skills/<skill-name>/SKILL.md`, with agent-specific links or copies.
+Direct agent discovery of nested catalog directories is not guaranteed across
+agents or versions; installing into your consumer project avoids relying on it.
+
 ```bash
 # Symlink — interactive (recommended for local development)
 npx skills add open-edge-platform/skills
@@ -54,7 +68,7 @@ npx skills add open-edge-platform/skills --agent claude-code --copy --yes
 
 ## Install a specific skill
 
-
+Select the unchanged skill name, without its product slug:
 
 ```bash
 # Symlink a single skill (interactive agent selection)

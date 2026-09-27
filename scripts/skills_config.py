@@ -71,15 +71,25 @@ def _validate_skill_path(path: str) -> str:
     return cleaned
 
 
-def validate_config_entries(entries: list[dict]) -> None:
+def validate_config_entries(entries: list[dict], require_slug: bool = True) -> None:
     """Validate structure and source values, then normalize refs and paths."""
     schema = json.loads((REPO_ROOT / "skills-config.schema.json").read_text(encoding="utf-8"))
+    if not require_slug:
+        schema["$defs"]["product"]["required"].remove("slug")
     error = next(Draft202012Validator(schema).iter_errors({"products": entries}), None)
     if error:
         location = ".".join(str(part) for part in error.absolute_path) or "<root>"
         raise ValueError(f"{location}: {error.message}")
     names = set()
+    slugs = set()
     for entry in entries:
+        if "slug" in entry:
+            slug = entry["slug"]
+            if not _SKILL_NAME_RE.fullmatch(slug):
+                raise ValueError(f"unsafe product slug: {slug!r}")
+            if slug in slugs:
+                raise ValueError(f"duplicate product slug: {slug!r}")
+            slugs.add(slug)
         if not _REPO_RE.fullmatch(entry["repo"]):
             raise ValueError(f"unsafe repo value: {entry['repo']!r}")
         if not entry["product"].strip():
@@ -98,7 +108,7 @@ def validate_config_entries(entries: list[dict]) -> None:
                 skill["path"] = _validate_skill_path(skill["path"])
 
 
-def load_skills_config(config_path: Path) -> list[dict]:
+def load_skills_config(config_path: Path, require_slug: bool = True) -> list[dict]:
     """Read YAML, failing before any partial catalog is used."""
     config_path = Path(config_path)
     try:
@@ -109,7 +119,7 @@ def load_skills_config(config_path: Path) -> list[dict]:
         if not isinstance(data, dict) or set(data) != {"products"}:
             raise ValueError("Catalog must be a mapping containing only 'products'")
         entries = data["products"]
-        validate_config_entries(entries)
+        validate_config_entries(entries, require_slug=require_slug)
         return entries
     except (OSError, ValueError, yaml.YAMLError) as error:
         raise ValueError(f"{config_path}: {error}") from error

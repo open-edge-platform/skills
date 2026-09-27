@@ -43,7 +43,23 @@ available to your skill body and reference files.
 
 ## Monorepo Layout
 
-Place all repo-wide skills under a single root-level skills tree. Scope a skill
+### Source catalog versus installed skills
+
+This repository groups source skills at
+`.agents/skills/<product-slug>/<skill-name>/SKILL.md`. Product directories are
+catalog containers, not skills; the leaf skill names remain unchanged.
+Recursive discovery of this nested source layout is **not guaranteed across
+agents or versions**.
+
+For reliable use, run `npx skills add open-edge-platform/skills` from a
+**separate consumer project**, not from this catalog checkout. The installer
+discovers catalog skills and installs them by unchanged name in a flat layout,
+such as `.agents/skills/<skill-name>/SKILL.md`, with agent-specific links or
+copies as appropriate. See [Get Started](docs/user-guide/get-started.md).
+
+### Consumer project layout
+
+Place all installed repo-wide skills under a single root-level skills tree. Scope a skill
 to a specific package through its `description` and `compatibility` fields, not
 by nesting skill directories inside package folders.
 

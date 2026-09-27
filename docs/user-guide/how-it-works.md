@@ -6,7 +6,7 @@ This guide explains how agent skills are discovered, loaded, and kept up to date
 
 ## Skill Loading
 
-A **skill** is a `SKILL.md` file that contains YAML frontmatter and task-specific instructions. Coding agents (GitHub Copilot, Claude Code, OpenAI Codex) scan their configured skill directories on startup and index every installed `SKILL.md`. When a user prompt matches a skill's `description` field, the agent injects that skill's instructions into its context automatically — no explicit invocation needed.
+A **skill** is a `SKILL.md` file that contains YAML frontmatter and task-specific instructions. Coding agents (GitHub Copilot, Claude Code, OpenAI Codex) discover installed skills in their supported skill directories. Discovery rules vary by agent and version; recursive discovery of nested source directories is not universally guaranteed. When a user prompt matches a skill's `description` field, the agent can load that skill's instructions into its context automatically.
 
 The `SKILL.md` frontmatter format:
 
@@ -21,7 +21,30 @@ description: >
 
 ## Skills Directory Layout
 
-Skills installed by `npx skills` land in `.agents/skills/<skill-name>/SKILL.md` relative to the project or global config root. The `--agent universal` flag restricts installation to `.agents/skills/` only, avoiding agent-specific subdirectories.
+### Source catalog
+
+This repository groups skills by product:
+
+```text
+.agents/skills/<product-slug>/<skill-name>/SKILL.md
+```
+
+The product slug comes from the `slug` field in `skills-config.yaml`. A product
+directory is only a container; each skill keeps its existing directory name
+and frontmatter `name`. The configuration's upstream `path` and `ref` still
+identify the original source location and revision, not the local product group.
+
+### Installed agent layout
+
+Install the catalog into a **separate consumer project**, rather than relying on
+an agent to discover nested skills directly in this checkout. `npx skills`
+discovers the source catalog and installs skills using their unchanged names,
+without the product-directory level.
+
+Project-level skills installed by `npx skills` use the flat layout
+`.agents/skills/<skill-name>/SKILL.md`, with agent-specific links or copies as
+appropriate. The `--agent universal` flag restricts installation to
+`.agents/skills/` only, avoiding agent-specific directories.
 
 ```
 .agents/
@@ -39,7 +62,9 @@ Skills installed by `npx skills` land in `.agents/skills/<skill-name>/SKILL.md` 
 which upstream skills this repository synchronizes. It is separate from the YAML
 frontmatter in each `SKILL.md`, which describes the skill to an agent.
 
-Each product specifies `product`, `repo`, `ref`, `skills`, and an optional `path`.
+Each product specifies `product`, `slug`, `repo`, `ref`, `skills`, and an optional `path`.
+Slugs must be unique lowercase names containing letters, digits, or hyphens and
+starting with a letter or digit. They identify local product directories only.
 Each skill specifies `name` and optionally its own `path`, which overrides the
 product path. Paths identify the directory containing skill directories, not the
 `SKILL.md` file itself. Skill names must be unique across the whole catalog.
@@ -65,6 +90,7 @@ From a checkout at `/home/runner/work/skills/skills`:
 python3 -m pip install -r /home/runner/work/skills/skills/requirements.txt
 python3 /home/runner/work/skills/skills/scripts/skills_config.py
 python3 -m unittest discover -s /home/runner/work/skills/skills/tests -v
+python3 -m unittest discover -s /home/runner/work/skills/skills/scripts -p 'test_*.py' -v
 python3 /home/runner/work/skills/skills/scripts/update_skills_index.py --dry-run
 ```
 
@@ -72,8 +98,8 @@ Adjust the checkout prefix for your machine. The shared validator enforces both
 the JSON Schema and the stricter catalog rules. The existing `check-jsonschema`
 command also accepts this YAML file, but does not replace the shared validator.
 Index sync and compliance reporting use the same loader and pinned dependencies.
-Dry runs do not install or write files; README preview requires an existing
-`skills-lock.json`, otherwise table generation is skipped.
+Dry runs do not install or write files; README preview reads the grouped catalog
+and works without `skills-lock.json`.
 
 ### Catalog format and schema
 
@@ -89,7 +115,9 @@ shared loader and `check-jsonschema` use this same schema.
 CI compares the current catalog with the base commit's YAML catalog when present.
 If the base commit predates the YAML catalog, CI checks **all** configured upstream
 skills instead of using a baseline. Invalid base commits or malformed existing
-base catalogs still fail validation.
+base catalogs still fail validation. Only baseline comparisons permit missing
+product slugs so catalogs from before product grouping remain comparable; current
+catalogs always require slugs.
 
 ## skills-lock.json
 

@@ -185,7 +185,7 @@ Only after confirmation:
    [`references/DISCOVERY.md`](references/DISCOVERY.md)):
 
    ```bash
-   npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
+   npx skills@1.7.0 add open-edge-platform/skills --skill <skill-name>
    ```
 
 2. **Invoke the delegate skill**, passing the parameters you inferred in Step 3.

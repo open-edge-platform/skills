@@ -34,6 +34,7 @@ jobs:
               - "scripts/generate_skill_compliance_report.py"
               - "requirements.txt"
               - "tests/**"
+              - "scripts/test_update_skills_index.py"
               - ".github/workflows/check-skills-config.yml"
 
   check-skills:
@@ -67,6 +68,9 @@ jobs:
 
       - name: Test catalog migration and consumers
         run: python3 -m unittest discover -s tests -v
+
+      - name: Test catalog synchronization
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Read base skills config
         id: base-config

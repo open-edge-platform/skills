@@ -2,18 +2,21 @@
 # This catalog selects upstream skills; per-skill paths override product paths.
 products:
 - product: OEP CLI Installer
+  slug: openedge-cli
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: frameworks/oep-installer-cli/.github/skills
   skills:
   - name: openedge-cli
 - product: DL Streamer
+  slug: dlstreamer
   repo: open-edge-platform/dlstreamer
   ref: main
   path: .github/skills
   skills:
   - name: dlstreamer-coding-agent
 - product: Chat Question and Answer
+  slug: chatqna
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: sample-applications/chat-question-and-answer-core/.github/skills
@@ -21,6 +24,7 @@ products:
   - name: chatqna-docker-deploy
   - name: chatqna-helm-deploy
 - product: Video Search and Summarization
+  slug: vss
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: sample-applications/video-search-and-summarization/.github/skills
@@ -30,36 +34,42 @@ products:
   - name: vss-search-index
   - name: vss-summarize-video
 - product: Multimodal Embedding Serving Microservice
+  slug: multimodal-embedding-serving
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: microservices/multimodal-embedding-serving/.github/skills
   skills:
   - name: multimodal-embedding-serving-user
 - product: Multimodal DataPrep microservice
+  slug: multimodal-dataprep
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills
   skills:
   - name: multimodal-dataprep-user
 - product: Model Download
+  slug: model-download
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: microservices/model-download/.github/skills
   skills:
   - name: model-download-user
 - product: DL Streamer Pipeline Server
+  slug: dlstreamer-pipeline-server
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: microservices/dlstreamer-pipeline-server/.github/skills
   skills:
   - name: dlsps-user
 - product: Time Series Analytics Microservice
+  slug: time-series-analytics
   repo: open-edge-platform/edge-ai-libraries
   ref: main
   path: microservices/time-series-analytics/.github/skills
   skills:
   - name: time-series-analytics-user
 - product: Physical AI Train
+  slug: physicalai-train
   repo: open-edge-platform/physical-ai-studio
   ref: main
   path: skills/library
@@ -70,6 +80,7 @@ products:
   - name: physicalai-train-training-a-policy
   - name: physicalai-train-working-with-datasets
 - product: Physical AI Runtime
+  slug: physicalai-runtime
   repo: openvinotoolkit/physicalai
   ref: main
   path: skills/runtime
@@ -83,6 +94,7 @@ products:
   - name: physicalai-runtime-adding-a-camera-backend
     path: skills/capture
 - product: Geti
+  slug: geti
   repo: open-edge-platform/geti
   ref: develop
   path: skills/application
@@ -101,30 +113,35 @@ products:
   - name: getitune-optimizing-a-model
     path: skills/library
 - product: Scenescape
+  slug: scenescape
   repo: open-edge-platform/scenescape
   ref: main
   path: .github/skills
   skills:
   - name: scenescape-setup
 - product: Metro AI Suite - AI App Builder
+  slug: metro-ai-app-builder
   repo: open-edge-platform/edge-ai-suites
   ref: main
   path: metro-ai-suite/prompt-library/.github/skills
   skills:
   - name: metro-ai-app-builder
 - product: Metro AI Suite - Vision AI App Recipe
+  slug: metro-ai-app-recipe
   repo: open-edge-platform/edge-ai-suites
   ref: main
   path: metro-ai-suite/metro-vision-ai-app-recipe/.github/skills
   skills:
   - name: metro-ai-app-recipe
 - product: UAV Mission Compute SDK
+  slug: uav-mission-compute-sdk
   repo: open-edge-platform/edge-ai-suites
   ref: main
   path: federal-and-aerospace-ai-suite/uav-mission-compute-sdk/skills
   skills:
   - name: uav-mission-compute-sdk
 - product: Anomalib
+  slug: anomalib
   repo: open-edge-platform/anomalib
   ref: main
   path: .agents/skills
