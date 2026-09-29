@@ -56,6 +56,6 @@ jobs:
         uses: open-edge-platform/geti-ci/actions/bandit@b9abdfc0ecbe989816a7f2cf582af771f9abbb87 # bandit/v0.1.1
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
-          severity-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
-          confidence-level: ${{ github.event_name == 'pull_request' && 'MEDIUM' || 'LOW' }}
+          severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || 'LOW' }}
+          confidence-level: ${{ github.event_name == 'pull_request' && 'HIGH' || 'LOW' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
