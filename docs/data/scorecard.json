@@ -1,0 +1,188 @@
+{
+  "scorecard": {
+    "snapshot_date": "2026-09-30",
+    "generated_at": "2026-09-30T05:57:11Z",
+    "raw_counts": {
+      "oep_products_families": 14,
+      "oep_skills": 37,
+      "nvidia_products": 48,
+      "nvidia_skills": 387,
+      "nvidia_top_products": [
+        {
+          "product": "TAO Toolkit",
+          "skills": 76
+        },
+        {
+          "product": "DOCA",
+          "skills": 60
+        },
+        {
+          "product": "Jetson BSP",
+          "skills": 24
+        },
+        {
+          "product": "NeMo MBridge",
+          "skills": 20
+        },
+        {
+          "product": "Video Search and Summarization",
+          "skills": 15
+        },
+        {
+          "product": "Medical AI Skills",
+          "skills": 14
+        },
+        {
+          "product": "Jetson Device",
+          "skills": 14
+        },
+        {
+          "product": "Isaac for Healthcare Workflows",
+          "skills": 14
+        }
+      ]
+    },
+    "taxonomy": {
+      "total_jobs": 42,
+      "oep_jobs_covered": 37,
+      "oep_jobs_covered_pct": 88.1,
+      "nvidia_jobs_covered": 28,
+      "nvidia_jobs_covered_pct": 66.7,
+      "oep_e2e_jobs": 28,
+      "overlap_jobs": 23,
+      "oep_only_jobs": 14,
+      "nvidia_only_jobs": 5,
+      "nvidia_only_job_ids": [
+        "VIS-04",
+        "VSS-05",
+        "VSS-06",
+        "RAG-03",
+        "PAI-11"
+      ],
+      "mean_skills_per_oep_covered_job": 1,
+      "mean_skills_per_nvidia_covered_job": 2,
+      "median_skills_per_oep_covered_job": 1,
+      "median_skills_per_nvidia_covered_job": 2.0,
+      "nvidia_jobs_skills_ge_3": [
+        "VIS-01",
+        "VIS-02",
+        "SPA-01",
+        "VSS-01",
+        "VSS-03",
+        "VSS-06",
+        "RAG-01",
+        "CVT-03",
+        "PAI-11"
+      ],
+      "oep_skills_mapped": 37,
+      "oep_skills_total": 37,
+      "oep_skills_jobs_gt_1": [],
+      "entry_skills": [
+        "metro-ai-app-builder"
+      ]
+    },
+    "depth": {
+      "oep_median_words": 740,
+      "oep_mean_words": 929,
+      "oep_depth_floor_pct": 78.4,
+      "oep_thin_skills": [
+        "getitune-discovering-models",
+        "getitune-running-inference",
+        "physicalai-runtime-adding-a-camera-backend",
+        "physicalai-runtime-configuring-inference-pipeline",
+        "physicalai-runtime-running-policy-on-robot"
+      ],
+      "nvidia_skills_measured": 0,
+      "nvidia_median_words": null,
+      "nvidia_depth_floor_pct": null
+    },
+    "oep_skill_set": [
+      "anomalib-adding-a-datamodule",
+      "anomalib-adding-a-model",
+      "anomalib-benchmarking",
+      "anomalib-tiled-ensemble",
+      "anomalib-training",
+      "chatqna-docker-deploy",
+      "chatqna-helm-deploy",
+      "dlsps-user",
+      "dlstreamer-coding-agent",
+      "geti-using-the-pipeline",
+      "getitune-discovering-models",
+      "getitune-exporting-a-model",
+      "getitune-optimizing-a-model",
+      "getitune-preparing-datasets",
+      "getitune-running-inference",
+      "getitune-training-a-model",
+      "metro-ai-app-builder",
+      "metro-ai-app-recipe",
+      "model-download-user",
+      "multimodal-dataprep-user",
+      "multimodal-embedding-serving-user",
+      "physicalai-runtime-adding-a-camera-backend",
+      "physicalai-runtime-adding-a-robot-integration",
+      "physicalai-runtime-configuring-inference-pipeline",
+      "physicalai-runtime-loading-exported-policies",
+      "physicalai-runtime-running-policy-on-robot",
+      "physicalai-train-adding-a-policy",
+      "physicalai-train-benchmarking-a-policy",
+      "physicalai-train-exporting-and-validating",
+      "physicalai-train-training-a-policy",
+      "physicalai-train-working-with-datasets",
+      "scenescape-setup",
+      "time-series-analytics-user",
+      "vss-deploy",
+      "vss-deploy-helm",
+      "vss-search-index",
+      "vss-summarize-video"
+    ],
+    "nvidia_skill_set_size": 387
+  },
+  "drift": {
+    "unmapped_oep_skills": [],
+    "stale_oep_refs": [],
+    "stale_nvidia_refs": [],
+    "unmapped_nvidia_overlap": [
+      "aiq-research",
+      "amc-run-rtsp-calibration",
+      "amc-run-sample-calibration",
+      "i4h-lerobot-viz",
+      "i4h-workflow-create",
+      "i4h-workflow-dataset-annotate",
+      "i4h-workflow-dataset-mimic",
+      "i4h-workflow-dataset-replay",
+      "i4h-workflow-scene-edit",
+      "i4h-workflow-setup",
+      "i4h-workflow-train-rl",
+      "nemo-retriever-mcp",
+      "omniverse-realtime-viewer",
+      "omniverse-usd-performance-tuning",
+      "paidf-cosmos-predict",
+      "paidf-orchestration-setup",
+      "paidf-orchestration-write-dag",
+      "physical-ai-event-video-generation",
+      "physical-ai-image-attribute-augmentation",
+      "physical-ai-infrastructure-setup-and-resilient-scaling",
+      "physical-ai-video-data-augmentation",
+      "rtvi-cv-customize-model",
+      "rtvi-vlm-customize-model",
+      "tao-analyze-changenet-rca",
+      "tao-analyze-detection-kpi",
+      "tao-analyze-gaps-od-map",
+      "tao-analyze-gaps-visual-changenet",
+      "tao-analyze-gaps-vlm-bcq",
+      "tao-artifacts",
+      "tao-data-io",
+      "tao-finetune-clip",
+      "tao-finetune-cosmos-embed",
+      "tao-finetune-cosmos-reason",
+      "tao-finetune-nv-tesseract-ad-diffusion",
+      "tao-finetune-nv-tesseract-forecasting",
+      "tao-finetune-video-clip",
+      "tao-generate-anomalies",
+      "tao-generate-image-embeddings",
+      "tao-generate-image-grounding",
+      "tao-generate-referring-expressions"
+    ],
+    "new_oep_since_csv": []
+  }
+}
