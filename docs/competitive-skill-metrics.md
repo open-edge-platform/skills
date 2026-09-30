@@ -9,7 +9,7 @@ Refresh with the `competitive-skill-metrics` skill (`scripts/refresh_scorecard.p
 
 | Catalog | Products | Skills (raw) | Notes |
 |---------|----------|--------------|-------|
-| open-edge-platform/skills | 14 families / see README | **37** | Index in repo README; meta skill excluded |
+| open-edge-platform/skills | 16 families / see README | **39** | Index in repo README; meta skill excluded |
 | NVIDIA/skills | **48** | **~387** | Catalog README; top: TAO Toolkit ~76, DOCA ~60, Jetson BSP ~24 |
 
 Raw count favors API/docs sharding. This document defines a shared **job taxonomy** and a **scorecard** so both catalogs are judged on the same unit of value: a user job.
@@ -24,13 +24,13 @@ Companion data: [`data/job-catalog.csv`](data/job-catalog.csv) · [`data/scoreca
 <!-- BEGIN GENERATED:SCORECARD -->
 | # | Metric | How to compute | OEP (this snapshot) | NVIDIA (same job set) | Why it beats count |
 |---|--------|----------------|---------------------|------------------------|--------------------|
-| 1 | **Jobs covered** | Jobs with ≥1 mapped skill / total jobs | **37 / 42 (88.1%)** | **28 / 42 (66.7%)** | Same denominator |
-| 2 | **E2E jobs covered** | Jobs marked end-to-end with a full path | **28** | (see taxonomy; shards may stop at install/API) | “Can finish the outcome” |
-| 3 | **Median skill depth** | Median `SKILL.md` words of mapped skills | **~740 words** | n/a — pass `--clone-nvidia-depth` or `--nvidia-clone` | Hard to fake with empty folders |
+| 1 | **Jobs covered** | Jobs with ≥1 mapped skill / total jobs | **39 / 44 (88.6%)** | **28 / 44 (63.6%)** | Same denominator |
+| 2 | **E2E jobs covered** | Jobs marked end-to-end with a full path | **30** | (see taxonomy; shards may stop at install/API) | “Can finish the outcome” |
+| 3 | **Median skill depth** | Median `SKILL.md` words of mapped skills | **~702 words** | n/a — pass `--clone-nvidia-depth` or `--nvidia-clone` | Hard to fake with empty folders |
 | 4 | **Granularity health** | Mean skills-per-job; target band 1–3 | **1.00** | **~2.00**; ≥3 on VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, RAG-01, CVT-03, PAI-11 | Detects over-split |
 | 5 | **Entry / routing coverage** | Domains with an orchestrator or clear progressive entry | `metro-ai-app-builder` | Mostly leaf catalog; few business-intent routers | Users need not know leaf names |
 
-OEP depth floor (words ≥500 or refs >0): **78.4%**. NVIDIA depth floor: **n/a**.
+OEP depth floor (words ≥500 or refs >0): **76.9%**. NVIDIA depth floor: **n/a**.
 
 **Optional sixth (governance):** % of skills with evals + security scan + skill card / signature. NVIDIA markets this heavily; track it so the debate does not shift to “unverified.”
 <!-- END GENERATED:SCORECARD -->
@@ -160,6 +160,8 @@ Domains:
 | cv-train | Geti / GetiTune training lifecycle |
 | anomaly | Anomalib |
 | pai-train / pai-runtime / pai-sim | Physical AI train, runtime, sim/synth |
+| platform | Open Edge Platform installer CLI |
+| uav | UAV mission compute SDK |
 
 ### 3.1 Full job list
 
@@ -209,6 +211,8 @@ Success criteria are intentionally short so evals can assert them.
 | PAI-09 | pai-runtime | Add camera backend | N | physicalai-runtime-adding-a-camera-backend | — | Contributor; thin |
 | PAI-10 | pai-runtime | Add robot integration | N | physicalai-runtime-adding-a-robot-integration | — | Contributor; thin |
 | PAI-11 | pai-sim | CAD→sim, neural recon, synthetic/augment/auto-label | N | — | omniverse-*, physical-ai-*, paidf-* | **NVIDIA-only on taxonomy** |
+| CLI-01 | platform | Install / manage OEP components and profiles via openedge-cli | Y | openedge-cli | — | OEP-only |
+| UAV-01 | uav | Operate UAV Mission Compute SDK (PX4 telemetry, cameras, missions, edge AI demos) | Y | uav-mission-compute-sdk | — | OEP-only |
 
 Machine-readable copy: [`data/job-catalog.csv`](data/job-catalog.csv).
 
@@ -217,13 +221,13 @@ Machine-readable copy: [`data/job-catalog.csv`](data/job-catalog.csv).
 <!-- BEGIN GENERATED:AGGREGATES -->
 | Measure | OEP | NVIDIA (on this taxonomy) |
 |---------|-----|---------------------------|
-| Jobs covered | 37 / 42 | 28 / 42 |
-| OEP-only jobs | 14 | — |
+| Jobs covered | 39 / 44 | 28 / 44 |
+| OEP-only jobs | 16 | — |
 | NVIDIA-only jobs | — | 5 (VIS-04, VSS-05, VSS-06, RAG-03, PAI-11) |
 | Overlap jobs | 23 | 23 |
 | Mean skills / covered job | **1.00** | **~2.00** |
 | Jobs with NVIDIA skills/job ≥ 3 | — | VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, RAG-01, CVT-03, PAI-11 |
-| OEP skills mapped | 37 / 37 | — |
+| OEP skills mapped | 39 / 39 | — |
 | OEP jobs/skill > 1 | 0 (none) | — |
 
 **Reading:** Compare on jobs and skills-per-job. NVIDIA raw skill count is dominated by products outside this taxonomy (DOCA, Jetson BSP, NeMo MBridge, per-model TAO trains).
@@ -315,12 +319,12 @@ Use the **`competitive-skill-metrics`** skill to refresh inventories and patch g
 ### Drift report (auto)
 
 <!-- BEGIN GENERATED:DRIFT -->
-_Generated 2026-09-30T05:57:11Z_.
+_Generated 2026-09-30T06:03:33Z_.
 
 - **Unmapped OEP skills** (0): none
 - **Stale OEP refs in CSV** (0): none
 - **Stale / unresolved NVIDIA refs** (0): none
-- **OEP thin skills** (words <400 and no refs): `getitune-discovering-models`, `getitune-running-inference`, `physicalai-runtime-adding-a-camera-backend`, `physicalai-runtime-configuring-inference-pipeline`, `physicalai-runtime-running-policy-on-robot`
+- **OEP thin skills** (words <400 and no refs): `getitune-discovering-models`, `getitune-running-inference`, `openedge-cli`, `physicalai-runtime-adding-a-camera-backend`, `physicalai-runtime-configuring-inference-pipeline`, `physicalai-runtime-running-policy-on-robot`
 - **Unmapped NVIDIA overlap-product skills** (sample, review for remap): `aiq-research`, `amc-run-rtsp-calibration`, `amc-run-sample-calibration`, `i4h-lerobot-viz`, `i4h-workflow-create`, `i4h-workflow-dataset-annotate`, `i4h-workflow-dataset-mimic`, `i4h-workflow-dataset-replay`, `i4h-workflow-scene-edit`, `i4h-workflow-setup`, `i4h-workflow-train-rl`, `nemo-retriever-mcp`, `omniverse-realtime-viewer`, `omniverse-usd-performance-tuning`, `paidf-cosmos-predict` … +25 more
 <!-- END GENERATED:DRIFT -->
 
