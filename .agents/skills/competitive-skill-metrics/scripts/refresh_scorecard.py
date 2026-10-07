@@ -339,10 +339,7 @@ def measure_nvidia_depth(clone: Path, skill_names: list[str] | None = None) -> d
     return depth
 
 
-def maybe_clone_nvidia(dest: Path | None) -> Path:
-    if dest and dest.is_dir():
-        return dest
-    tmp = Path(tempfile.mkdtemp(prefix="nvidia-skills-"))
+def clone_nvidia(dest: Path) -> None:
     cmd = [
         "git",
         "clone",
@@ -350,10 +347,9 @@ def maybe_clone_nvidia(dest: Path | None) -> Path:
         "1",
         "--single-branch",
         "https://github.com/NVIDIA/skills.git",
-        str(tmp),
+        str(dest),
     ]
     subprocess.check_call(cmd)
-    return tmp
 
 
 def split_skills(cell: str) -> list[str]:
@@ -380,6 +376,11 @@ def expand_nvidia_refs(ref: str, nvidia_skills: set[str]) -> list[str]:
     return sorted(s for s in nvidia_skills if needle in s)
 
 
+def resolve_nvidia_cell(cell: str, nvidia_skills: set[str]) -> list[str]:
+    """Expand every ref in a CSV cell to the distinct NVIDIA skills it matches."""
+    return sorted({m for ref in split_skills(cell) for m in expand_nvidia_refs(ref, nvidia_skills)})
+
+
 def compute_scorecard(
     jobs: list[dict[str, str]],
     oep: CatalogInventory,
@@ -393,7 +394,7 @@ def compute_scorecard(
         return split_skills(row.get("oep_skills", ""))
 
     def nv_list(row: dict[str, str]) -> list[str]:
-        return split_skills(row.get("nvidia_skills", ""))
+        return resolve_nvidia_cell(row.get("nvidia_skills", ""), nvidia_set)
 
     total = len(jobs)
     oep_covered_rows = [r for r in jobs if oep_list(r)]
@@ -504,19 +505,15 @@ def compute_drift(
     oep_set = set(oep.skills)
     nvidia_set = set(nvidia.skills)
     mapped_oep = {s for r in jobs for s in split_skills(r.get("oep_skills", ""))}
-    mapped_nv_literals: set[str] = set()
+    mapped_nv: set[str] = set()
     stale_nv: list[str] = []
 
     for r in jobs:
         for ref in split_skills(r.get("nvidia_skills", "")):
-            if "*" in ref:
-                matches = expand_nvidia_refs(ref, nvidia_set)
-                if not matches:
-                    stale_nv.append(ref)
-                continue
-            mapped_nv_literals.add(ref)
-            if ref not in nvidia_set:
+            matches = expand_nvidia_refs(ref, nvidia_set)
+            if not matches:
                 stale_nv.append(ref)
+            mapped_nv.update(matches)
 
     overlap_skills = {
         s
@@ -526,9 +523,9 @@ def compute_drift(
     }
     # Heuristic: unmapped overlap skills that look like workflow (not pure API shards)
     # Flag all overlap skills not referenced for human review — capped list.
-    unmapped_overlap = sorted(overlap_skills - mapped_nv_literals)
+    unmapped_overlap = sorted(overlap_skills - mapped_nv)
     # Prefer ones that share prefixes with mapped ones for relevance
-    mapped_prefixes = {s.split("-")[0] for s in mapped_nv_literals}
+    mapped_prefixes = {s.split("-")[0] for s in mapped_nv}
     prioritized = [s for s in unmapped_overlap if s.split("-")[0] in mapped_prefixes]
     other = [s for s in unmapped_overlap if s not in prioritized]
 
@@ -541,7 +538,10 @@ def compute_drift(
     )
 
 
-def rewrite_csv(path: Path, jobs: list[dict[str, str]], oep: CatalogInventory) -> None:
+def rewrite_csv(
+    path: Path, jobs: list[dict[str, str]], oep: CatalogInventory, nvidia: CatalogInventory
+) -> None:
+    nvidia_set = set(nvidia.skills)
     fieldnames = [
         "job_id",
         "domain",
@@ -559,7 +559,7 @@ def rewrite_csv(path: Path, jobs: list[dict[str, str]], oep: CatalogInventory) -
     rows_out = []
     for r in jobs:
         oep_skills = split_skills(r.get("oep_skills", ""))
-        nv_skills = split_skills(r.get("nvidia_skills", ""))
+        nv_skills = resolve_nvidia_cell(r.get("nvidia_skills", ""), nvidia_set)
         words = [oep.depth[s].words for s in oep_skills if s in oep.depth]
         refs = any(oep.depth[s].refs > 0 for s in oep_skills if s in oep.depth)
         rows_out.append(
@@ -767,12 +767,13 @@ def main() -> int:
     nvidia_text = fetch_nvidia_readme(args.nvidia_readme, args.fetch_nvidia, cache_path=cache_path)
     nvidia = parse_nvidia_readme(nvidia_text)
 
-    clone_path: Path | None = args.nvidia_clone
-    if args.clone_nvidia_depth and not clone_path:
+    if args.nvidia_clone:
+        nvidia.depth = measure_nvidia_depth(args.nvidia_clone)
+    elif args.clone_nvidia_depth:
         print("Shallow-cloning NVIDIA/skills for depth stats…", file=sys.stderr)
-        clone_path = maybe_clone_nvidia(None)
-    if clone_path:
-        nvidia.depth = measure_nvidia_depth(clone_path)
+        with tempfile.TemporaryDirectory(prefix="nvidia-skills-") as tmp:
+            clone_nvidia(Path(tmp))
+            nvidia.depth = measure_nvidia_depth(Path(tmp))
 
     jobs = load_job_catalog(job_catalog)
     score = compute_scorecard(jobs, oep, nvidia, snapshot_date)
@@ -792,7 +793,7 @@ def main() -> int:
         print(f"Wrote {out_json}")
 
     if args.write_csv:
-        rewrite_csv(job_catalog, jobs, oep)
+        rewrite_csv(job_catalog, jobs, oep, nvidia)
         print(f"Wrote {job_catalog}")
 
     if args.write_docs:

@@ -5,12 +5,12 @@
 Refresh with the `competitive-skill-metrics` skill (`scripts/refresh_scorecard.py`).
 
 <!-- BEGIN GENERATED:SNAPSHOT -->
-**Snapshot (2026-09-30).**
+**Snapshot (2026-10-07).**
 
 | Catalog | Products | Skills (raw) | Notes |
 |---------|----------|--------------|-------|
 | open-edge-platform/skills | 16 families / see README | **39** | Index in repo README; meta skill excluded |
-| NVIDIA/skills | **48** | **~387** | Catalog README; top: TAO Toolkit ~76, DOCA ~60, Jetson BSP ~24 |
+| NVIDIA/skills | **50** | **~396** | Catalog README; top: TAO Toolkit ~76, DOCA ~60, Jetson BSP ~24 |
 
 Raw count favors API/docs sharding. This document defines a shared **job taxonomy** and a **scorecard** so both catalogs are judged on the same unit of value: a user job.
 
@@ -26,11 +26,11 @@ Companion data: [`data/job-catalog.csv`](data/job-catalog.csv) · [`data/scoreca
 |---|--------|----------------|---------------------|------------------------|--------------------|
 | 1 | **Jobs covered** | Jobs with ≥1 mapped skill / total jobs | **39 / 44 (88.6%)** | **28 / 44 (63.6%)** | Same denominator |
 | 2 | **E2E jobs covered** | Jobs marked end-to-end with a full path | **30** | (see taxonomy; shards may stop at install/API) | “Can finish the outcome” |
-| 3 | **Median skill depth** | Median `SKILL.md` words of mapped skills | **~702 words** | n/a — pass `--clone-nvidia-depth` or `--nvidia-clone` | Hard to fake with empty folders |
-| 4 | **Granularity health** | Mean skills-per-job; target band 1–3 | **1.00** | **~2.00**; ≥3 on VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, RAG-01, CVT-03, PAI-11 | Detects over-split |
+| 3 | **Median skill depth** | Median `SKILL.md` words of mapped skills | **~702 words** | **~1592 words** (n=398) | Hard to fake with empty folders |
+| 4 | **Granularity health** | Mean skills-per-job; target band 1–3 | **1.00** | **~1.96**; ≥3 on VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, CVT-03, PAI-11 | Detects over-split |
 | 5 | **Entry / routing coverage** | Domains with an orchestrator or clear progressive entry | `metro-ai-app-builder` | Mostly leaf catalog; few business-intent routers | Users need not know leaf names |
 
-OEP depth floor (words ≥500 or refs >0): **76.9%**. NVIDIA depth floor: **n/a**.
+OEP depth floor (words ≥500 or refs >0): **76.9%**. NVIDIA depth floor: **100%**.
 
 **Optional sixth (governance):** % of skills with evals + security scan + skill card / signature. NVIDIA markets this heavily; track it so the debate does not shift to “unverified.”
 <!-- END GENERATED:SCORECARD -->
@@ -181,7 +181,7 @@ Success criteria are intentionally short so evals can assert them.
 | VSS-04 | vss | Search a video library with natural language | Y | vss-search-index | vss-search-archive | Fit |
 | VSS-05 | vss | Manage alerts / incidents | N | — | vss-manage-alerts | **OEP gap** |
 | VSS-06 | vss | Query analytics / sensors / behavior APIs | N | — | vss-query-analytics, vss-setup-video-analytics-api, vss-setup-behavior-analytics | **OEP gap**; NV fragmented |
-| RAG-01 | rag | Deploy ChatQnA / RAG (Docker) | Y | chatqna-docker-deploy | rag-blueprint, nemo-retriever, aiq-deploy | Fit |
+| RAG-01 | rag | Deploy ChatQnA / RAG (Docker) | Y | chatqna-docker-deploy | rag-blueprint, nemo-retriever | Fit; aiq-deploy removed upstream |
 | RAG-02 | rag | Deploy ChatQnA / RAG (Helm) | Y | chatqna-helm-deploy | rag-blueprint | Variant split OK |
 | RAG-03 | rag | Evaluate RAG quality / performance | N | — | rag-eval, rag-perf | **OEP gap** |
 | MM-01 | multimodal | Deploy multimodal embedding serving | Y | multimodal-embedding-serving-user | vss-deploy-video-embedding (partial) | Fit |
@@ -195,7 +195,7 @@ Success criteria are intentionally short so evals can assert them.
 | CVT-05 | cv-train | Quantize / optimize exported model | Y | getitune-optimizing-a-model | — | OEP strength |
 | CVT-06 | cv-train | Run inference / evaluate | Y | getitune-running-inference | tao-run-inference-service | Thin risk |
 | CVT-07 | cv-train | Geti app E2E (project → annotate → train → deploy) | Y | geti-using-the-pipeline | — | OEP-only |
-| ANM-01 | anomaly | Train anomalib model | Y | anomalib-training | paidf-anomalygen (adjacent) | Fit |
+| ANM-01 | anomaly | Train anomalib model | Y | anomalib-training | physical-ai-defect-image-generation (adjacent) | Fit; paidf-anomalygen removed upstream |
 | ANM-02 | anomaly | Add anomalib model architecture | N | anomalib-adding-a-model | — | Contributor job |
 | ANM-03 | anomaly | Add anomalib datamodule | N | anomalib-adding-a-datamodule | — | Contributor job |
 | ANM-04 | anomaly | Benchmark anomalib grid | Y | anomalib-benchmarking | — | Fit |
@@ -225,8 +225,8 @@ Machine-readable copy: [`data/job-catalog.csv`](data/job-catalog.csv).
 | OEP-only jobs | 16 | — |
 | NVIDIA-only jobs | — | 5 (VIS-04, VSS-05, VSS-06, RAG-03, PAI-11) |
 | Overlap jobs | 23 | 23 |
-| Mean skills / covered job | **1.00** | **~2.00** |
-| Jobs with NVIDIA skills/job ≥ 3 | — | VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, RAG-01, CVT-03, PAI-11 |
+| Mean skills / covered job | **1.00** | **~1.96** |
+| Jobs with NVIDIA skills/job ≥ 3 | — | VIS-01, VIS-02, SPA-01, VSS-01, VSS-03, VSS-06, CVT-03, PAI-11 |
 | OEP skills mapped | 39 / 39 | — |
 | OEP jobs/skill > 1 | 0 (none) | — |
 
@@ -237,14 +237,14 @@ Machine-readable copy: [`data/job-catalog.csv`](data/job-catalog.csv).
 
 ## 4. How to present this to management
 
-**Do not lead with:** “We have 37, they have 347.”
+**Do not lead with:** “We have 39, they have ~396.”
 
 **Lead with:**
 
-1. **Jobs covered on a shared taxonomy** (88% vs 69% on this draft).  
-2. **Skills per job** (1.0 vs ~2.0; several NVIDIA jobs at 3–5 shards).  
-3. **Median depth / depth-floor %** (measure NVIDIA next; show OEP 740 / 78%).  
-4. **Entry skill** — business users hit `metro-ai-app-builder` instead of browsing 347 names.  
+1. **Jobs covered on a shared taxonomy** (88.6% vs 63.6% on this snapshot).  
+2. **Skills per job** (1.0 vs ~1.96; several NVIDIA jobs at 3–5 shards).  
+3. **Median depth / depth-floor %** (OEP ~702 words / 76.9% vs NVIDIA ~1592 / 100%; close the depth gap on thin skills).  
+4. **Entry skill** — business users hit `metro-ai-app-builder` instead of browsing ~396 names.  
 5. **Bakeoff plan** — task success on ORCH/VIS/VSS/RAG/CVT/PAI subset.
 
 **Acknowledge gaps (builds credibility):** VIS-04 profiling, VSS alerts/analytics APIs, RAG eval/perf, Physical AI sim/synth (PAI-11). Decide expand vs out-of-scope.
@@ -319,13 +319,13 @@ Use the **`competitive-skill-metrics`** skill to refresh inventories and patch g
 ### Drift report (auto)
 
 <!-- BEGIN GENERATED:DRIFT -->
-_Generated 2026-09-30T06:03:33Z_.
+_Generated 2026-10-07T18:25:57Z_.
 
 - **Unmapped OEP skills** (0): none
 - **Stale OEP refs in CSV** (0): none
 - **Stale / unresolved NVIDIA refs** (0): none
 - **OEP thin skills** (words <400 and no refs): `getitune-discovering-models`, `getitune-running-inference`, `openedge-cli`, `physicalai-runtime-adding-a-camera-backend`, `physicalai-runtime-configuring-inference-pipeline`, `physicalai-runtime-running-policy-on-robot`
-- **Unmapped NVIDIA overlap-product skills** (sample, review for remap): `aiq-research`, `amc-run-rtsp-calibration`, `amc-run-sample-calibration`, `i4h-lerobot-viz`, `i4h-workflow-create`, `i4h-workflow-dataset-annotate`, `i4h-workflow-dataset-mimic`, `i4h-workflow-dataset-replay`, `i4h-workflow-scene-edit`, `i4h-workflow-setup`, `i4h-workflow-train-rl`, `nemo-retriever-mcp`, `omniverse-realtime-viewer`, `omniverse-usd-performance-tuning`, `paidf-cosmos-predict` … +25 more
+- **Unmapped NVIDIA overlap-product skills** (sample, review for remap): `amc-run-rtsp-calibration`, `amc-run-sample-calibration`, `i4h-lerobot-viz`, `i4h-workflow-create`, `i4h-workflow-dataset-annotate`, `i4h-workflow-dataset-mimic`, `i4h-workflow-dataset-replay`, `i4h-workflow-scene-edit`, `i4h-workflow-setup`, `i4h-workflow-train-rl`, `nemo-retriever-mcp`, `omniverse-realtime-viewer`, `omniverse-usd-performance-tuning`, `paidf-cosmos-predict`, `paidf-orchestration-setup` … +25 more
 <!-- END GENERATED:DRIFT -->
 
 ---

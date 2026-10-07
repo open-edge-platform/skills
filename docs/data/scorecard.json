@@ -1,12 +1,12 @@
 {
   "scorecard": {
-    "snapshot_date": "2026-09-30",
-    "generated_at": "2026-09-30T06:03:33Z",
+    "snapshot_date": "2026-10-07",
+    "generated_at": "2026-10-07T18:25:57Z",
     "raw_counts": {
       "oep_products_families": 16,
       "oep_skills": 39,
-      "nvidia_products": 48,
-      "nvidia_skills": 387,
+      "nvidia_products": 50,
+      "nvidia_skills": 396,
       "nvidia_top_products": [
         {
           "product": "TAO Toolkit",
@@ -60,7 +60,7 @@
         "PAI-11"
       ],
       "mean_skills_per_oep_covered_job": 1,
-      "mean_skills_per_nvidia_covered_job": 2,
+      "mean_skills_per_nvidia_covered_job": 1.96,
       "median_skills_per_oep_covered_job": 1,
       "median_skills_per_nvidia_covered_job": 2.0,
       "nvidia_jobs_skills_ge_3": [
@@ -70,7 +70,6 @@
         "VSS-01",
         "VSS-03",
         "VSS-06",
-        "RAG-01",
         "CVT-03",
         "PAI-11"
       ],
@@ -93,9 +92,9 @@
         "physicalai-runtime-configuring-inference-pipeline",
         "physicalai-runtime-running-policy-on-robot"
       ],
-      "nvidia_skills_measured": 0,
-      "nvidia_median_words": null,
-      "nvidia_depth_floor_pct": null
+      "nvidia_skills_measured": 398,
+      "nvidia_median_words": 1592,
+      "nvidia_depth_floor_pct": 100.0
     },
     "oep_skill_set": [
       "anomalib-adding-a-datamodule",
@@ -138,14 +137,13 @@
       "vss-search-index",
       "vss-summarize-video"
     ],
-    "nvidia_skill_set_size": 387
+    "nvidia_skill_set_size": 396
   },
   "drift": {
     "unmapped_oep_skills": [],
     "stale_oep_refs": [],
     "stale_nvidia_refs": [],
     "unmapped_nvidia_overlap": [
-      "aiq-research",
       "amc-run-rtsp-calibration",
       "amc-run-sample-calibration",
       "i4h-lerobot-viz",
@@ -184,7 +182,8 @@
       "tao-generate-anomalies",
       "tao-generate-image-embeddings",
       "tao-generate-image-grounding",
-      "tao-generate-referring-expressions"
+      "tao-generate-referring-expressions",
+      "tao-generate-video-reasoning-annotations"
     ],
     "new_oep_since_csv": []
   }

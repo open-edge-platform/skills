@@ -1,7 +1,7 @@
 job_id,domain,job,e2e,oep_skills,nvidia_skills,routing,notes,oep_skills_per_job,nvidia_skills_per_job,oep_median_words,oep_has_refs
 ORCH-01,orchestration,Turn a business objective into a working Intel Edge AI app without naming a skill,Y,metro-ai-app-builder,,entry,OEP progressive-disclosure exemplar,1,0,2353,Y
 VIS-01,vision-deploy,Stand up live CV analytics (cameras to annotated WebRTC + alerts),Y,metro-ai-app-recipe,deepstream-generate-pipeline;deepstream-run-mv3dt;rtvi-cv-scaffold-vss-service,leaf,NV over-split risk,1,3,2072,Y
-VIS-02,vision-build,Build a custom vision pipeline app (Python/C/C++/gst-launch),Y,dlstreamer-coding-agent,deepstream-dev;deepstream-generate-pipeline;deepstream-import-vision-model,leaf,OEP consolidates; NV shards,1,3,2711,Y
+VIS-02,vision-build,Build a custom vision pipeline app (Python/C/C++/gst-launch),Y,dlstreamer-coding-agent,deepstream-dev;deepstream-generate-pipeline;deepstream-import-vision-model,leaf,OEP consolidates; NV shards,1,3,2728,Y
 VIS-03,vision-ops,Deploy and operate pipeline server via REST,Y,dlsps-user,deepstream-sop;rtvi-cv-scaffold-vss-service,leaf,fit,1,2,1128,Y
 VIS-04,vision-ops,Profile / tune vision pipeline performance,N,,deepstream-profile-pipeline,gap,OEP gap,0,1,,
 SPA-01,spatial,Deploy multi-camera SceneScape from streams to tracking verified,Y,scenescape-setup,amc-setup-calibration-stack;amc-run-video-calibration;deepstream-run-mv3dt,leaf,OEP one deep skill,1,3,902,Y
@@ -11,7 +11,7 @@ VSS-03,vss,Summarize a video via Pipeline Manager,Y,vss-summarize-video,vss-summ
 VSS-04,vss,Search a video library with natural language,Y,vss-search-index,vss-search-archive,leaf,fit,1,1,1202,Y
 VSS-05,vss,Manage alerts / incidents,N,,vss-manage-alerts,gap,OEP gap,0,1,,
 VSS-06,vss,Query analytics / sensors / behavior APIs,N,,vss-query-analytics;vss-setup-video-analytics-api;vss-setup-behavior-analytics,gap,OEP gap; NV fragmented,0,3,,
-RAG-01,rag,Deploy ChatQnA / RAG (Docker),Y,chatqna-docker-deploy,rag-blueprint;nemo-retriever;aiq-deploy,leaf,fit,1,3,1566,Y
+RAG-01,rag,Deploy ChatQnA / RAG (Docker),Y,chatqna-docker-deploy,rag-blueprint;nemo-retriever,leaf,fit,1,2,1566,Y
 RAG-02,rag,Deploy ChatQnA / RAG (Helm),Y,chatqna-helm-deploy,rag-blueprint,leaf,variant split OK,1,1,1186,Y
 RAG-03,rag,Evaluate RAG quality / performance,N,,rag-eval;rag-perf,gap,OEP gap,0,2,,
 MM-01,multimodal,Deploy multimodal embedding serving,Y,multimodal-embedding-serving-user,vss-deploy-video-embedding,leaf,NV partial,1,1,853,Y
