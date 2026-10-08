@@ -40,6 +40,7 @@ to build solutions with Open Edge Platform products.
 | [Get Started](docs/user-guide/get-started.md) | Install, list, update, and remove skills via `npx skills` |
 | [How It Works](docs/user-guide/how-it-works.md) | Skill loading, index maintenance CI workflow, and lock file |
 | [Release Notes](docs/user-guide/release-notes.md) | Changelog and release history |
+| [Competitive Skill Metrics](docs/competitive-skill-metrics.md) | Job taxonomy and scorecard for comparing catalogs (not raw skill count) |
 
 
 ## Maintaining the Index
