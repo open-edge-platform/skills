@@ -2,7 +2,7 @@
 
 **Purpose.** Replace raw skill-count comparisons (e.g. vs [NVIDIA/skills](https://github.com/NVIDIA/skills)) with measures of **jobs covered**, **depth**, **granularity fitness**, **progressive disclosure**, and **outcome quality**.
 
-Refresh with the `competitive-skill-metrics` skill (`scripts/refresh_scorecard.py`).
+Refresh with the `competitive-skill-metrics` skill (`.agents/skills/competitive-skill-metrics/scripts/refresh_scorecard.py`).
 
 <!-- BEGIN GENERATED:SNAPSHOT -->
 **Snapshot (2026-10-07).**

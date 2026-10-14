@@ -241,8 +241,9 @@ def check_skills_exist(
 ) -> bool:
     """Check that added or relocated skills contain a SKILL.md at their source.
 
-    Skills sourced from ``local_repo`` are checked in the local checkout at
-    ``repo_root``, since a PR may add them before they exist on the remote ref.
+    Skills sourced from ``local_repo`` with ``ref`` ``main`` are checked in the
+    local checkout at ``repo_root``, since a PR may add them before they exist
+    on the remote. Non-``main`` refs still use the GitHub contents API.
     """
     has_error = False
     checked = 0
@@ -266,7 +267,10 @@ def check_skills_exist(
 
             checked += 1
             skill_path = "/".join(filter(None, (source_path, skill_name, "SKILL.md")))
-            if local_repo and repo_root and repo == local_repo:
+            # Only short-circuit for main: PR checkouts mirror main's tree for
+            # same-repo adds. Other refs (tags/branches) may lack the file here
+            # even when the local path exists, so keep the GitHub contents check.
+            if local_repo and repo_root and repo == local_repo and ref == "main":
                 if (repo_root / skill_path).is_file():
                     print(f"  ✓ {repo}@local:{skill_path}", file=sys.stderr)
                 else:

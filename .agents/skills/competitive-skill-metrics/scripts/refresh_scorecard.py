@@ -260,6 +260,11 @@ def parse_nvidia_readme(text: str) -> CatalogInventory:
             by_product[prod] = skills
 
     all_skills = sorted({s for v in by_product.values() for s in v})
+    if not all_skills:
+        raise ValueError(
+            "NVIDIA README parse returned an empty catalog; refusing to publish "
+            "a zeroed scorecard (README table format may have changed)"
+        )
     return CatalogInventory(
         source="NVIDIA/skills README catalog",
         products=len(by_product),
@@ -766,6 +771,12 @@ def main() -> int:
     cache_path = root / "docs" / "data" / "nvidia-skills-README.cache.md"
     nvidia_text = fetch_nvidia_readme(args.nvidia_readme, args.fetch_nvidia, cache_path=cache_path)
     nvidia = parse_nvidia_readme(nvidia_text)
+    if not nvidia.skills:
+        print(
+            "ERROR: NVIDIA catalog parse is empty; not writing scorecard outputs",
+            file=sys.stderr,
+        )
+        return 1
 
     if args.nvidia_clone:
         nvidia.depth = measure_nvidia_depth(args.nvidia_clone)
