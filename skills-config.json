@@ -208,9 +208,9 @@
     },
     {
       "product": "Metro AI Suite - AI App Builder",
-      "repo": "open-edge-platform/metro-ai-suite",
+     "repo": "open-edge-platform/metro-ai-suite",
       "ref": "main",
-      "path": "metro-ai-suite/prompt-library/.github/skills",
+      "path": "prompt-library/.github/skills",
       "skills": [
         {
           "name": "metro-ai-app-builder"
@@ -221,7 +221,7 @@
       "product": "Metro AI Suite - Vision AI App Recipe",
       "repo": "open-edge-platform/metro-ai-suite",
       "ref": "main",
-      "path": "metro-ai-suite/metro-vision-ai-app-recipe/.github/skills",
+      "path": "metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
           "name": "metro-ai-app-recipe"
@@ -232,7 +232,7 @@
       "product": "UAV Mission Compute SDK",
       "repo": "open-edge-platform/federal-and-aerospace-ai-suite",
       "ref": "main",
-      "path": "federal-and-aerospace-ai-suite/uav-mission-compute-sdk/skills",
+      "path": "uav-mission-compute-sdk/skills",
       "skills": [
         {
           "name": "uav-mission-compute-sdk"
