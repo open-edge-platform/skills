@@ -34,11 +34,15 @@ count for parity. Prefer deeper skills, progressive disclosure, and orchestrator
 
 ## Artifacts (repo root = open-edge-platform/skills)
 
+Paths under `docs/` are **repo-root-relative** (outside this skill package — do not use
+`../` markdown links; skill-validator rejects path traversal). Resolve them via
+`$REPO_ROOT` from Step 1. Skill-local files use normal relative links.
+
 | Path | Role |
 |------|------|
-| [`docs/competitive-skill-metrics.md`](../../../docs/competitive-skill-metrics.md) | Narrative + rubric + scorecard (generated sections marked) |
-| [`docs/data/job-catalog.csv`](../../../docs/data/job-catalog.csv) | Canonical job ↔ skill map (edit by hand for remaps) |
-| [`docs/data/scorecard.json`](../../../docs/data/scorecard.json) | Machine-readable latest aggregates + drift |
+| `docs/competitive-skill-metrics.md` | Narrative + rubric + scorecard (generated sections marked) |
+| `docs/data/job-catalog.csv` | Canonical job ↔ skill map (edit by hand for remaps) |
+| `docs/data/scorecard.json` | Machine-readable latest aggregates + drift |
 | [`scripts/refresh_scorecard.py`](scripts/refresh_scorecard.py) | Inventory both catalogs; recompute; patch docs |
 
 Load [`references/remap-guide.md`](references/remap-guide.md) when adding jobs or
