@@ -261,6 +261,17 @@
           "name": "anomalib-benchmarking"
         }
       ]
+    },
+    {
+      "product": "Skills Index \u2014 Competitive Metrics",
+      "repo": "open-edge-platform/skills",
+      "ref": "main",
+      "path": ".agents/skills",
+      "skills": [
+        {
+          "name": "competitive-skill-metrics"
+        }
+      ]
     }
   ]
 }

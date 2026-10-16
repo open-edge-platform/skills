@@ -4,3 +4,6 @@ __pycache__/
 *$py.class
 skills-lock.json
 skill-compliance-report.md
+
+# Offline fallback for competitive-skill-metrics refresh (regenerated on fetch)
+docs/data/nvidia-skills-README.cache.md

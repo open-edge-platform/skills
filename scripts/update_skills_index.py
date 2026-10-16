@@ -233,9 +233,18 @@ def _lock_source_matches(lock_meta: dict, entry: dict, skill: str | dict) -> boo
 
 
 def check_skills_exist(
-    config_entries: list[dict], github_token: str = "", base_entries: list[dict] | None = None
+    config_entries: list[dict],
+    github_token: str = "",
+    base_entries: list[dict] | None = None,
+    local_repo: str = "",
+    repo_root: Path | None = None,
 ) -> bool:
-    """Check that added or relocated skills contain a SKILL.md at their source."""
+    """Check that added or relocated skills contain a SKILL.md at their source.
+
+    Skills sourced from ``local_repo`` with ``ref`` ``main`` are checked in the
+    local checkout at ``repo_root``, since a PR may add them before they exist
+    on the remote. Non-``main`` refs still use the GitHub contents API.
+    """
     has_error = False
     checked = 0
     headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
@@ -258,6 +267,16 @@ def check_skills_exist(
 
             checked += 1
             skill_path = "/".join(filter(None, (source_path, skill_name, "SKILL.md")))
+            # Only short-circuit for main: PR checkouts mirror main's tree for
+            # same-repo adds. Other refs (tags/branches) may lack the file here
+            # even when the local path exists, so keep the GitHub contents check.
+            if local_repo and repo_root and repo == local_repo and ref == "main":
+                if (repo_root / skill_path).is_file():
+                    print(f"  ✓ {repo}@local:{skill_path}", file=sys.stderr)
+                else:
+                    print(f"  [error] {repo}@local:{skill_path} (not found in checkout)", file=sys.stderr)
+                    has_error = True
+                continue
             url = (
                 f"https://api.github.com/repos/{repo}/contents/{quote(skill_path, safe='/')}?"
                 f"{urlencode({'ref': ref})}"
@@ -606,7 +625,12 @@ def main():
                 validate_config_entries(base_entries)
             except ValueError as error:
                 sys.exit(f"Error: {error}")
-        if not check_skills_exist(entries, os.environ.get("GITHUB_TOKEN", ""), base_entries):
+        local_repo = os.environ.get("GITHUB_REPOSITORY", "")
+        if local_repo and not _REPO_RE.fullmatch(local_repo):
+            sys.exit(f"Error: unsafe GITHUB_REPOSITORY value: {local_repo!r}")
+        if not check_skills_exist(
+            entries, os.environ.get("GITHUB_TOKEN", ""), base_entries, local_repo=local_repo, repo_root=repo_root
+        ):
             sys.exit(1)
         return
 

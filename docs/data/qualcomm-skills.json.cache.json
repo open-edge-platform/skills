@@ -1,0 +1,44 @@
+{
+  "manifestVersion": 1,
+  "skills": [
+    {
+      "name": "configure-ethernet",
+      "versions": [
+        {
+          "version": "1.0.0+qcs6490",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/qcs6490"
+        },
+        {
+          "version": "1.0.0+iq-9075",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/iq-9075"
+        },
+        {
+          "version": "1.0.0+iq-9075-mezzanine",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/iq-9075-mezzanine"
+        },
+        {
+          "version": "1.0.0+iq-8275",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/iq-8275"
+        },
+        {
+          "version": "1.0.0+iq-8275-mezzanine",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/iq-8275-mezzanine"
+        },
+        {
+          "version": "1.0.0+iq-615",
+          "path": "IOT/qualcomm-linux/skills/configure-ethernet/iq-615"
+        }
+      ]
+    },
+    {
+      "name": "configure-fan-controller",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "path": "IOT/qualcomm-linux/skills/configure-fan-controller"
+        }
+      ]
+    }
+  ],
+  "sources": []
+}
