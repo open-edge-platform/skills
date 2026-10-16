@@ -6,7 +6,7 @@ Use this when `refresh_scorecard.py` reports unmapped or stale skill references.
 
 1. **Jobs first.** A row is one user outcome with one success criterion.
 2. **Split** only when tools, permissions, failure modes, or audiences differ.
-3. **Do not split** for parameters (model name, install flavor, one API symbol).
+3. **Do not split** for parameters (model name, install flavor, board/devkit, one API symbol).
 4. **Orchestrate** when the user cannot know the leaf skill up front (`routing=entry`).
 5. **Never** add skills only to raise raw count.
 
@@ -15,14 +15,16 @@ Use this when `refresh_scorecard.py` reports unmapped or stale skill references.
 | Column | Meaning |
 |--------|---------|
 | `job_id` | Stable ID (`DOMAIN-##`); keep stable across renames when the job is the same |
-| `domain` | Taxonomy domain (`vss`, `cv-train`, `pai-runtime`, …) |
+| `domain` | Taxonomy domain (`vss`, `cv-train`, `llm-serve`, `qcom-linux`, …) |
 | `job` | Short success-oriented description |
 | `e2e` | `Y` if path reaches a verified running/exported artifact |
 | `oep_skills` | `;`-separated OEP skill directory names (empty = OEP gap) |
 | `nvidia_skills` | `;`-separated NVIDIA skill names; `prefix*` wildcards allowed |
-| `routing` | `entry` \| `leaf` \| `gap` \| `gap-nvidia-only` |
+| `amd_skills` | `;`-separated AMD skill names; wildcards allowed |
+| `qualcomm_skills` | `;`-separated Qualcomm logical or `name--variant` shard ids; wildcards allowed |
+| `routing` | `entry` \| `leaf` \| `gap` \| `gap-nvidia-only` \| `gap-amd-only` \| `gap-qualcomm-only` |
 | `notes` | Fit / gap / thin / over-split notes |
-| derived | `oep_skills_per_job`, `nvidia_skills_per_job`, `oep_median_words`, `oep_has_refs` — rewritten by the script |
+| derived | `*_skills_per_job`, `oep_median_words`, `oep_has_refs` — rewritten by the script |
 
 ## When an OEP skill is unmapped
 
@@ -33,15 +35,28 @@ Ask, in order:
 3. Is it a **contributor/extension** skill (add backend, add model)? → still a job, mark `e2e=N`.
 4. Is it **meta/index tooling** (like this skill)? → exclude from product inventory (script already skips `competitive-skill-metrics`).
 
-## When NVIDIA skills appear in the unmapped overlap sample
+## When NVIDIA / AMD / Qualcomm skills appear unmapped
 
 Map only if they clearly finish a taxonomy job. Patterns that inflate count without a new job:
 
 - One skill per library/API (`doca-*`, many `tao-train-*`)
 - One skill per install flavor (wheel / conda / debian / container)
+- One skill per board/devkit for the same procedure (`configure-ethernet--*`)
 - Calibration micro-steps that belong under one deploy job
+- AMD `planned` README rows (no published link) — ignore until shipped
 
-Prefer updating `nvidia_skills` on an existing row (including wildcards like `i4h-workflow-dataset-*`) over adding NVIDIA-only vanity jobs — unless leadership wants an explicit **gap** row (`routing=gap`).
+Prefer updating vendor columns on an existing row (including wildcards like
+`i4h-workflow-dataset-*` or `configure-ethernet*`) over adding vanity jobs — unless
+leadership wants an explicit **gap** / competitor-only row
+(`routing=gap-nvidia-only|gap-amd-only|gap-qualcomm-only`).
+
+### Vendor catalog notes
+
+| Vendor | Inventory source | Typical overlap with OEP Edge AI |
+|--------|------------------|----------------------------------|
+| NVIDIA | README product table | High on vision / VSS / RAG / TAO / Physical AI |
+| AMD | README catalog tables (linked skills only) | Low today — LLM serve, Lemonade, Quark, ROCm ops |
+| Qualcomm | `IOT/qualcomm-linux/skills.json` | Low today — QLI Ethernet / fan bring-up |
 
 ## After editing the CSV
 
