@@ -1030,7 +1030,7 @@ def build_cross_cli_benchmark(workspace: Path, clis: list[str], skill_name: str,
         for cli in clis:
             cli_dir = workspace / cli
             pass_rates, times, tokens = [], [], []
-            for meta_path in sorted(cli_dir.glob(f"eval-*/{config}/eval_metadata.json")):
+            for meta_path in sorted(cli_dir.glob(f"eval-*/{_config_dir_name(config)}/eval_metadata.json")):
                 eval_meta = json.loads(meta_path.read_text())
                 config_dir = meta_path.parent
                 for run_dir in sorted(config_dir.glob("run-*")):
@@ -1139,8 +1139,9 @@ def generate_consolidated_benchmark_md(
             for config in configs:
                 cell = agg[config][cli]
                 cell["evals_total"] += 1
-                grading_path = base / config / "run-1" / "grading.json"
-                timing_path = base / config / "run-1" / "timing.json"
+                run_dir = base / _config_dir_name(config) / "run-1"
+                grading_path = run_dir / "grading.json"
+                timing_path = run_dir / "timing.json"
                 per_eval[ev_id][config][cli] = None
                 if grading_path.exists():
                     try:
