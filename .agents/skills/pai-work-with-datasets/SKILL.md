@@ -1,19 +1,19 @@
 ---
-name: physicalai-train-working-with-datasets
-description: Works with Physical AI Studio datasets and Lightning datamodules built on the LeRobot format. Use when wiring physicalai.data.lerobot.LeRobotDataModule into a training config, choosing a repo_id, converting between the physicalai and lerobot data layouts, defining observation Features/FeatureType, setting normalization, or debugging batch shapes and dataloading.
+name: pai-work-with-datasets
+description: Works with Physical AI Studio datasets and Lightning datamodules using the LeRobot format. Use when wiring LeRobotDataModule into a project training config, choosing a repo_id, inspecting batch shapes, converting between physicalai and lerobot layouts with FormatConverter, or debugging dataloading. DO NOT USE FOR changing the Studio library's converters or dataset implementation.
 license: Apache-2.0
 ---
 
 # Working with Studio Datasets
 
-Studio data lives in `library/src/physicalai/data/`. Datasets use the **LeRobot format** and are consumed through Lightning datamodules. The datamodules are first-class Python API objects; YAML/CLI configs are a serialization of the same construction path.
+Studio datasets use the **LeRobot format** and are consumed through Lightning datamodules. The datamodules are first-class Python API objects; YAML/CLI configs are a serialization of the same construction path. These modules ship with `physicalai-train`:
 
 Key modules:
 
 - `data/lerobot/datamodule.py` — `LeRobotDataModule` (the class configs reference as `physicalai.data.lerobot.LeRobotDataModule`).
 - `data/lerobot/dataset.py` — LeRobot dataset wrapper.
-- `data/lerobot/converters.py` — `DataFormat` (StrEnum: `physicalai`, `lerobot`) and bidirectional field mapping between the two layouts.
-- `data/observation.py` — `Observation`, `Feature`, `FeatureType`, `NormalizationParameters`.
+- `data/lerobot/converters.py` — `DataFormat` and public `FormatConverter.to_lerobot_dict(...)` / `to_observation(...)`.
+- `data/observation.py` — `Observation`, `Feature`, `FeatureType`, `NormalizationParameters` (match your policy's features).
 - `data/datamodules.py` — base `DataModule` (Lightning `LightningDataModule`, auto num-workers heuristic).
 - `data/dataset.py` — base `Dataset`; `data/gym.py` — `GymDataset` for gym-generated data.
 
@@ -44,7 +44,7 @@ data:
     train_batch_size: 64
 ```
 
-`repo_id` points at a LeRobot/HuggingFace dataset; the datamodule pulls it on first use. See the `physicalai-train-training-a-policy` skill for the full config.
+`repo_id` points at a LeRobot/HuggingFace dataset; the datamodule pulls it on first use. See `pai-train-policy` for the full config.
 
 ## Workflow
 
@@ -62,31 +62,27 @@ data:
    physicalai fit --config <config.yaml> --trainer.fast_dev_run=true
    ```
    - Done when: one batch flows through with correct shapes and no missing-feature errors.
-4. **Convert layouts** only when needed via `converters.py` (`DataFormat.physicalai` ↔ `DataFormat.lerobot`); keep field names stable, since they propagate to training and export.
-5. **Set normalization** through `NormalizationParameters`/`Feature` consistently with what the policy expects at inference.
+4. **Convert layouts** only when needed via `FormatConverter.to_lerobot_dict(batch)` or `FormatConverter.to_observation(batch)`; keep field names stable, since they propagate to training and export.
+5. **Set normalization** through `NormalizationParameters`/`Feature` consistently with what the selected policy expects at inference.
 
 ## Debugging dataloading
 
-- Missing/renamed feature → the config's dataset features disagree with the policy; align `Feature` names in `data/observation.py` conventions.
+- Missing/renamed feature → the dataset features disagree with the policy; align the user's config or data mapping with the policy's `Feature` names.
 - Slow/stalled first batch → the LeRobot `repo_id` is downloading; expected on first run (see the `requires_download` test marker for tests that need this).
-- Wrong batch dimensions → check `train_batch_size` and the datamodule's collate/observation handling before changing the policy.
-- OOM or heavy swapping during training (common on smaller policies like ACT/SmolVLA on low-RAM machines) → try `pin_memory=False` and/or `persistent_workers=False` on the `DataModule`; see `library/docs/explanation/data/datamodules.md`.
+- Wrong batch dimensions → check `train_batch_size` and the produced batch keys before changing the project config.
+- OOM or heavy swapping → try `pin_memory=False` and/or `persistent_workers=False` on the `DataModule`; see the [datamodule guide](https://github.com/open-edge-platform/physical-ai-studio/blob/main/library/docs/explanation/data/datamodules.md).
 
 ## Required checks
 
 - Feature names, `FeatureType`, action dim, and normalization match between dataset, `Config`, and any export metadata.
 - Conversions round-trip without dropping or renaming fields.
 - Direct datamodule API construction and YAML config construction produce compatible batches.
-- Tests that require downloads are marked `requires_download`; keep default `uv run --no-sync pytest` runnable offline.
+- Downloading a new dataset requires network access; ask before starting a large transfer.
 
 ## Verify
 
-```bash
-# from library/
-uv run --no-sync pytest tests/unit/data tests/unit/datamodules
-```
+Inspect one train batch in the project's Python environment, then run `physicalai fit --config <config.yaml> --trainer.fast_dev_run=true` when the dataset is used from YAML.
 
 ## Related skills
 
-- `physicalai-train-training-a-policy` — the `data` block is one half of a training config.
-- `physicalai-train-adding-a-policy` — align observation features with the policy `Config`.
+- `pai-train-policy` — the `data` block is one half of a training config.
