@@ -115,22 +115,19 @@
       "product": "Physical AI Train",
       "repo": "open-edge-platform/physical-ai-studio",
       "ref": "main",
-      "path": "skills/library",
+      "path": "skills/using",
       "skills": [
         {
-          "name": "physicalai-train-adding-a-policy"
+          "name": "pai-benchmark-policy"
         },
         {
-          "name": "physicalai-train-benchmarking-a-policy"
+          "name": "pai-export-policy"
         },
         {
-          "name": "physicalai-train-exporting-and-validating"
+          "name": "pai-train-policy"
         },
         {
-          "name": "physicalai-train-training-a-policy"
-        },
-        {
-          "name": "physicalai-train-working-with-datasets"
+          "name": "pai-work-with-datasets"
         }
       ]
     },
@@ -138,25 +135,16 @@
       "product": "Physical AI Runtime",
       "repo": "openvinotoolkit/physicalai",
       "ref": "main",
-      "path": "skills/runtime",
+      "path": "skills/using",
       "skills": [
         {
-          "name": "physicalai-runtime-adding-a-robot-integration"
+          "name": "pai-run-policy"
         },
         {
-          "name": "physicalai-runtime-running-policy-on-robot"
+          "name": "pai-configure-inference"
         },
         {
-          "name": "physicalai-runtime-configuring-inference-pipeline",
-          "path": "skills/inference"
-        },
-        {
-          "name": "physicalai-runtime-loading-exported-policies",
-          "path": "skills/inference"
-        },
-        {
-          "name": "physicalai-runtime-adding-a-camera-backend",
-          "path": "skills/capture"
+          "name": "pai-load-policy"
         }
       ]
     },
