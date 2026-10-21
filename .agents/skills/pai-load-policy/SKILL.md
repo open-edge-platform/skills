@@ -1,12 +1,12 @@
 ---
-name: physicalai-runtime-loading-exported-policies
-description: Loads and validates policies exported from Physical AI Studio for Runtime deployment. Use when working on InferenceModel, InferenceModel.from_pretrained, manifest.json, adapter auto-detection (onnx, openvino), backend/device kwargs, Hugging Face Hub policy packages, or the Runtime side of the export/load contract that Studio produces with physicalai export.
+name: pai-load-policy
+description: Loads and validates policies exported from Physical AI Studio for Runtime deployment. Use when calling InferenceModel or from_pretrained on a local export or Hub snapshot, checking manifest.json, selecting an ONNX/OpenVINO backend or device, or smoke-testing an action. DO NOT USE FOR implementing an inference adapter in Runtime source.
 license: Apache-2.0
 ---
 
 # Loading Exported Policies
 
-Runtime loads Studio export directories (or Hub snapshots that mirror them) through `InferenceModel` in `src/physicalai/inference/model.py`. Manifest parsing lives in `src/physicalai/inference/manifest.py`; backends register in `src/physicalai/inference/adapters/registry.py` (`onnx` → `.onnx`, `openvino` → `.xml`). Hub downloads use `src/physicalai/inference/utils/_hub.py`.
+Runtime loads Studio export directories (or Hub snapshots that mirror them) through `InferenceModel`. It reads `manifest.json`, auto-detects registered ONNX/OpenVINO adapters from model files, and supports Hub revisions. See the [inference API](https://github.com/openvinotoolkit/physicalai/blob/main/docs/reference/inference-api.md) and [manifest schema](https://github.com/openvinotoolkit/physicalai/blob/main/docs/reference/manifest-schema.md).
 
 ## Workflow
 
@@ -35,7 +35,7 @@ Runtime loads Studio export directories (or Hub snapshots that mirror them) thro
    model = InferenceModel("./exports/act_policy", backend="openvino", device="CPU")
    ```
 
-5. **Validate structure** against `references/export-load-contract.md` and backend notes (`references/onnx.md`, `references/openvino.md`).
+5. **Validate structure** against the [manifest schema](https://github.com/openvinotoolkit/physicalai/blob/main/docs/reference/manifest-schema.md) and backend notes (`references/onnx.md`, `references/openvino.md`).
    - Done when: manifest, model file, and processor artifacts resolve under the export directory.
 6. **Smoke inference** without owning robot timing:
 
@@ -44,25 +44,21 @@ Runtime loads Studio export directories (or Hub snapshots that mirror them) thro
    action = model.select_action(observation)
    ```
 
-   - Done when: one forward pass succeeds on representative observation keys/shapes. For hardware loops, hand off to `physicalai-runtime-running-policy-on-robot`.
+   - Done when: one forward pass succeeds on representative observation keys/shapes. For hardware loops, hand off to `pai-run-policy`.
 
 ## Validation loop
 
-```bash
-uv run pytest tests/unit/inference/test_model.py tests/unit/inference/test_manifest.py -q
-```
-
-For adapter changes, add or run targeted tests under `tests/unit/inference/`.
+Construct `InferenceModel` from the export and run one representative fake observation without hardware. If a backend cannot be loaded, check its installed optional dependency and the [documented adapter support](https://github.com/openvinotoolkit/physicalai/blob/main/docs/reference/inference-api.md).
 
 ## Required checks
 
 - Export directory contains backend model file(s) and `manifest.json` consistent with `docs/reference/manifest-schema.md`.
 - Metadata input/output/feature names align with preprocessors in the manifest.
 - Optional backends fail with clear install guidance (`onnxruntime`, OpenVINO).
-- Do not document a backend unless an adapter is registered in `src/physicalai/inference/adapters/`.
+- Do not claim support for an adapter absent from the installed Runtime package.
 - Hub loads must not log tokens; prefer pinned `revision=` for production docs.
 
 ## References
 
-- `references/export-load-contract.md` — consumer-side contract (coordinate with Studio export skill).
+- [Manifest schema](https://github.com/openvinotoolkit/physicalai/blob/main/docs/reference/manifest-schema.md) — canonical export/load contract.
 - `references/onnx.md`, `references/openvino.md` — adapter constraints.
