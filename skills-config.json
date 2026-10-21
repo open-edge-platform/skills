@@ -118,10 +118,6 @@
       "path": "skills/using",
       "skills": [
         {
-          "name": "add-policy",
-          "path": "skills/contributing"
-        },
-        {
           "name": "pai-benchmark-policy"
         },
         {
@@ -142,10 +138,6 @@
       "path": "skills/using",
       "skills": [
         {
-          "name": "add-robot-integration",
-          "path": "skills/contributing"
-        },
-        {
           "name": "pai-run-policy"
         },
         {
@@ -153,10 +145,6 @@
         },
         {
           "name": "pai-load-policy"
-        },
-        {
-          "name": "add-camera-backend",
-          "path": "skills/contributing"
         }
       ]
     },
