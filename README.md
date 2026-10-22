@@ -6,7 +6,7 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-10-22 00:03 UTC -->
+<!-- Last updated: 2026-10-22 17:34 UTC -->
 | Product | Skills |
 |---------|--------|
 | [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-training) |
@@ -14,6 +14,8 @@ to build solutions with Open Edge Platform products.
 | [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent) |
 | [DL Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries) | [dlsps-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user) |
 | [Geti](https://github.com/open-edge-platform/geti) | [geti-using-the-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti-using-the-pipeline), [getitune-discovering-models](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-discovering-models), [getitune-exporting-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-exporting-a-model), [getitune-optimizing-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-optimizing-a-model), [getitune-preparing-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-preparing-datasets), [getitune-running-inference](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-running-inference), [getitune-training-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-training-a-model) |
+| [Manufacturing AI Suite - AI App Builder](https://github.com/open-edge-platform/manufacturing-ai-suite) | [manufacturing-ai-app-builder](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/manufacturing-ai-app-builder) |
+| [Manufacturing AI Suite - App Recipe](https://github.com/open-edge-platform/manufacturing-ai-suite) | [manufacturing-app-recipe](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/manufacturing-app-recipe) |
 | [Metro AI Suite - AI App Builder](https://github.com/open-edge-platform/metro-ai-suite) | [metro-ai-app-builder](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-builder) |
 | [Metro AI Suite - Vision AI App Recipe](https://github.com/open-edge-platform/metro-ai-suite) | [metro-ai-app-recipe](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/metro-ai-app-recipe) |
 | [Model Download](https://github.com/open-edge-platform/edge-ai-libraries) | [model-download-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/model-download-user) |
@@ -26,7 +28,7 @@ to build solutions with Open Edge Platform products.
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user) |
 | [UAV Mission Compute SDK](https://github.com/open-edge-platform/federal-and-aerospace-ai-suite) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk) |
 | [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video) |
-| **Total** | **17 products, 36 skills** |
+| **Total** | **19 products, 38 skills** |
 <!-- END SKILLS INDEX -->
 
 ---
