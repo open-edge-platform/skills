@@ -2,6 +2,6 @@
   "name": "skills-index",
   "private": true,
   "dependencies": {
-    "skills": "1.7.2"
+    "skills": "1.7.3"
   }
 }
