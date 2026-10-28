@@ -8,21 +8,21 @@ description: Train a computer-vision model with the getitune library (the Geti t
 `getitune` is a low-code transfer-learning library. Training is driven by an
 `Engine` created with `create_engine(...)`, which pairs a **model/recipe** with a
 **dataset** and returns a runnable engine. Recipes (YAML under
-`library/src/getitune/recipe/<task>/`) bundle model + data pipeline + training
+`libraries/getitune/src/getitune/recipe/<task>/`) bundle model + data pipeline + training
 config, so a model name alone gives a strong baseline.
 
 There are two equal entry points that share the same objects and recipes:
 
 - **Python API** — `from getitune.engine import create_engine`, then
   `engine.train()` / `engine.test()`. Preferred for notebooks, scripts, tests,
-  and library integration. See `library/README.md` ("Quick Start") and the
+  and library integration. See `libraries/getitune/README.md` ("Quick Start") and the
   [getitune documentation](https://docs.geti.intel.com/docs/user-guide/library/get-started/quick-start).
 - **CLI** — `getitune train --data_root <path> --model <name|recipe.yaml>`.
   Preferred for reproducible experiments and shell workflows. See
   `getitune train --help` and the
   [getitune documentation](https://docs.geti.intel.com/docs/user-guide/library/get-started/intro).
 
-Run everything from `library/`. Install with the extra that matches your
+Run everything from `libraries/getitune/`. Install with the extra that matches your
 hardware: `uv sync` (cpu), `uv sync --extra xpu`, or `uv sync --extra cuda`.
 
 ## Python API workflow
@@ -64,7 +64,7 @@ Warm-start from existing weights with
 ## CLI workflow
 
 ```bash
-# from library/
+# from libraries/getitune/
 # 1. Simplest: data only — getitune picks a default model for the task
 getitune train --data_root /path/to/dataset
 
@@ -104,7 +104,7 @@ argument list.
 ## Verify
 
 ```bash
-# from library/
+# from libraries/getitune/
 just lint
 just test-unit -- -k engine        # when you changed engine/training code
 ```
@@ -119,4 +119,4 @@ a long real run.
 - `getitune-preparing-datasets` — the `data=` half of the engine.
 - `getitune-exporting-a-model` — export a trained checkpoint to OpenVINO/ONNX.
 - `getitune-running-inference` — run predictions with a trained or exported model.
-- `geti-library-dev` — when the library/model code itself needs changes.
+- `geti-library-dev` — when the libraries/getitune/model code itself needs changes.

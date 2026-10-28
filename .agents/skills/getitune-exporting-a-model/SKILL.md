@@ -11,7 +11,7 @@ After training, export a model to a deployable format with `engine.export(...)`
 artifacts load back for inference via the OpenVINO/ONNX path (see the
 `getitune-running-inference` skill).
 
-Run everything from `library/`.
+Run everything from `libraries/getitune/`.
 
 ## Python API workflow
 
@@ -54,7 +54,7 @@ onnx_fp16 = engine.export(export_format=ExportFormat.ONNX, export_precision=Prec
 ## CLI workflow
 
 ```bash
-# from library/
+# from libraries/getitune/
 getitune export --data_root /path/to/dataset --model efficientnet_b0
 # use --help -v for export-format / precision flags
 ```
@@ -62,7 +62,7 @@ getitune export --data_root /path/to/dataset --model efficientnet_b0
 ## Export/load contract
 
 - Each model implements `forward_for_tracing(...)` under
-  `library/src/getitune/backend/lightning/models/<task>/`; that is what defines
+  `libraries/getitune/src/getitune/backend/lightning/models/<task>/`; that is what defines
   the exported graph. If you change model I/O, keep this method in sync or export
   parity breaks.
 - Exported OpenVINO IR / ONNX models are loaded for inference through the
@@ -74,7 +74,7 @@ getitune export --data_root /path/to/dataset --model efficientnet_b0
 ## Verify
 
 ```bash
-# from library/
+# from libraries/getitune/
 just lint
 just test-unit -- -k export        # when you touched export/tracing code
 ```

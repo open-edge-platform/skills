@@ -10,7 +10,7 @@ description: Run inference and evaluation with a getitune model (the Geti traini
 engine holds a **PyTorch** model or an **exported** OpenVINO/ONNX model — the
 backend is selected from what you pass to `model=`.
 
-Run everything from `library/`.
+Run everything from `libraries/getitune/`.
 
 ## PyTorch inference (trained model)
 
@@ -61,7 +61,7 @@ Passing an `.xml` or `.onnx` path builds an `OVEngine`, which loads the model vi
 ## CLI
 
 ```bash
-# from library/
+# from libraries/getitune/
 getitune predict --data_root /path/to/dataset --model efficientnet_b0
 getitune test    --data_root /path/to/dataset --model /path/to/exported_model.xml
 ```

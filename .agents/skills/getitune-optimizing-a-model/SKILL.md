@@ -10,7 +10,7 @@ description: Optimize an exported getitune model (the Geti training library) wit
 model and speed up inference. Quantization runs on an **OpenVINO** model (an
 exported `.xml`), producing an INT8 version.
 
-Run everything from `library/`.
+Run everything from `libraries/getitune/`.
 
 ## Workflow
 
@@ -59,7 +59,7 @@ FP32/FP16 model, either pass the original `.xml` path directly to `.test()` /
 ## Verify
 
 ```bash
-# from library/
+# from libraries/getitune/
 just lint
 just test-unit -- -k optimize      # when you touched optimization code
 ```

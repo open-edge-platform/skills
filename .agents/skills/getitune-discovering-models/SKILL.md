@@ -6,10 +6,10 @@ description: Discover which models, recipes, and tasks the getitune library (the
 # Discovering models and recipes in getitune
 
 Every trainable model in `getitune` is backed by a **recipe** YAML under
-`library/src/getitune/recipe/<task>/`. Recipes are self-discovering, so listing
+`libraries/getitune/src/getitune/recipe/<task>/`. Recipes are self-discovering, so listing
 them is how you learn what you can train and what to pass to `create_engine`.
 
-Run everything from `library/`.
+Run everything from `libraries/getitune/`.
 
 ## List models from Python
 
@@ -29,7 +29,7 @@ Pass any returned name (or recipe path) to
 ## List models from the CLI
 
 ```bash
-# from library/
+# from libraries/getitune/
 getitune find                # lists available model recipes
 ```
 
