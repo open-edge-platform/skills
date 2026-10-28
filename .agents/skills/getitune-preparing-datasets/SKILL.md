@@ -10,7 +10,7 @@ When you pass a filesystem path to `data=` (Python API) or `--data_root` (CLI),
 **auto-detect the dataset format** — you point at the dataset root and the same
 call works regardless of the underlying format.
 
-Run everything from `library/`.
+Run everything from `libraries/getitune/`.
 
 ## Supported formats and how they are detected
 
