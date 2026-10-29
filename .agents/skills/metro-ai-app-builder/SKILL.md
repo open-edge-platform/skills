@@ -4,12 +4,12 @@ description: >-
   Conversational orchestrator that turns an objective into a working Intel Edge
   AI application through one questionnaire — the user states an outcome and may
   optionally specify packaging, API recipe, hardware, and models (or defer each
-  with `auto`) — then discovering the relevant open-edge-platform/skills,
+  with `auto`) — then discovering the relevant Open Edge Platform skills,
   proposing a plan, and building the deliverable by DELEGATING to the right
   skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
-  Requires: Node.js 20+ and the `npx skills@1.5.23` CLI (from open-edge-platform/skills)
+  Requires: Node.js 20+ and the `npx skills@1.5.23` CLI
   to add delegate skills on demand; `git`/`gh` and network access to github.com
   to read the live skill index. Individual delegate skills add their own
   requirements (Docker + Compose v2, Intel CPU/GPU/NPU, Kubernetes/Helm, Python)
@@ -33,9 +33,9 @@ terms, in **technical** terms, or a mix — accept whatever they give. You:
    scale, plus the optional technical axes (**packaging type, API recipe,
    target HW, models & videos**). Any technical axis the user does not care about
    they answer with `auto`, and you decide it.
-2. **Discover** the relevant skill(s) from the
-   `open-edge-platform/skills`
-   catalog (see [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and
+2. **Discover** the relevant skill(s) from the curated objective mappings and
+   the upstream `skills-config.json` index (see
+   [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and
    [`references/DISCOVERY.md`](references/DISCOVERY.md)).
 3. **Propose a plan** — deliverable, which skill(s) will build it, and the
    technology you inferred — and **wait for explicit confirmation**.
@@ -64,9 +64,10 @@ already know which specific skill to run. Specifically:
 
 Typical objectives this skill routes: detect/count/track objects in camera
 feeds, spatial multi-camera analytics, video search & summarization,
-conversational Q&A / RAG over documents, multimodal embeddings,
-downloading/converting models, training a computer-vision model, or deploying a
-robot policy.
+conversational Q&A / RAG over documents, multimodal data preparation and
+embeddings, model download/conversion and training, manufacturing-quality and
+time-series applications, OEP component lifecycle, UAV mission compute, and
+Physical AI policy workflows.
 
 **Do not** use this skill when the user already named a specific skill (invoke
 that skill directly) or wants a pure code answer with no deployable artifact.
@@ -147,7 +148,7 @@ recipe** (Q8) is specified, load [`references/API_RECIPES.md`](references/API_RE
 | API recipe = **DL Streamer**, or "build/port a DL Streamer pipeline or simple vision app" | **`dlstreamer-coding-agent`** (the DLS skill) — **not** the recipe stack |
 | API recipe = **OpenVINO + OpenCV** | OpenVINO custom-code path (per OpenVINO docs) + `model-download-user` for the IR |
 | API recipe = **OVMS + FFmpeg** | OVMS model-serving path + `model-download-user` (OVMS-ready IR) + FFmpeg glue code |
-| Packaging = **microservice / full end-to-end** analytics stack + dashboard (detection/counting/zone alerts) | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
+| Packaging = **microservice / full end-to-end** analytics stack + dashboard (detection/counting/zone alerts) | **`metro-ai-app-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
 | Packaging = **demo/PoC** app that just proves a model runs and emits detections (single lightweight vision app, no full stack) | **`dlstreamer-coding-agent`** |
 | "Multi-camera / spatial / cross-camera tracking of a scene" (whole-scene view) | **`scenescape-setup`** (directly — multi-camera spatial analytics) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
@@ -155,10 +156,14 @@ recipe** (Q8) is specified, load [`references/API_RECIPES.md`](references/API_RE
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |
 | "Search / summarize my video library" | **`vss-deploy`** (+ `vss-search-index` / `vss-summarize-video`); k8s → **`vss-deploy-helm`** |
 | "Embed text/images/videos for similarity search" | **`multimodal-embedding-serving-user`** |
-| "Ingest videos into a vector DB" | **`vdms-dataprep-user`** |
+| "Prepare / ingest videos and images for retrieval" | **`multimodal-dataprep-user`** |
 | "Download / convert a model for inference/OVMS" | **`model-download-user`** |
-| "Train / fine-tune / export / quantize a CV model" | **`getitune-*`** (training lib) or **`geti-using-the-pipeline`** (Geti app) |
-| "Deploy / benchmark / run a robot policy" | **`physicalai-train-*`** / **`physicalai-runtime-*`** |
+| "Train / fine-tune / export / quantize a CV model" | **`getitune-*`** (Geti model library), **`geti-using-the-pipeline`** (Geti app), or **`anomalib-training`** (anomaly detection) |
+| "Train / export / benchmark / run a Physical AI policy" | **`pai-train-policy`**, **`pai-export-policy`**, **`pai-benchmark-policy`**, **`pai-load-policy`**, **`pai-run-policy`** |
+| Manufacturing-quality application | **`manufacturing-ai-app-builder`** → `manufacturing-app-recipe` |
+| "Install / start / stop an OEP module or profile" | **`openedge-cli`** |
+| "Build a time-series analytics use case" | **`time-series-analytics-user`** |
+| UAV Mission Compute SDK setup / operation | **`uav-mission-compute-sdk`** |
 
 If nothing fits, say so plainly and suggest the closest catalog entry or a
 custom-code path — do not invent a skill.
@@ -215,14 +220,19 @@ Only after confirmation:
    installed in the session, add it (see
    [`references/DISCOVERY.md`](references/DISCOVERY.md)):
 
+   Use the skill's `repo`, `ref`, `path`, and `name` from `skills-config.json`:
    ```bash
-   npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
+   npx skills@1.5.23 add https://github.com/<owner>/<repo>/tree/<ref>/<path>/<skill-name>
    ```
+   Verify that the configured path exists on the selected ref and use any
+   per-skill path override. If it is stale, discover the actual skill folder in
+   that repository before installing; do not assume every delegate is in
+   `open-edge-platform/skills`.
 
 2. **Invoke the delegate skill**, passing the parameters you inferred in Step 3.
    Let it own the build — do not re-implement its work by hand. Chain supporting
    skills in dependency order (e.g. `model-download-user` →
-   `metro-ai-app-recipe`; `vdms-dataprep-user` → `vss-*`).
+   `metro-ai-app-recipe`; `multimodal-dataprep-user` → `vss-*`).
 3. Relay only the **business-relevant** progress to the user; keep the technical
    chatter to the delegate.
 
@@ -263,12 +273,13 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 
 - This skill wraps the prompt library (`metro-ai-suite/prompt-library`); the minimal
   `prompts/*.yaml` files state only a business objective and hand off here.
-- Vision objectives split three ways: **`metro-ai-apps-recipe`**
-  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`,
+- Vision objectives split three ways: **`metro-ai-app-recipe`**
+  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-app-recipe/`,
   in this same repository) builds the **end-to-end** analytics stack;
   **`scenescape-setup`** handles **multi-camera / spatial** whole-scene analytics
   directly; **`dlstreamer-coding-agent`** builds a **quick demo / simple** or
-  custom-code vision app. All delegates other than `metro-ai-apps-recipe` live in
+  custom-code vision app. Resolve every external delegate's source repository
+  from the current `skills-config.json`; the index is not limited to
   `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
   in sync with the upstream `skills-config.json` — see

@@ -23,7 +23,7 @@ deferred.
 
 **Discovery (Step 2):** API recipe = **OVMS + FFmpeg** takes precedence (see
 `references/API_RECIPES.md`) → **OVMS model-serving path** (OVMS + FFmpeg glue
-code), **not** `metro-ai-apps-recipe`. Supporting: **`model-download-user`** for
+code), **not** `metro-ai-app-recipe`. Supporting: **`model-download-user`** for
 an OVMS-ready IR.
 
 **Resolved axes (Step 3 — decisions for deferred axes, choices for specified):**
@@ -38,6 +38,8 @@ an OVMS-ready IR.
   client that decodes the RTSP feed and calls the OVMS API; results over the
   service API.
 - Skills: `model-download-user` (OVMS-ready IR) → OVMS + FFmpeg custom-code path.
+- Install after approval:
+  `npx skills@1.5.23 add https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download/.github/skills/model-download-user`
 - Requirements: Docker + Compose v2; an Intel GPU (render/video groups) for the
   AUTO→GPU choice, else CPU; the RTSP URL.
 

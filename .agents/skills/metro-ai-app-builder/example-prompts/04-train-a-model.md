@@ -24,7 +24,15 @@ user prefers the Geti app REST workflow instead of the library.
   `getitune-running-inference`.
 - Inferred technology: a detection recipe baseline, device per availability,
   FP32→INT8 via NNCF PTQ.
-- Install (after approval): `npx skills@1.5.23 add open-edge-platform/skills --skill getitune-training-a-model` (and the other getitune skills as needed).
+- Install after approval from `open-edge-platform/geti@develop`. Although the
+  current `skills-config.json` path override says `skills/library`, the actual
+  `getitune-*` skill folders are under `skills/getitune/`:
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-discovering-models`
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-preparing-datasets`
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-training-a-model`
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-exporting-a-model`
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-optimizing-a-model`
+  - `npx skills@1.5.23 add https://github.com/open-edge-platform/geti/tree/develop/skills/getitune/getitune-running-inference`
 - Requirements: Python env for getitune; dataset accessible locally.
 
 **Follow-on:** the resulting IR can be deployed via `model-download-user` →

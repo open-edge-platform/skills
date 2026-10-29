@@ -31,7 +31,8 @@ NVIDIA model needs an OpenVINO IR equivalent.
 - Requirements: Node 20+ / `npx skills@1.5.23` to install the delegate; Intel GPU
   drivers for GPU inference; OpenVINO runtime.
 - Install command (run only after approval):
-  `npx skills@1.5.23 add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent`
+  `npx skills@1.5.23 add https://github.com/open-edge-platform/dlstreamer/tree/main/.github/skills/dlstreamer-coding-agent`
+  and `npx skills@1.5.23 add https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download/.github/skills/model-download-user`
 
 **Build (Step 5, after "go"):** delegate to `dlstreamer-coding-agent`, passing the
 inferred element mapping, model IR, `DEVICE=GPU`, and the ONVIF source. Verify
