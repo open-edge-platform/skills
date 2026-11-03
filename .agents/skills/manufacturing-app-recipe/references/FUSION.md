@@ -27,12 +27,12 @@ processed topic, never the raw input topic. Keep Fusion's service-local
    flags to produce one fused decision.
 5. Write the fused verdict + raw vision metadata to InfluxDB, and publish
    the fused verdict on `{{FUSION_TOPIC}}`.
-6. (`vllm`/`agentic` modes only) Accumulate fused verdicts in a batch and
-   publish a **batch-complete** MQTT event on `{{MQTT_BATCH_TOPIC}}` (e.g.
-   `vllm/batch-complete` or `apm/batch-complete`) once the configured trigger
-   fires — this is Fusion Analytics' own responsibility, not a separate
-   service: no extra "batching shim" container exists in the generated
-   layout. See *Batching for the explanation layer* below.
+6. (`vllm`/`agentic` modes) Serve the storage API (`api.py`, port `8080`)
+   that the UI and `apm-agent` read. **Do not** publish `batch-complete` by
+   default. In the reference format the user starts agent runs from the
+   agentic UI's **Run Agentic Analysis** button, and VLM explanations from
+   the **Explain** button. Automatic triggering is opt-in; see *Batching for
+   the explanation layer (opt-in)* below.
 
 ## Required env
 
@@ -51,12 +51,16 @@ INFLUXDB_DB=datain
 INFLUXDB_USERNAME=${INFLUXDB_USERNAME}
 INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}
 
-# vllm/agentic modes only — batch-complete trigger (see "Batching for the
-# explanation layer" below); omit entirely for plain multimodal mode
-MQTT_BATCH_TOPIC={{MQTT_BATCH_TOPIC}}    # vllm/batch-complete (vllm) or apm/batch-complete (agentic)
-BATCH_TRIGGER_MODE={{BATCH_TRIGGER_MODE}} # "size" or "time" — validate at startup
-BATCH_SIZE={{BATCH_SIZE}}                # fused verdicts per batch, when BATCH_TRIGGER_MODE=size (e.g. 10)
-BATCH_INTERVAL_S={{BATCH_INTERVAL_S}}    # seconds between flushes, when BATCH_TRIGGER_MODE=time (e.g. 30)
+FUSION_MEASUREMENT=fusion_result         # keep the reference name; the UI and agent read it
+VISION_MEASUREMENT={{VISION_MEASUREMENT}}
+
+# agentic mode, ONLY when {{AGENT_TRIGGER}} is `size` or `time` (opt-in; the
+# reference default `ui` sets none of these)
+MQTT_BATCH_TOPIC=apm/batch-complete
+BATCH_TRIGGER_MODE={{AGENT_TRIGGER}}     # "size" or "time" — validate at startup
+BATCH_SIZE={{BATCH_SIZE}}                # confirmed defects per run, when size (e.g. 10)
+BATCH_INTERVAL_S={{BATCH_INTERVAL_S}}    # seconds between runs, when time (e.g. 300)
+BATCH_MIN_INTERVAL_S={{BATCH_MIN_INTERVAL_S}}  # cooldown >= one agent run (CPU LLM: ~120-300 s)
 ```
 
 ## Timestamp handling — the trickiest part
@@ -119,8 +123,14 @@ different rates and out of lockstep. Use first-come-first-served pairing:
   of multimodal outcome, tagged with `label`/`confidence`/`search_time`, so
   Grafana can show a vision-only trend even when no sensor match was found.
   This happens in the MQTT `on_message` callback, not in the multimodal step.
+  `search_time` (the RTP sender timestamp in ns) and the fields `frame_id`
+  and `img_handle` are **required** in `vllm`/`agentic`: the UI's Explain
+  flow joins on them to fetch the stored frame. See
+  [`UI_SERVICE.md`](UI_SERVICE.md#data-contract).
 - **Fused verdict** — write every verdict published to `{{FUSION_TOPIC}}` to
-  a separate `FUSION_MEASUREMENT` (e.g. `multimodal-anomaly-detection-results`).
+  a separate `FUSION_MEASUREMENT` (keep the reference name `fusion_result`;
+  the UI and agent default to it). Store `vision_timestamp` and
+  `timeseries_timestamp` as epoch-ns integers and `frame_id` as a field.
   Include both source timestamps and the timestamp delta for matched pairs;
   for unmatched `OR` verdicts, set the missing modality's timestamp and the
   delta to JSON `null` in the MQTT payload and omit those unavailable fields
@@ -147,46 +157,61 @@ with scalar `fused_decision`**, not a nested object — Grafana's MQTT
 datasource plots scalars directly; a nested/array payload breaks the panel
 (same caveat as `metro-ai-app-recipe`'s count-topic rule).
 
+**OpenMES (`{{OPENMES_ENABLED}}=yes`):** this fused verdict is the **only**
+input for OpenMES publishing in `multimodal`/`vllm`/`agentic` modes.
+- The publisher reports `fused_decision == 1` from `{{FUSION_TOPIC}}`.
+- It never subscribes to `{{VISION_TOPIC}}`, `{{TS_PROCESSED_TOPIC}}` or
+  `{{SENSOR_ALERT_TOPIC}}`, which would duplicate modality-level reports.
+- Keep the `vision_time`/`timeseries_time` keys exactly as above. The
+  publisher uses whichever one is non-null as the event timestamp.
+- Fusion Analytics needs no code change.
+
+See [`OPENMES.md`](OPENMES.md).
+
 ## Health/API surface
 
-Expose a small FastAPI app (`api.py` in the reference) on a fixed port
-(e.g. `8080`) with at minimum a `/health` endpoint the container healthcheck
-can hit, and (optionally) a query endpoint the `vllm`/`agentic` layer's
-`STORAGE_SERVICE_URL` can call to retrieve a recent fused-event batch — this
-is the integration point [`references/VLM.md`](VLM.md) depends on when
-`{{DEPLOYMENT}}` is `vllm` or `agentic`.
+Expose the reference FastAPI app (`api.py`) on port `8080`: `/health`
+for the container healthcheck, plus `/detections`, `/detections/summary`,
+`/detections/labels` and `/detections/max_id`. In `agentic` mode
+`apm-agent` reads these through `STORAGE_SERVICE_URL`; the exact response
+shapes it needs (including `frame_id` per row) are in
+[`AGENTIC.md`](AGENTIC.md#storage-api-contract-the-agent-depends-on).
+Copy the reference `api.py` and change only names.
 
-**InfluxQL injection warning — do not copy the reference's query-building
-verbatim.** The reference `api.py`'s `/detections?label=...` endpoint
-interpolates the `label` query parameter directly into an InfluxQL string
-(`f"fusion_classification = '{label}'"`) — it defines a `_SAFE_LABEL_RE`
-allowlist regex but never actually applies it, so a crafted `label` value
-breaks out of the string literal and injects arbitrary InfluxQL. Any query
-endpoint built from this template **must** validate/allowlist every
-user-supplied filter value (e.g. `_SAFE_LABEL_RE.fullmatch(label)`, rejecting
-with 400 on failure) before interpolating it into a query string — never
-trust `_SAFE_LABEL_RE` being merely *defined* as evidence it's *enforced*.
+**InfluxQL injection — keep the guard when adapting.** Every user-supplied
+filter must be validated before it reaches a query: the reference
+`/detections?label=...` checks `_SAFE_LABEL_RE.fullmatch(label)` (400 on
+failure) and passes the value as a bind parameter (`$label`). Numeric filters
+are typed FastAPI `Query` parameters. Do not drop either guard, and never
+interpolate a raw string parameter into InfluxQL.
 
-## Batching for the explanation layer (`vllm`/`agentic` modes only)
+## Batching for the explanation layer (opt-in)
 
-Fusion Analytics itself maintains the batch, in addition to its per-event
-fused-verdict write/publish above — there is no separate batching
-microservice in the generated layout:
+**Default (`{{AGENT_TRIGGER}}=ui`, the reference format): Fusion Analytics
+publishes nothing for the explanation layer.** VLM explanations are
+requested per row from `/insights-ui/` (Explain), and agent runs from
+`/agentic-ui/` (Run Agentic Analysis, which publishes `apm/batch-complete`
+itself). `vllm` mode has no batch topic at all.
 
-- Append every fused verdict (step 4/5 above) to an in-memory batch list.
-- When `BATCH_TRIGGER_MODE=size`, flush once the list reaches `BATCH_SIZE`
-  entries; when `=time`, flush every `BATCH_INTERVAL_S` seconds regardless
-  of size (use a background timer/thread, not a blocking sleep in the MQTT
-  callback).
-- On flush: publish an empty-payload (or `{"count": N}`) MQTT message to
-  `{{MQTT_BATCH_TOPIC}}`, then clear the batch. The accumulated batch itself
-  is retrieved by `vllm-explainer`/`apm-agent` via the `/health` surface's
-  query endpoint above, keyed by `STORAGE_SERVICE_URL`, **not** carried in
-  the MQTT payload.
-- Ask the user for `{{BATCH_TRIGGER_MODE}}`/`{{BATCH_SIZE}}`/
-  `{{BATCH_INTERVAL_S}}` explicitly during planning (see SKILL.md's `vllm`
-  mode questions) — do not silently default this, an unset trigger means
-  the explanation layer never receives any input.
+Only when the user explicitly asks for **automatic** agent runs in
+`agentic` mode (`{{AGENT_TRIGGER}}=size` or `time`), add this to Fusion
+Analytics:
+
+- Record the time of every **confirmed** verdict (`fused_decision == 1`),
+  not every pairing. At 10 fps a defective part yields about 10 per second.
+- `size`: flush when at least `BATCH_SIZE` confirmed verdicts have
+  accumulated **and** `BATCH_MIN_INTERVAL_S` has passed since the last flush.
+  `time`: flush every `BATCH_INTERVAL_S` if any accumulated. Use a background
+  thread, never a sleep in the MQTT callback.
+- Set `BATCH_MIN_INTERVAL_S` to at least one agent run's duration (a CPU
+  agent LLM run is about 2–5 min). Without it, runs queue up far faster
+  than they complete (observed: 65 queued batches within minutes).
+- On flush, publish the same payload the UI's Run publishes
+  (`{"run_id", "status": "completed", "device", "video_filename",
+  "start_id", "end_id", "pipeline_status"}`), where `start_id`/`end_id` are
+  epoch-ns bounds with `start_id < end_id`. `apm-agent` rejects anything
+  else. The rows themselves are read from the storage API, never carried
+  in MQTT.
 
 ## Verifying multimodal end-to-end
 

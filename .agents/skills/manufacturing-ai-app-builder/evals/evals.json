@@ -1,0 +1,188 @@
+{
+  "skill_name": "manufacturing-ai-app-builder",
+  "notes": "These self-contained evals cover business-first discovery, routing, deployment prerequisites, explicit approval, parameter handoff, and boundaries. Initial requests grade only the current conversational stage: ask for missing answers before presenting a complete plan, and never require a build before approval. The approved-handoff case asks for the procedure only, not an actual deployment. Do not infer live success from a proposed command or plan.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "sensor-only-full-stack-routing",
+      "prompt": "I want to catch bearing wear before a pump fails using vibration readings, and I need a dashboard and alerts. Help me build this.",
+      "expected_output": "A short batched set of business questions about missing inputs and the build location; identifies the sensor-only ts route without building or presenting an executable plan before the answers are known.",
+      "should_trigger": true,
+      "files": [
+        "../example-prompts/01-sensor-only-anomaly.md"
+      ],
+      "expectations": [
+        "Routes the sensor-only full-stack objective to manufacturing-app-recipe with deployment mode ts",
+        "Does not ask the user to choose a framework, model, device, precision, or technical implementation",
+        "Asks only for missing business decisions such as the sensor source, alert preference, and the target checkout or parent directory"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "fused-weld-mode-selection",
+      "prompt": "For weld inspection, combine a camera and pressure sensor so we alert only when both signals indicate a defect. I want a full dashboard solution, and every confirmed defect should be logged as a quality issue in our OpenMES.",
+      "expected_output": "Business-first follow-up questions and a route to manufacturing-app-recipe for a fused stack with the optional OpenMES publisher enabled. The user must explicitly choose multimodal, vllm, or agentic; OpenMES connection details are requested from the user, not invented; no build begins before approval.",
+      "should_trigger": true,
+      "files": [
+        "../example-prompts/02-vision-sensor-fusion.md"
+      ],
+      "expectations": [
+        "Recognizes that camera and sensor signals must combine into one verdict and routes to manufacturing-app-recipe",
+        "Explicitly presents multimodal (fused alert only), vllm (on-demand explanation of a selected result), and agentic (agent-run analysis that includes the vllm layer) as the available fused deployment choices",
+        "Does not silently default to multimodal or ask only a generic question about whether explanations are wanted",
+        "Treats the OpenMES request as the recipe's optional OpenMES publishing and asks for the base URL, the token file path (not the token value), an existing work order ID, a non-blocking issue type ID, and a station/line name, without inventing any of them",
+        "States that only confirmed fused defects are reported to OpenMES, one Issue per confirmed defect, not camera-only or sensor-only alerts",
+        "Asks for missing business inputs and the absolute build location without asking the user to choose technical components",
+        "Does not create files or start services before proposing the plan and receiving explicit approval"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "camera-only-vision-routing",
+      "prompt": "I need a camera-only demo that spots scratches on metal parts. No sensor data is involved, and I only need a quick proof of concept.",
+      "expected_output": "Routes the camera-only demo to dlstreamer-coding-agent or metro-ai-app-recipe demo mode, not the manufacturing recipe's full-stack path, and asks only for missing business details.",
+      "should_trigger": true,
+      "files": [
+        "../example-prompts/03-vision-only-inspection.md"
+      ],
+      "expectations": [
+        "Recognizes this as a camera-only quick demo rather than a fused or sensor-only problem",
+        "Routes to dlstreamer-coding-agent or metro-ai-app-recipe demo mode",
+        "Does not route to manufacturing-app-recipe multimodal, vllm, or agentic mode"
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "ambiguous-signal-clarification",
+      "prompt": "I want to catch problems early on our production line. What can you build?",
+      "expected_output": "Asks concise business questions to understand the desired outcome, available decision signals, and deliverable before choosing a route or proposing a build plan.",
+      "should_trigger": true,
+      "files": [
+        "../example-prompts/04-ambiguous-modality.md"
+      ],
+      "expectations": [
+        "Asks what outcome or problem the user wants to detect",
+        "Clarifies whether the decision is fed by a camera, sensor stream, or both, without asking the user to select a technical modality by name",
+        "Does not guess a delegate skill, deployment mode, or implementation before the signal and deliverable are clear",
+        "Does not create files, download dependencies, or start services"
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "direct-skill-request-boundary",
+      "prompt": "Use the time-series-analytics-user skill directly to write a threshold UDF for my existing service. I do not need a new application stack.",
+      "expected_output": "The app-builder skill should not trigger; the user named a specific skill and requests a bare UDF rather than guided app discovery.",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Does not begin the manufacturing app-builder discovery and planning procedure",
+        "Does not route the request to manufacturing-app-recipe or propose a new application stack"
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "camera-full-stack-discovery-and-install-plan",
+      "prompt": "Detect scratches using only my factory RTSP camera and show annotated video, defect counts, and alerts on a dashboard. Use single-host Docker Compose on my Intel GPU host. Create scratch-inspection-stack under /work/stacks. MQTT alerts are fine; no sensor correlation or explanations. These are my completed business answers, but I have not approved a build. Assume metro-ai-app-recipe is not installed locally. Present the plan only; do not install or create anything.",
+      "expected_output": "A complete camera-only plan using metro-ai-app-recipe, with inferred technology, deployment prerequisites, a deferred skill-install command, and a concrete delegation-and-verification next step; stops for approval.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses references/SKILL_CATALOG.md to route the camera-only dashboard objective to metro-ai-app-recipe, not manufacturing-app-recipe vision demo or multimodal mode",
+        "States the deliverable path /work/stacks/scratch-inspection-stack and explains that the camera alone feeds the decision",
+        "Presents model/device/topics as inferred decisions rather than asking the user to select a framework, model architecture, precision, or device; asking only whether a trained scratch model already exists (and where) or should be fetched is a model-availability question and is allowed",
+        "Surfaces Docker Compose, Intel GPU device/group permissions, required ports, and network/model-download prerequisites",
+        "Includes npx skills@1.7.4 add open-edge-platform/skills --skill metro-ai-app-recipe as an installation step to run only after approval",
+        "Commits to delegating to metro-ai-app-recipe and checking its completion criteria after approval rather than implementing the stack by hand",
+        "Waits for explicit approval without installing skills, generating artifacts, or starting containers"
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "bare-sensor-udf-routing",
+      "prompt": "Our pump already sends vibration readings to a running analytics microservice. I only want a rule that alerts when vibration_mm_s exceeds 12; no simulator, Grafana, or new application stack. Help me choose how to add this.",
+      "expected_output": "Routes the bare sensor-analytics request to time-series-analytics-user rather than the full ts app scaffold, then plans and waits for approval.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Selects time-series-analytics-user for a UDF/TICKscript against an existing service",
+        "Preserves the vibration_mm_s field and strict greater-than-12 threshold as inferred handoff parameters",
+        "Does not propose manufacturing-app-recipe ts production, a new apps/<name>/ folder, simulator, or dashboard",
+        "Requires an approved plan before creating or deploying the UDF"
+      ]
+    },
+    {
+      "id": 8,
+      "eval_name": "approved-plan-handoff-and-verification",
+      "prompt": "We have completed the business Q&A and I approved this plan: a sensor-only pump threshold app pump-pressure in /work/industrial-edge-insights-time-series, MQTT ingestion, field pressure_bar outside [80,150], MQTT alerts, dashboard, and generated tests. All delegate skills are available locally. Before executing, explain the exact skill handoff and verification sequence you will follow. This message requests guidance only: do not create files, call deployment APIs, or start services.",
+      "expected_output": "A post-approval procedure handing off to manufacturing-app-recipe ts production with supporting time-series-analytics-user UDF work in dependency order, preserving the approved parameters and checking real completion evidence rather than assuming success.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Names manufacturing-app-recipe as the primary delegate and explicitly passes {{DEPLOYMENT}}=ts",
+        "Passes the exact approved checkout, app name, MQTT ingestion, pressure_bar threshold outside [80,150], dashboard, alert channel, and test choice",
+        "Sequences supporting time-series-analytics-user UDF/TICKscript work before its integration/package deployment instead of reimplementing the delegate's work",
+        "Does not propose reinstalling locally available skills or fetch manufacturing-app-recipe from an invented upstream location",
+        "Verifies against the delegate's criteria including registration, healthy ingestion, stored sensor data, an actual alert, correct dashboard, and tests",
+        "Reports a failing delegate step and stops rather than claiming success or retrying indefinitely",
+        "Obeys the guidance-only request and does not execute the approved build"
+      ]
+    },
+    {
+      "id": 9,
+      "eval_name": "changed-business-answer-requires-reapproval",
+      "prompt": "You proposed a sensor-only pump dashboard in /work/industrial-edge-insights-time-series, but I have not approved it. Change of plan: ignore sensors for the decision. Only camera-based leak detection should trigger the alert; the pressure gauge is just background context. Keep a full video dashboard and MQTT alerts. I have not chosen a new build directory.",
+      "expected_output": "Replans as a camera-only full stack, asks for a standalone output location, and requires approval of the changed plan without building the previously proposed ts app.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Routes to metro-ai-app-recipe because the camera alone determines the alert",
+        "Does not select multimodal merely because the user mentions a pressure gauge",
+        "Asks for the new standalone build location rather than reusing the time-series checkout or current directory without confirmation",
+        "Does not build the old ts plan and requires confirmation of the revised plan"
+      ]
+    },
+    {
+      "id": 10,
+      "eval_name": "agentic-choice-plan-preservation",
+      "prompt": "Completed business answers: my camera and temperature sensor must both flag a defective part; use live RTSP and MQTT feeds, a single-host Compose solution on Intel GPU, MQTT alerts plus dashboard, and create part-quality-stack under /work/stacks. For the explanation choice I explicitly select agentic, without the optional MCP server. Present the plan and wait for approval.",
+      "expected_output": "A fused AND plan using manufacturing-app-recipe in agentic mode, explicitly including its vllm layer, preserving the chosen path and MCP opt-out, and waiting for approval.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Routes to manufacturing-app-recipe because both signals combine into one verdict and infers FUSION_MODE=AND",
+        "Carries the explicitly selected agentic mode verbatim and explains that it already includes the vllm explanation layer",
+        "Does not substitute multimodal, ask the already answered mode question again, or pass agentic and vllm as two parallel deployments",
+        "Preserves /work/stacks/part-quality-stack and the MCP server opt-out",
+        "Surfaces extra LLM/VLM model, hardware, and setup requirements while keeping explanation output supplemental to the fused decision",
+        "Lists the reference-format deliverables: the Explainability dashboard (/insights-ui/ Explain) and the Agentic dashboard (/agentic-ui/ Run Agentic Analysis), and asks for both the vision-language model and the agent LLM rather than inventing them",
+        "States the post-approval delegation and verification step, and creates nothing before approval"
+      ]
+    },
+    {
+      "id": 11,
+      "eval_name": "multi-camera-spatial-routing",
+      "prompt": "Track the same forklift across three factory cameras so it is counted once as it moves between views. I need a dashboard on a local Intel host. No sensor readings feed this decision.",
+      "expected_output": "Recognizes cross-camera spatial correlation rather than camera-plus-sensor fusion and routes through metro-ai-app-recipe's Scenescape path.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Routes to scenescape-setup through metro-ai-app-recipe's opt-in Scenescape path",
+        "Does not confuse multiple cameras with manufacturing-app-recipe camera-plus-sensor multimodal fusion",
+        "Clarifies missing business inputs and location before a complete plan, then requires approval before installation or deployment",
+        "Does not invent a new cross-camera skill"
+      ]
+    },
+    {
+      "id": 12,
+      "eval_name": "non-manufacturing-objective-boundary",
+      "prompt": "Build a chatbot that answers HR questions from our employee-policy PDFs. It has no manufacturing quality or equipment-monitoring role.",
+      "expected_output": "The manufacturing orchestrator should not trigger for a document-grounded HR chatbot, even though the broader Metro builder can route such a request.",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Does not begin manufacturing business Q&A or route to manufacturing-app-recipe",
+        "Does not fabricate a manufacturing deployment mode for document question answering"
+      ]
+    }
+  ]
+}

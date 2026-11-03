@@ -107,8 +107,10 @@ exactly one UDF per app — confirm against the reference's own
 `wind-turbine-anomaly-detection.tar` naming before deviating).
 
 Deploy via the Makefile's `post_config` step (REST sequencing against
-`https://localhost:${GRAFANA_PORT}/ts-api/config`, with `-k` for the
-self-signed cert), not a hand-written curl — call
+`https://localhost:${GRAFANA_PORT}/ts-api/config`), not a hand-written curl.
+That shared reference Makefile itself calls curl with `-k`; that's existing
+repo behaviour this recipe doesn't change. Any curl **this recipe** runs or
+writes must verify TLS per SKILL.md's *Execution guardrails* (never `-k`) — call
 `make up_{{INGEST_TRANSPORT}}_ingestion app={{APP_NAME}}` and let it
 run `upload_tar_file` + `post_config` for you. **Note:** as of this writing
 `post_config`/`upload_tar_file` do not pass `--noproxy '*'`, so with a host

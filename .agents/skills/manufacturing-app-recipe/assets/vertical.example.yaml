@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Vertical spec for scripts/scaffold_stack.py. Fill in ONLY the user's
+# answers; every path must already exist (never invent models or data).
+# Run:  python3 scripts/scaffold_stack.py --spec my-vertical.yaml --dry-run
+#       python3 scripts/scaffold_stack.py --spec my-vertical.yaml
+# JSON with the same keys also works (no PyYAML needed).
+
+mode: multimodal                 # ts | multimodal | vllm | agentic
+object: cnc_tool_wear            # snake_case id used in topics/UDF names
+title: CNC Tool Wear Detection   # human title (dashboards, UI)
+# slug: cnc-tool-wear            # optional; default derived from object
+host_ip: 127.0.0.1               # LAN IP for remote browsers
+
+# --- multimodal / vllm / agentic ---------------------------------------
+# input_type: simulator         # simulator (default) | rtsp (live camera + live sensor stream:
+#                                #   set vision.rtsp_url; the simulator service is omitted and the
+#                                #   sensor publishes to MQTT topic <slug>-data on the broker)
+# vision.rtsp_url: rtsp://camera.example/stream
+reference_dir: /abs/path/industrial-edge-insights-multimodal
+out_dir: /abs/path/cnc-tool-wear-stack          # new flat stack directory
+fusion_mode: AND                 # AND | OR
+tolerance_ns: 50e6
+use_case_id: cnc-tool-wear-monitoring           # agentic use-case id / prompt file name
+simulation_data_dir: /abs/path/sim-data         # paired <name>.avi + <name>.csv
+vision:
+  model_dir: /abs/path/cnc-classifier-ir        # OpenVINO .xml/.bin (model-proc auto-added if needed)
+  model_name: cnc-tool-wear-classifier
+sensor:
+  udf_name: cnc_tool_wear_detector
+  measurement: cnc-spindle-data
+  model_files:                                  # pretrained pattern only; omit for threshold UDFs
+    - /abs/path/model.pkl
+    - /abs/path/model_labels.pkl
+# reuse_reference_assets: true   # weld only: reuse the reference video/CSV and models
+# generate_tests: false
+# env: {SIMULATION_TARGET_FPS: 10}              # extra .env overrides
+
+# vllm / agentic only
+# vlm:
+#   model_dir: /abs/path/Qwen3.5-2B             # Hugging Face VLM folder (Intel GPU only)
+#   served_name: unsloth/Qwen3.5-2B
+#   adapter_dir: /abs/path/lora-adapter          # optional; omit for no adapter
+#   adapter_name: my-adapter
+
+# agentic only
+# llm:
+#   model_name: microsoft/Phi-4-mini-instruct
+#   device: CPU                                  # CPU | GPU
+#   weight_format: int4
+#   converted_dir: /abs/path/openvino_models/cpu/int4/microsoft/Phi-4-mini-instruct
+#   # or: download: true   (make up_agentic fetches it via model-download)
+#   mode: llm                                    # llm | fallback (fallback: no agent LLM weights,
+#                                                #   model_name/converted_dir not needed, apm-llm not started)
+# mcp: false
+
+# --- ts -------------------------------------------------------------------
+# ts_repo_dir: /abs/path/industrial-edge-insights-time-series
+# alert_channel: mqtt            # mqtt | opcua (OpenMES requires mqtt)
+# template_app: wind-turbine-anomaly-detection
+# app_name: pump-vibration-monitor
+# simulation_csv: /abs/path/pump.csv
+
+# --- optional OpenMES -----------------------------------------------------
+openmes:
+  enabled: false
+  # dummy: true                  # ONLY if the user asked to test without a real OpenMES;
+  #                              # alerts page http://<host_ip>:8099/ (give it to the user)
+  # base_url: https://mes.example.internal       # real OpenMES (user-supplied)
+  # token_file: /abs/path/openmes_token          # path only, never the token value
+  # work_order_id: 123
+  # issue_type_id: 7                             # must be non-blocking
+  # batch_step_id: null
+  # source_id: cnc-cell-01

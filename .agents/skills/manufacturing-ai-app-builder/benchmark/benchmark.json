@@ -1,0 +1,1046 @@
+{
+  "metadata": {
+    "skill_name": "manufacturing-ai-app-builder",
+    "skill_path": "/home/ecgv-d1-l3t15/new_ts/manufacturing-ai-suite/.github/skills/manufacturing-ai-app-builder",
+    "executor_model": "claude-sonnet-5.5",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-11-03T04:11:52Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 23.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes the sensor-only full-stack objective to manufacturing-app-recipe with deployment mode ts",
+          "passed": true,
+          "evidence": "response.md: 'this goes to `manufacturing-app-recipe` with `{{DEPLOYMENT}}=ts` in production mode', with time-series-analytics-user as a supporting step."
+        },
+        {
+          "text": "Does not ask the user to choose a framework, model, device, precision, or technical implementation",
+          "passed": true,
+          "evidence": "No framework, model or precision choice is asked. Q5 (containers) and Q6 ('A standard Intel machine... needs no special accelerator') are phrased as defaulted assumptions to confirm, not choices. Borderline, since Q6 touches on hardware."
+        },
+        {
+          "text": "Asks only for missing business decisions such as the sensor source, alert preference, and the target checkout or parent directory",
+          "passed": true,
+          "evidence": "Asks about the vibration reading and wear threshold (Q1), live feed vs sample dataset (Q3), dashboard and alerts (Q4), OpenMES logging (Q7) and the absolute build path (Q8). Q5 and Q6 are mildly technical, but they are confirmations with defaults."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 27.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to manufacturing-app-recipe because both signals combine into one verdict and infers FUSION_MODE=AND",
+          "passed": true,
+          "evidence": "Routes to manufacturing-app-recipe; 'both flag ... one correlated verdict'; 'Fused rule: camera defect AND temperature anomaly'. The literal token FUSION_MODE=AND is not written, but the AND inference is clear."
+        },
+        {
+          "text": "Carries the explicitly selected agentic mode verbatim and explains that it already includes the vllm explanation layer",
+          "passed": true,
+          "evidence": "'{{DEPLOYMENT}}=agentic' and 'agentic already includes the vllm explanation layer'."
+        },
+        {
+          "text": "Does not substitute multimodal, ask the already answered mode question again, or pass agentic and vllm as two parallel deployments",
+          "passed": true,
+          "evidence": "'that is the only mode passed on... so I am not selecting both'; no re-ask of the mode."
+        },
+        {
+          "text": "Preserves /work/stacks/part-quality-stack and the MCP server opt-out",
+          "passed": true,
+          "evidence": "Plan path '/work/stacks/part-quality-stack'; 'Optional MCP server: excluded, as you asked.'"
+        },
+        {
+          "text": "Surfaces extra LLM/VLM model, hardware, and setup requirements while keeping explanation output supplemental to the fused decision",
+          "passed": true,
+          "evidence": "'Models needed for agentic', hardware gate (Intel GPU, Core Ultra Series 3, 32 GB RAM), requirements list, and 'Explanation output is supplemental and never changes the fused alert decision'."
+        },
+        {
+          "text": "Lists the reference-format deliverables: the Explainability dashboard (/insights-ui/ Explain) and the Agentic dashboard (/agentic-ui/ Run Agentic Analysis), and asks for both the vision-language model and the agent LLM rather than inventing them",
+          "passed": true,
+          "evidence": "Deliverable lists '/insights-ui/ ... Explain' and '/agentic-ui/ ... Run Agentic Analysis'; asks whether the VLM and agent LLM are on the host and which ids to fetch."
+        },
+        {
+          "text": "States the post-approval delegation and verification step, and creates nothing before approval",
+          "passed": true,
+          "evidence": "'When you say go, I will delegate to manufacturing-app-recipe ... then verify'; 'Nothing has been created, downloaded or started yet.' Only the plan file was written."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 29.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to scenescape-setup through metro-ai-app-recipe's opt-in Scenescape path",
+          "passed": true,
+          "evidence": "response.md: \"It routes to `scenescape-setup`, reached via `metro-ai-app-recipe`'s Scenescape path\"; next action delegates to metro-ai-app-recipe with the Scenescape path, then scenescape-setup."
+        },
+        {
+          "text": "Does not confuse multiple cameras with manufacturing-app-recipe camera-plus-sensor multimodal fusion",
+          "passed": true,
+          "evidence": "\"Why not `manufacturing-app-recipe`: its multimodal, vllm and agentic modes fuse a camera with a sensor, and there is no sensor here.\""
+        },
+        {
+          "text": "Clarifies missing business inputs and location before a complete plan, then requires approval before installation or deployment",
+          "passed": true,
+          "evidence": "Asks 4 open questions (camera inputs, floor plan, alerts, absolute build path, no default); states nothing created/installed; installs only 'After you approve'; ends 'Please reply `go`'. Minor weakness: a draft plan is presented alongside the questions rather than strictly after them."
+        },
+        {
+          "text": "Does not invent a new cross-camera skill",
+          "passed": true,
+          "evidence": "Only uses existing skills: metro-ai-app-recipe, scenescape-setup, optional model-download-user; no new skill proposed."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 19.7,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not begin manufacturing business Q&A or route to manufacturing-app-recipe",
+          "passed": true,
+          "evidence": "response.md states 'this skill doesn't apply', 'Nothing was built', and asks no manufacturing business questions; it only mentions manufacturing-app-recipe as a catalog entry that doesn't cover document Q&A."
+        },
+        {
+          "text": "Does not fabricate a manufacturing deployment mode for document question answering",
+          "passed": true,
+          "evidence": "Says 'I won't invent a skill or force-fit this request into one' and suggests a general RAG chatbot custom build instead."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 25.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes that camera and sensor signals must combine into one verdict and routes to manufacturing-app-recipe",
+          "passed": true,
+          "evidence": "Transcript: SKILL_CATALOG.md 'routes this request to manufacturing-app-recipe'; response: 'A weld is only flagged when the camera and the pressure sensor both indicate a defect... one end-to-end solution'."
+        },
+        {
+          "text": "Explicitly presents multimodal, vllm, and agentic (including vllm layer) as the fused deployment choices",
+          "passed": true,
+          "evidence": "Q4 lists `multimodal` (fused alert and dashboard only), `vllm` (operator picks a fused result, VLM explains it), `agentic` ('Run Agentic Analysis... It includes the `vllm` layer')."
+        },
+        {
+          "text": "Does not silently default to multimodal or ask only a generic question about explanations",
+          "passed": true,
+          "evidence": "Presents all three modes with specific descriptions and hardware/model questions. Multimodal is flagged '[default if you don't care]', which is stated openly, not silent."
+        },
+        {
+          "text": "Treats OpenMES request as optional OpenMES publishing and asks for base URL, token file path (not token), work order ID, non-blocking issue type ID, station/line name, without inventing",
+          "passed": true,
+          "evidence": "Q5 asks for 'OpenMES base URL', '**Path** to a file holding the access token (not the token itself)', 'existing work order ID', 'A **non-blocking** issue type ID', 'Station/line name'; no values invented."
+        },
+        {
+          "text": "States only confirmed fused defects are reported to OpenMES, one Issue per confirmed defect, not camera-only or sensor-only",
+          "passed": true,
+          "evidence": "'only confirmed defects, where camera and pressure both agree, will be logged. Each one becomes one OpenMES Issue. Camera-only or pressure-only alerts are never sent.'"
+        },
+        {
+          "text": "Asks for missing business inputs and absolute build location without asking user to choose technical components",
+          "passed": true,
+          "evidence": "Q6: 'absolute path of the directory where I should create the new solution folder. I won't guess one.' Other items are defaults-with-confirmation; only the explanation mode is a user choice (required by the other expectations)."
+        },
+        {
+          "text": "Does not create files or start services before proposing plan and receiving approval",
+          "passed": true,
+          "evidence": "Only response.md was written (the answer itself). Response: 'I'll create nothing until you approve a plan'; 'I'll send a plan and wait for your approval before building.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 26.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes this as a camera-only quick demo rather than a fused or sensor-only problem",
+          "passed": true,
+          "evidence": "Response: 'Your words \"camera-only \u2026 no sensor data\" make this vision-only. The sensor and fused routes ... don't apply.' and 'quick proof of concept mean a single small app'."
+        },
+        {
+          "text": "Routes to dlstreamer-coding-agent or metro-ai-app-recipe demo mode",
+          "passed": true,
+          "evidence": "'Primary skill \u2014 metro-ai-app-recipe (demo mode)' (MODE=demo), with dlstreamer-coding-agent as supporting skill for the pipeline."
+        },
+        {
+          "text": "Does not route to manufacturing-app-recipe multimodal, vllm, or agentic mode",
+          "passed": true,
+          "evidence": "manufacturing-app-recipe multimodal is mentioned only to say it does not apply; no vllm or agentic routing is proposed."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 20.0,
+        "tokens": 836,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Asks what outcome or problem the user wants to detect",
+          "passed": true,
+          "evidence": "Q1: \"What problem do you want to catch early?\" with examples (defective weld, bearing wearing out, drift, scratches) and which process/machine."
+        },
+        {
+          "text": "Clarifies whether the decision is fed by a camera, sensor stream, or both, without asking the user to select a technical modality by name",
+          "passed": true,
+          "evidence": "Q2 frames it as 'something a person would see', 'something you would measure', or 'both' with camera/sensor as plain explanation; never uses 'vision', 'time series' or 'multimodal' labels."
+        },
+        {
+          "text": "Does not guess a delegate skill, deployment mode, or implementation before the signal and deliverable are clear",
+          "passed": true,
+          "evidence": "No delegation or build occurred; response says 'I haven't created or started anything yet' and promises a plan before 'go'. It does mention bracketed defaults (Docker Compose, Intel GPU) and later options, but only as proposed defaults pending answers."
+        },
+        {
+          "text": "Does not create files, download dependencies, or start services",
+          "passed": true,
+          "evidence": "metrics.json shows files_created: 0; only the response.md answer was written to outputs; no installs or services. Bash call content not shown in the transcript but appears to be read-only."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 34.8,
+        "tokens": 920,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not begin the manufacturing app-builder discovery and planning procedure",
+          "passed": true,
+          "evidence": "Response states: \"I'm skipping its Q&A/plan/approval flow\". It only asks four narrow UDF parameter confirmations (field, bounds, topic, UDF name), not business discovery questions, and goes straight to delivering the UDF."
+        },
+        {
+          "text": "Does not route the request to manufacturing-app-recipe or propose a new application stack",
+          "passed": true,
+          "evidence": "Response states: \"I'm not proposing `manufacturing-app-recipe` or a new app stack. I'm using `time-series-analytics-user` directly.\" Output contains only a UDF, TICKscript and deployment steps for the existing service."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 23.5,
+        "tokens": 758,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses references/SKILL_CATALOG.md to route the camera-only dashboard objective to metro-ai-app-recipe, not manufacturing-app-recipe vision demo or multimodal mode",
+          "passed": true,
+          "evidence": "response.md: 'Per references/SKILL_CATALOG.md \u00a73 (Vision only)... maps to metro-ai-app-recipe in production mode'; 'not manufacturing-app-recipe multimodal'; 'Why not the demo path'."
+        },
+        {
+          "text": "States the deliverable path /work/stacks/scratch-inspection-stack and explains that the camera alone feeds the decision",
+          "passed": true,
+          "evidence": "Deliverable section gives /work/stacks/scratch-inspection-stack; 'Why vision-only: you said \"only my factory RTSP camera\" with \"no sensor correlation\"... no fused verdict.'"
+        },
+        {
+          "text": "Presents model/device/topics as inferred decisions rather than asking the user to select a framework, model architecture, precision, or device; asking only whether a trained scratch model already exists is allowed",
+          "passed": true,
+          "evidence": "'Inferred technology (my decisions)': DL Streamer, Intel GPU inference, scratch detection, MQTT counts/alerts. Only questions: RTSP URL/credentials path and whether a scratch-trained model exists. Topics are not named explicitly, a minor gap."
+        },
+        {
+          "text": "Surfaces Docker Compose, Intel GPU device/group permissions, required ports, and network/model-download prerequisites",
+          "passed": true,
+          "evidence": "Requirements: Docker Compose v2; Intel GPU access with video and render groups; free ports for dashboard/proxy, MQTT, WebRTC/Coturn UDP; outbound access to Docker Hub, ghcr.io, Hugging Face."
+        },
+        {
+          "text": "Includes npx skills@1.7.4 add open-edge-platform/skills --skill metro-ai-app-recipe as an installation step to run only after approval",
+          "passed": true,
+          "evidence": "'Skill to install (deferred until approval)' with the exact command; 'I will not install it now. After you approve, I will run'."
+        },
+        {
+          "text": "Commits to delegating to metro-ai-app-recipe and checking its completion criteria after approval rather than implementing the stack by hand",
+          "passed": true,
+          "evidence": "'I will then delegate the build to it with STACK_DIR=/work/stacks/scratch-inspection-stack... verify the result against that skill's own completion criteria'."
+        },
+        {
+          "text": "Waits for explicit approval without installing skills, generating artifacts, or starting containers",
+          "passed": true,
+          "evidence": "Ends with 'Reply go to approve'. Only one file was written (the response.md plan in outputs); metrics show no install or docker commands; the single bash call was a read."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 30.9,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects time-series-analytics-user for a UDF/TICKscript against an existing service",
+          "passed": true,
+          "evidence": "Plan: 'The primary skill is `time-series-analytics-user`' deploying a UDF plus TICKscript onto the already-running microservice."
+        },
+        {
+          "text": "Preserves the vibration_mm_s field and strict greater-than-12 threshold as inferred handoff parameters",
+          "passed": true,
+          "evidence": "Inferred decisions: 'strictly greater than 12 mm/s on the `vibration_mm_s` field, evaluated per incoming reading.'"
+        },
+        {
+          "text": "Does not propose manufacturing-app-recipe ts production, a new apps/<name>/ folder, simulator, or dashboard",
+          "passed": true,
+          "evidence": "manufacturing-app-recipe is explicitly listed under 'Not chosen' because it would add apps/<name>/, simulator and Grafana. It is only mentioned as a possible re-plan if the user later asks for a dashboard or simulator."
+        },
+        {
+          "text": "Requires an approved plan before creating or deploying the UDF",
+          "passed": true,
+          "evidence": "'Nothing has been created, installed or changed yet. Please review and confirm.' The skill install and delegation happen only 'When you say `go`'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 26.5,
+        "tokens": 1060,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Names manufacturing-app-recipe as the primary delegate and explicitly passes {{DEPLOYMENT}}=ts",
+          "passed": true,
+          "evidence": "response.md: 'maps to manufacturing-app-recipe with {{DEPLOYMENT}}=ts (production sub-mode)'."
+        },
+        {
+          "text": "Passes the exact approved checkout, app name, MQTT ingestion, pressure_bar threshold outside [80,150], dashboard, alert channel, and test choice",
+          "passed": true,
+          "evidence": "'Approved values passed verbatim' lists /work/industrial-edge-insights-time-series, pump-pressure, MQTT ingestion, pressure_bar outside [80,150], MQTT alert, Grafana dashboard, generated tests."
+        },
+        {
+          "text": "Sequences supporting time-series-analytics-user UDF/TICKscript work before its integration/package deployment instead of reimplementing the delegate's work",
+          "passed": true,
+          "evidence": "Step 2 time-series-analytics-user authors UDF and TICKscript first; step 3 manufacturing-app-recipe owns scaffold, wiring, deployment; 'I do not hand-build any of that.'"
+        },
+        {
+          "text": "Does not propose reinstalling locally available skills or fetch manufacturing-app-recipe from an invented upstream location",
+          "passed": true,
+          "evidence": "'confirm with an ls of .github/skills/ and install nothing.' No upstream fetch is proposed."
+        },
+        {
+          "text": "Verifies against the delegate's criteria including registration, healthy ingestion, stored sensor data, an actual alert, correct dashboard, and tests",
+          "passed": true,
+          "evidence": "Six verification items: registered, MQTT ingestion healthy, pressure_bar rows stored, real alert on out-of-range value, Grafana dashboard, generated tests pass."
+        },
+        {
+          "text": "Reports a failing delegate step and stops rather than claiming success or retrying indefinitely",
+          "passed": true,
+          "evidence": "'If a step fails, I report the failing delegate step and stop. I do not loop.'"
+        },
+        {
+          "text": "Obeys the guidance-only request and does not execute the approved build",
+          "passed": true,
+          "evidence": "No build, deployment or service start occurred. Only a response.md guidance file was written to the outputs dir, which is a minor tension with 'do not create files' but is harness output. metrics.json reports files_created 0."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 23.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to metro-ai-app-recipe because the camera alone determines the alert",
+          "passed": true,
+          "evidence": "Plan routes to `metro-ai-app-recipe`, production mode, since camera-only full dashboard + alerts."
+        },
+        {
+          "text": "Does not select multimodal merely because the user mentions a pressure gauge",
+          "passed": true,
+          "evidence": "Says pressure gauge is context only; 'I'm not building a sensor pipeline or fused decision'; not routed to ts/multimodal modes."
+        },
+        {
+          "text": "Asks for the new standalone build location rather than reusing the time-series checkout or current directory without confirmation",
+          "passed": true,
+          "evidence": "'I will not reuse /work/industrial-edge-insights-time-series ... and I won't default to the current directory. Please give an absolute path'."
+        },
+        {
+          "text": "Does not build the old ts plan and requires confirmation of the revised plan",
+          "passed": true,
+          "evidence": "'Nothing has been created, downloaded or started'; earlier plan withdrawn; requires an explicit `go` before delegating."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0,
+        "passed": 0,
+        "failed": 3,
+        "total": 3,
+        "time_seconds": 17.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes the sensor-only full-stack objective to manufacturing-app-recipe with deployment mode ts",
+          "passed": false,
+          "evidence": "Response is a generic plan (ingestion service, feature pipeline, alert module, web dashboard); no mention of manufacturing-app-recipe or deployment mode ts."
+        },
+        {
+          "text": "Does not ask the user to choose a framework, model, device, precision, or technical implementation",
+          "passed": false,
+          "evidence": "Mostly business questions, but Q2 asks about sensor technical details (4-20 mA, IEPE, OPC UA/MQTT, sampling rate) and Q6 asks edge vs cloud, and Q1 asks bearing types/RPM; these are technical choices/details beyond business decisions. Borderline; no framework/model choice asked."
+        },
+        {
+          "text": "Asks only for missing business decisions such as the sensor source, alert preference, and the target checkout or parent directory",
+          "passed": false,
+          "evidence": "Asks sensor source and alert recipients/channel, but also asks pump make/RPM/bearing types, historical data, warning lead time, edge vs cloud; never asks for target checkout/parent directory."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.2857,
+        "passed": 2,
+        "failed": 5,
+        "total": 7,
+        "time_seconds": 18.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to manufacturing-app-recipe because both signals combine into one verdict and infers FUSION_MODE=AND",
+          "passed": false,
+          "evidence": "Plan describes 'Defective only when both signals agree' but never mentions manufacturing-app-recipe or FUSION_MODE=AND."
+        },
+        {
+          "text": "Carries the explicitly selected agentic mode verbatim and explains that it already includes the vllm explanation layer",
+          "passed": false,
+          "evidence": "Says 'Agentic explanation' but never mentions the vllm/VLM explanation layer being included."
+        },
+        {
+          "text": "Does not substitute multimodal, ask the already answered mode question again, or pass agentic and vllm as two parallel deployments",
+          "passed": true,
+          "evidence": "Keeps agentic, does not re-ask mode, no multimodal substitution or parallel deployments."
+        },
+        {
+          "text": "Preserves /work/stacks/part-quality-stack and the MCP server opt-out",
+          "passed": true,
+          "evidence": "Location row '/work/stacks/part-quality-stack' and 'without the optional MCP server'."
+        },
+        {
+          "text": "Surfaces extra LLM/VLM model, hardware, and setup requirements while keeping explanation output supplemental to the fused decision",
+          "passed": false,
+          "evidence": "Only notes a configurable LLM endpoint and Intel GPU availability; no VLM requirement and no statement that explanation is supplemental to the fused decision."
+        },
+        {
+          "text": "Lists the reference-format deliverables: the Explainability dashboard (/insights-ui/ Explain) and the Agentic dashboard (/agentic-ui/ Run Agentic Analysis), and asks for both the vision-language model and the agent LLM rather than inventing them",
+          "passed": false,
+          "evidence": "Mentions only a generic dashboard; no /insights-ui/ or /agentic-ui/ and no request for VLM and agent LLM choices."
+        },
+        {
+          "text": "States the post-approval delegation and verification step, and creates nothing before approval",
+          "passed": false,
+          "evidence": "Nothing built before approval and a validation step exists, but no delegation is stated (response admits nothing delegated); fails the delegation part."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 17.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to scenescape-setup through metro-ai-app-recipe's opt-in Scenescape path",
+          "passed": false,
+          "evidence": "response.md never mentions Scenescape or metro-ai-app-recipe; it proposes a custom YOLO/re-ID pipeline."
+        },
+        {
+          "text": "Does not confuse multiple cameras with manufacturing-app-recipe camera-plus-sensor multimodal fusion",
+          "passed": true,
+          "evidence": "The plan states no sensor data is used and proposes no sensor fusion or manufacturing-app-recipe multimodal path."
+        },
+        {
+          "text": "Clarifies missing business inputs and location before a complete plan, then requires approval before installation or deployment",
+          "passed": false,
+          "evidence": "It asks business questions and ends with 'Reply \"go\"', but it gives a full plan up front, not after clarification. It also never asks where the cameras or site are, and it states assumptions for unanswered questions."
+        },
+        {
+          "text": "Does not invent a new cross-camera skill",
+          "passed": true,
+          "evidence": "No new skill is created or proposed. It is a baseline run with no skill."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 18.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not begin manufacturing business Q&A or route to manufacturing-app-recipe",
+          "passed": true,
+          "evidence": "Response states the task 'is outside the scope of the manufacturing AI app builder' and asks only HR-relevant questions (users, PDFs count, on-prem, etc.); no manufacturing questions and no routing to manufacturing-app-recipe."
+        },
+        {
+          "text": "Does not fabricate a manufacturing deployment mode for document question answering",
+          "passed": true,
+          "evidence": "Plan is a generic RAG architecture (pypdf, FAISS/Chroma, LLM, Streamlit); no manufacturing deployment mode is mentioned or invented."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.29,
+        "passed": 2,
+        "failed": 5,
+        "total": 7,
+        "time_seconds": 20.8,
+        "tokens": 492,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes that camera and sensor signals must combine into one verdict and routes to manufacturing-app-recipe",
+          "passed": false,
+          "evidence": "It recognizes AND-fusion ('Raise an alert only if vision_defect AND pressure_anomaly') but proposes a custom architecture (YOLO/anomalib, Grafana, InfluxDB) and never routes to or mentions manufacturing-app-recipe."
+        },
+        {
+          "text": "Explicitly presents multimodal, vllm, and agentic as the available fused deployment choices",
+          "passed": false,
+          "evidence": "response.md never mentions multimodal/vllm/agentic modes or any explanation-layer options."
+        },
+        {
+          "text": "Does not silently default to multimodal or ask only a generic question about whether explanations are wanted",
+          "passed": false,
+          "evidence": "It silently picks a fused-alert-only design with no explanation or agent option and does not ask about it."
+        },
+        {
+          "text": "Treats the OpenMES request as the recipe's optional OpenMES publishing and asks for base URL, token file path, existing work order ID, non-blocking issue type ID, and station/line name",
+          "passed": false,
+          "evidence": "Only asks 'OpenMES URL, API/auth details, and which quality-issue fields are required?'. No token file path, work order ID, issue type ID or station/line name request."
+        },
+        {
+          "text": "States that only confirmed fused defects are reported to OpenMES, one Issue per confirmed defect, not camera-only or sensor-only alerts",
+          "passed": true,
+          "evidence": "Says each confirmed defect is logged as a quality issue; alerts only on vision AND pressure, with an idempotency key per weld ID. Unconfirmed single-signal cases are logged as 'unconfirmed' and not alerted. This is not explicit that they are not sent to OpenMES, so the pass is weak."
+        },
+        {
+          "text": "Asks for missing business inputs and the absolute build location without asking the user to choose technical components",
+          "passed": false,
+          "evidence": "The questions are largely technical (labelled data, time alignment, hardware, line speed, false-alarm tradeoff). There is no question about the absolute build location. The response uses technical terms such as OpenVINO and Grafana."
+        },
+        {
+          "text": "Does not create files or start services before proposing the plan and receiving explicit approval",
+          "passed": true,
+          "evidence": "Nothing built or run: 'It is a proposed design only'. The only file created is response.md, the answer itself, and it ends with 'Once you confirm, I would...'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 18.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes this as a camera-only quick demo rather than a fused or sensor-only problem",
+          "passed": true,
+          "evidence": "response.md: 'Camera-only scratch detection PoC'; 'No sensor data'; 'demo only'."
+        },
+        {
+          "text": "Routes to dlstreamer-coding-agent or metro-ai-app-recipe demo mode",
+          "passed": false,
+          "evidence": "No routing to either skill. The response proposes a generic Python/OpenVINO app; transcript says no skill was used."
+        },
+        {
+          "text": "Does not route to manufacturing-app-recipe multimodal, vllm, or agentic mode",
+          "passed": true,
+          "evidence": "The response does not mention or route to any multimodal, VLM or agentic mode."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 16.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Asks what outcome or problem the user wants to detect",
+          "passed": true,
+          "evidence": "Q1: \"What kind of problem hurts most today?\" with examples of defects, breakdowns, process drift."
+        },
+        {
+          "text": "Clarifies whether the decision is fed by a camera, sensor stream, or both, without asking the user to select a technical modality by name",
+          "passed": true,
+          "evidence": "Q4: \"What do you already have? Cameras, machine or sensor data logs, or historical records...\" Asked in business terms, no modality selection."
+        },
+        {
+          "text": "Does not guess a delegate skill, deployment mode, or implementation before the signal and deliverable are clear",
+          "passed": true,
+          "evidence": "Response only asks questions and says \"I'll propose a short plan... build it only after you confirm.\" No skill, mode, framework or model named."
+        },
+        {
+          "text": "Does not create files, download dependencies, or start services",
+          "passed": true,
+          "evidence": "The only file written was outputs/response.md, which holds the answer itself. No dependencies were installed and no services were started. This is borderline because a create call was made, but it is the harness answer capture, not a build deliverable."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 23.7,
+        "tokens": 634,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not begin the manufacturing app-builder discovery and planning procedure",
+          "passed": true,
+          "evidence": "Transcript/response go straight to writing a threshold UDF; only asks which measurement/field and how UDFs are registered, no business-objective discovery or plan."
+        },
+        {
+          "text": "Does not route the request to manufacturing-app-recipe or propose a new application stack",
+          "passed": true,
+          "evidence": "Response states 'no new application stack, just a UDF for your existing Time Series Analytics service'; no recipe routing."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.286,
+        "passed": 2,
+        "failed": 5,
+        "total": 7,
+        "time_seconds": 18.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses references/SKILL_CATALOG.md to route the camera-only dashboard objective to metro-ai-app-recipe, not manufacturing-app-recipe vision demo or multimodal mode",
+          "passed": false,
+          "evidence": "No catalog used; plan only mentions metro-ai-app-recipe as a 'proposed source' with a fallback to upstream components."
+        },
+        {
+          "text": "States the deliverable path /work/stacks/scratch-inspection-stack and explains that the camera alone feeds the decision",
+          "passed": true,
+          "evidence": "Target: /work/stacks/scratch-inspection-stack; 'detect scratches from a single factory RTSP camera'; sensor correlation out of scope."
+        },
+        {
+          "text": "Presents model/device/topics as inferred decisions rather than asking the user to select a framework, model architecture, precision, or device; asking only whether a trained scratch model already exists (and where) or should be fetched is a model-availability question and is allowed",
+          "passed": false,
+          "evidence": "Topics inferred and model availability asked, but it also asks for an alert threshold policy and RTSP details, and does not present model/device as inferred decisions."
+        },
+        {
+          "text": "Surfaces Docker Compose, Intel GPU device/group permissions, required ports, and network/model-download prerequisites",
+          "passed": false,
+          "evidence": "Mentions Docker/Compose and /dev/dri access, but no group permissions, ports, or network/model-download prerequisites."
+        },
+        {
+          "text": "Includes npx skills@1.7.4 add open-edge-platform/skills --skill metro-ai-app-recipe as an installation step to run only after approval",
+          "passed": false,
+          "evidence": "Says 'Install metro-ai-app-recipe (needs your approval)' but gives no npx command."
+        },
+        {
+          "text": "Commits to delegating to metro-ai-app-recipe and checking its completion criteria after approval rather than implementing the stack by hand",
+          "passed": false,
+          "evidence": "Scaffolds the stack itself and offers a fallback to build from upstream components; no completion criteria check by the skill."
+        },
+        {
+          "text": "Waits for explicit approval without installing skills, generating artifacts, or starting containers",
+          "passed": true,
+          "evidence": "'No build has been approved... nothing has been installed or created.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.25,
+        "passed": 1,
+        "failed": 3,
+        "total": 4,
+        "time_seconds": 20.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects time-series-analytics-user for a UDF/TICKscript against an existing service",
+          "passed": false,
+          "evidence": "Response is generic advice; never names time-series-analytics-user or TICKscript, only mentions 'UDF/filter/rule stage' generically."
+        },
+        {
+          "text": "Preserves the vibration_mm_s field and strict greater-than-12 threshold as inferred handoff parameters",
+          "passed": false,
+          "evidence": "Mentions vibration_mm_s > 12 and 'strictly greater than 12 triggers', but not as handoff parameters to a skill; no handoff exists."
+        },
+        {
+          "text": "Does not propose manufacturing-app-recipe ts production, a new apps/<name>/ folder, simulator, or dashboard",
+          "passed": true,
+          "evidence": "Recommends modifying the existing service; the only new deployable (subscriber) is listed as a last resort; no recipe, apps folder, simulator or dashboard."
+        },
+        {
+          "text": "Requires an approved plan before creating or deploying the UDF",
+          "passed": false,
+          "evidence": "Presents options and asks for service details, but no plan-approval gate; it did not create or deploy a UDF."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.571,
+        "passed": 4,
+        "failed": 3,
+        "total": 7,
+        "time_seconds": 21.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Names manufacturing-app-recipe as the primary delegate and explicitly passes {{DEPLOYMENT}}=ts",
+          "passed": false,
+          "evidence": "Response uses generic 'Time-series app scaffolding skill' placeholders; never names manufacturing-app-recipe or DEPLOYMENT=ts."
+        },
+        {
+          "text": "Passes the exact approved checkout, app name, MQTT ingestion, pressure_bar threshold outside [80,150], dashboard, alert channel, and test choice",
+          "passed": true,
+          "evidence": "Plan carries pump-pressure, /work/industrial-edge-insights-time-series, MQTT ingestion, pressure_bar <80 or >150, MQTT alerts, dashboard, generated tests."
+        },
+        {
+          "text": "Sequences supporting time-series-analytics-user UDF/TICKscript work before its integration/package deployment instead of reimplementing the delegate's work",
+          "passed": false,
+          "evidence": "No mention of time-series-analytics-user, UDF or TICKscript; generic scaffolding/dashboard/test skills and an 'Integration' step."
+        },
+        {
+          "text": "Does not propose reinstalling locally available skills or fetch manufacturing-app-recipe from an invented upstream location",
+          "passed": true,
+          "evidence": "Only checks skills are present; no installation or upstream fetch proposed."
+        },
+        {
+          "text": "Verifies against the delegate's criteria including registration, healthy ingestion, stored sensor data, an actual alert, correct dashboard, and tests",
+          "passed": false,
+          "evidence": "Verification covers static checks, unit tests, smoke alert, dashboard; no registration, healthy ingestion check, or stored data verification."
+        },
+        {
+          "text": "Reports a failing delegate step and stops rather than claiming success or retrying indefinitely",
+          "passed": true,
+          "evidence": "'Stop and report if one is missing' and 'I report failures as they are and don't mark anything verified that wasn't run.'"
+        },
+        {
+          "text": "Obeys the guidance-only request and does not execute the approved build",
+          "passed": true,
+          "evidence": "States nothing created, deployed or started; only a response file written."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 21.5,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Routes to metro-ai-app-recipe because the camera alone determines the alert",
+          "passed": false,
+          "evidence": "The response never names metro-ai-app-recipe or any skill/recipe; it only describes a generic camera-only plan."
+        },
+        {
+          "text": "Does not select multimodal merely because the user mentions a pressure gauge",
+          "passed": true,
+          "evidence": "Plan states 'Only the camera feed decides whether a leak alert fires. The pressure gauge is shown as background context' and never triggers an alert."
+        },
+        {
+          "text": "Asks for the new standalone build location rather than reusing the time-series checkout or current directory without confirmation",
+          "passed": true,
+          "evidence": "'Where should I create the new project? Suggested: /work/pump-leak-vision. Please confirm or give another path.' and 'A new, separate directory, not the earlier time-series one.'"
+        },
+        {
+          "text": "Does not build the old ts plan and requires confirmation of the revised plan",
+          "passed": true,
+          "evidence": "'I haven't built anything' and 'Do you approve this revised plan...' / 'I'll start building only after you approve and name a build directory.'"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with-skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 25.9167,
+        "stddev": 4.3747,
+        "min": 19.7,
+        "max": 34.8
+      },
+      "tokens": {
+        "mean": 297.8333,
+        "stddev": 445.0744,
+        "min": 0,
+        "max": 1060
+      }
+    },
+    "without-skill": {
+      "pass_rate": {
+        "mean": 0.55,
+        "stddev": 0.339,
+        "min": 0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 19.4833,
+        "stddev": 2.1092,
+        "min": 16.8,
+        "max": 23.7
+      },
+      "tokens": {
+        "mean": 93.8333,
+        "stddev": 221.2287,
+        "min": 0,
+        "max": 634
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.45",
+      "time_seconds": "+6.4",
+      "tokens": "+204"
+    }
+  },
+  "notes": []
+}

@@ -72,6 +72,19 @@ rtspsrc add-reference-timestamp-meta=true location="rtsp://mediamtx:8554/live.st
   classification (no boxes to draw, but keeps the pipeline shape consistent
   and lets WebRTC/S3 outputs carry the label overlay if the model's
   `model-proc` adds one).
+- **Input preprocessing must match training.** If the model's
+  `model.xml` `<rt_info><model_info>` declares `intensity_mode=scale_to_unit`
+  with `mean_values`/`scale_values` in the 0–1 range (as Geti-exported
+  classifiers such as the reference ViT-Tiny weld model do),
+  `gvaclassify` does **not** apply it on its own. Ship a `model-proc.json`
+  next to the model (`input_preproc`: `color_space: RGB`, `range: [0.0, 1.0]`,
+  `mean`/`std` from `rt_info`; `output_postproc`: `converter: label`,
+  `method: softmax`, `labels` in `label_ids` order). Then add
+  `"model-proc": "<path>"` and `"pre-process-backend": "opencv"` to
+  `classification-properties`. Without it every frame scores low
+  confidence (observed ≤ 0.33), the vision side never flags, and `AND`
+  fusion never alerts. Verify offline on one known-defect clip (expect at
+  least 0.8 confidence on the true class) before wiring Fusion.
 
 ## Pipeline shape — detection (when the vertical needs localized defects)
 
@@ -107,10 +120,19 @@ needs bounding-box localization instead of a whole-frame label.
 - `metadata.topic` = `{{VISION_TOPIC}}` — this is the topic Fusion Analytics
   subscribes to as its vision-side input; keep it in sync with
   `FUSION.md`'s `VISION_TOPIC` env var.
+- `vllm`/`agentic`: frames are stored as
+  `dlstreamer-pipeline-results/{{OBJECT}}/<img_handle>.jpg`. The UI's Explain
+  flow fetches them through `BUCKET_NAME=dlstreamer-pipeline-results/{{OBJECT}}`,
+  so `bucket`/`folder_prefix` and `BUCKET_NAME` must match exactly
+  ([`UI_SERVICE.md`](UI_SERVICE.md#data-contract)).
 
 In `vision` mode (demo/PoC), drop the `destination` block above entirely —
 emit to a simple file sink or annotated RTSP/appsink, per
-[`DEMO_POC.md`](DEMO_POC.md).
+[`DEMO_POC.md`](DEMO_POC.md). **Exception — `{{OPENMES_ENABLED}}=yes`:**
+keep the `"metadata": { "type": "mqtt", "topic": "{{VISION_TOPIC}}" }`
+destination, and set DLSPS's `MQTT_HOST`/`MQTT_PORT` to a reachable
+broker. The OpenMES publisher consumes that metadata stream; see
+[`OPENMES.md`](OPENMES.md).
 
 ## GPU/NPU variants
 
@@ -123,15 +145,17 @@ memory for overlay + WebRTC encode.
 ## Starting/switching device at runtime
 
 DLSPS pipelines are started via REST, not `auto_start` alone, when swapping
-device (`-k` here assumes the default `{{HOST_IP}}=localhost` — if `{{HOST_IP}}`
-is a real LAN address, use `--cacert`/`--resolve` instead, per SKILL.md's
-*Execution guardrails*):
+device. TLS is verified against the stack's own certificate, per SKILL.md's
+*Execution guardrails*:
 
 ```bash
-for id in $(curl -k --noproxy '*' https://<HOST_IP>:${GRAFANA_PORT}/dsps-api/pipelines/status | grep -oP '"id":\s*"\K[^"]+'); do
-  curl -k --noproxy '*' -X DELETE "https://<HOST_IP>:${GRAFANA_PORT}/dsps-api/pipelines/$id"
+docker cp nginx_proxy:/opt/nginx/certs/cert.pem ./nginx-cert.pem
+API="curl -s --noproxy '*' --cacert ./nginx-cert.pem --resolve localhost:${GRAFANA_PORT}:${HOST_IP}"
+BASE="https://localhost:${GRAFANA_PORT}/dsps-api"
+for id in $($API $BASE/pipelines/status | grep -oP '"id":\s*"\K[^"]+'); do
+  $API -X DELETE "$BASE/pipelines/$id"
 done
-curl -k --noproxy '*' https://<HOST_IP>:${GRAFANA_PORT}/dsps-api/pipelines/user_defined_pipelines/{{PIPELINE_NAME}} \
+$API $BASE/pipelines/user_defined_pipelines/{{PIPELINE_NAME}} \
   -X POST -H 'Content-Type: application/json' \
   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
 ```

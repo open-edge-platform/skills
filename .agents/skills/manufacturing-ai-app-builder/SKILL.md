@@ -10,13 +10,11 @@ description: >-
   deliverable by DELEGATING to the right skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
-  Requires: `git`/`gh` and network access to github.com if a delegate skill
-  needs to be fetched from `open-edge-platform/skills` or its own repo; `npx
-  skills@latest` CLI for that install step. `manufacturing-app-recipe` ships
-  locally in this workspace under `.github/skills/` — no install needed for
-  it. Individual delegate skills add their own requirements (Docker +
-  Compose v2, Intel CPU/GPU/NPU) — surface those during planning, do not
-  assume them.
+  External delegates require git/gh, github.com access, Node.js >= 22.20,
+  and the pinned CLI `npx skills@1.7.4` (never @latest).
+  `manufacturing-app-recipe` is local under `.github/skills/`; no install
+  needed. Surface each delegate's Docker Compose v2 and Intel CPU/GPU/NPU
+  requirements during planning; do not assume availability.
 metadata:
   author: open-edge-platform
   tags: "orchestrator business-objective skill-discovery planning manufacturing time-series multimodal vision"
@@ -25,14 +23,9 @@ allowed-tools: bash git gh
 
 # Manufacturing AI App Builder — business-objective orchestrator
 
-You are the **single owner of this conversation**. The user states a
-manufacturing-quality business outcome (e.g. *"alert me when a weld is
-defective"*, *"catch bearing wear before it fails"*, *"flag anomalous power
-output from my wind turbines"*, *"detect scratches on parts from my camera"*).
-Your job is to turn that into a running Intel Edge AI application **without
-ever asking the user to pick a technology** — including never asking whether
-the answer is "vision", "time series", or "both"; you infer that from what
-signals feed the decision.
+Own the conversation: turn a manufacturing-quality business outcome into a
+running Intel Edge AI application. Infer technology from the input signals
+instead of asking the user to choose it, except for Step 1 Q8.
 
 1. **Ask business questions** — outcome, what feeds the decision (camera,
    sensor, or both), deployment target, hardware, operations — never ask which
@@ -46,27 +39,12 @@ signals feed the decision.
 4. **Build only after approval** by delegating to the chosen skill(s). Nothing
    is created before the user confirms.
 
-> Golden rule: the user speaks **business**; you speak **technology** silently.
-> Whether the solution needs a camera, a sensor, or both is a technology
-> inference from the business answers, not a question you ask directly.
-> The one spoken-out-loud exception is the fused-stack explanation layer
-> (`multimodal` vs `vllm` vs `agentic`) — see Step 1's Q8.
-
 ## When to use this skill
 
-Use this skill for any *"I want to `<manufacturing quality/monitoring
-outcome>`"* request — asking only business questions — when you do **not**
-already know which specific skill to run. Specifically:
-
-- The user describes a defect/anomaly/quality-monitoring outcome for a
-  manufacturing process (welding, machining, electronics, rotating machinery,
-  HVAC/facilities, predictive maintenance) but has **not** named a concrete
-  skill.
-- It's unclear up front whether the signal is a **camera feed**, a **sensor
-  stream** (OPC-UA/MQTT), or **both correlated together** — this skill's job
-  is to resolve that ambiguity from business answers, then route.
-- The user asks *"how do I catch defects/anomalies in my `<process>`?"* and
-  needs a guided path.
+Use for manufacturing defect detection, quality monitoring or predictive
+maintenance when the user has not named a concrete skill. Clarify whether
+the decision depends on camera data, sensor data or both correlated together,
+then route to the appropriate delegate.
 
 **Do not** use this skill when the user already named a specific skill
 (invoke that skill directly), when the objective has nothing to do with
@@ -107,7 +85,16 @@ Adapt the wording to the stated outcome, but cover these axes:
    Compose solution? [Docker Compose]
 5. **Hardware** — Intel GPU (default) for vision, or Intel CPU/NPU?
 6. **Operations** — needs a dashboard/UI vs just an alert; MQTT or OPC-UA
-   alerting? [reasonable default per domain]
+   alerting? Should confirmed defects also be logged as quality issues in
+   an OpenMES system? [reasonable default per domain; OpenMES off unless
+   asked]. If the user already asked for OpenMES (for example "log each
+   defect in our OpenMES"), don't ask whether again; go straight to the
+   details. Ask for: the OpenMES base URL, the **path** to a token file
+   (never the token itself), an existing work order ID, a **non-blocking**
+   issue type ID, and a station/line name. These are the user's own system
+   details, not technology choices, so asking for them is allowed. Hand them
+   over to `manufacturing-app-recipe` as `{{OPENMES_*}}` parameters; never
+   invent them.
 7. **Where to build it** — an absolute path to an existing checkout to add
    to (sensor-only recipe adds `apps/<name>/` to an existing
    `industrial-edge-insights-time-series` clone), or where to create a new
@@ -117,24 +104,46 @@ Adapt the wording to the stated outcome, but cover these axes:
 8. **Explanation layer — ask by name** — whenever the decision fuses camera
     and sensor signals into one verdict, you MUST ask which deployment the
     user wants and name the three modes explicitly: `multimodal` (fused
-    alert only, no language model), `vllm` (adds a written explanation of
-    each fused alert), or `agentic` (adds an agent-coordinated explanation,
-    and includes the `vllm` layer by default). This is a deliberate
+    alert only, no language model), `vllm` (adds an Explainability
+    dashboard where an operator picks a fused result and a vision-language
+    model explains it from the stored frame and the sensor readings), or
+    `agentic` (adds an Agentic dashboard where **Run Agentic Analysis**
+    produces a policy decision, analysis and ticket for a time window; it
+    includes the `vllm` layer). This is a deliberate
     exception to the "never name technology" rule: the explanation layers
     pull in a real LLM/VLM, extra hardware, and extra setup time, so the
     user has to opt in knowingly. Never skip this question, never assume
     `multimodal`, and never reword it into a generic "do you want
     explanations?" that hides the mode names.
+    If the answer is `vllm` or `agentic`, also ask (as availability, not as
+    a technology choice) whether the explanation models are already on the
+    host or which Hugging Face/OpenVINO ids to fetch: one vision-language
+    model (plus an optional fine-tuned adapter) for both modes, and a second
+    agent LLM for `agentic`. The recipe never invents them. State the
+    hardware gate in the same message: the vision-language model needs an
+    Intel GPU and is validated on Core Ultra Series 3 with at least 32 GB RAM.
 
-Keep it to what changes the routing decision. Never ask which model,
-framework, precision, device, or "vision vs time series vs multimodal" by
-name — you decide that from question 2's answer. The one exception is Q8's
-`multimodal`/`vllm`/`agentic` choice, which is always named out loud.
+**Use business questions, not technology menus.** State inferred defaults
+as decisions, then ask for confirmation or a business-fact override
+("live camera or sample footage?"). Do not offer protocol, framework or
+device menus. Only Q8's mode names and explanation-model availability/ids
+may be technical questions ("already on the host, or which ids to fetch?").
+Always request the **absolute build location** (Q7) and any missing business
+inputs (and, when OpenMES is wanted, the base URL, token file *path*, work
+order ID, non-blocking issue type ID, and station/line name) in this same
+single message.
+
+Keep questions to routing-relevant business facts. OpenMES connection
+details identify the user's system and are permitted whenever it is wanted.
 
 ### Step 2 — Discover the relevant skill(s)
 
-Load [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and map the
-answers to one **primary** skill (and any **supporting** skills). If the
+**Always open and read** [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
+with the view tool in this step — even when the routing table below makes the
+answer look obvious, and even when the user says nothing is installed or asks
+for a plan only (reading a reference file is not building). Map the answers to
+one **primary** skill (and any **supporting** skills), and record the catalog
+row you matched so you can cite it in the plan. If the
 objective is ambiguous or a delegate's availability is unclear, load
 [`references/DISCOVERY.md`](references/DISCOVERY.md). Routing summary:
 
@@ -169,17 +178,33 @@ of `multimodal`, `vllm`, or `agentic` — `agentic` already builds on the
 `vllm` explanation layer, so never pass both as a pair. Explanation output is
 supplemental and must not change the fused-alert decision.
 
-**Exception — the working directory is not a technology inference.** Both
-manufacturing recipes now ask explicitly where to create their scaffold
-(existing repo checkout to extend, or a fresh parent directory) — carry the
-answer from Step 1's Q7 forward verbatim rather than guessing a path on the
-delegate's behalf; an inferred path is a correctness risk, not a convenience.
+**OpenMES (when Q6 says yes).** Set `{{OPENMES_ENABLED}}=yes` and pass the
+user's details through verbatim: `{{OPENMES_BASE_URL}}`,
+`{{OPENMES_TOKEN_FILE}}` (a path), `{{OPENMES_WORK_ORDER_ID}}`,
+`{{OPENMES_ISSUE_TYPE_ID}}`, `{{OPENMES_SOURCE_ID}}`, and the optional
+`{{OPENMES_BATCH_STEP_ID}}`. Infer the input silently from the route:
+
+| Route | Publisher mode | What is reported |
+|---|---|---|
+| fused (`multimodal`/`vllm`/`agentic`) | `multimodal` | only confirmed fused defects (`fused_decision == 1`) from `{{FUSION_TOPIC}}`; never the camera-only or sensor-only topics |
+| sensor only (`ts`) | `ts` | the MQTT sensor alert topic; needs MQTT alerting, not OPC-UA |
+| camera only (`vision`) | `vision` | the vision metadata topic, filtered by defect labels and minimum confidence |
+
+Any detail still missing stays an open question in the plan. Never use
+placeholder IDs or URLs. The recipe's dummy OpenMES receiver is only for a
+user who explicitly asks to test without a real OpenMES.
+
+**Working directory:** carry Q7's approved path forward verbatim; never infer it.
 
 ### Step 4 — Propose the plan and WAIT for confirmation
 
 Present a concise plan and **stop for approval**. Include:
 
 - **Deliverable** — what will exist when done (directory/service/URLs/artifacts).
+- **Routing source** — one line citing `references/SKILL_CATALOG.md` and the
+  catalog row matched (for example "per SKILL_CATALOG.md, camera-only +
+  full dashboard → `metro-ai-app-recipe`, not `manufacturing-app-recipe`
+  vision demo or multimodal mode").
 - **Primary + supporting skill(s)** and why each was chosen — explicitly state
   *why* this is vision-only, sensor-only, or fused (quote the business answer
   that drove it), since that routing decision is this skill's core value.
@@ -187,10 +212,31 @@ Present a concise plan and **stop for approval**. Include:
   you selected, shown as *decisions you made*, not questions.
 - For a fused stack, state the Q8 after-alert choice and the single
   deployment mode it maps to; if that mode is `agentic`, note that the
-  written-explanation layer is included by default.
-- **Requirements/assumptions** — Docker, GPU groups, ports, network —
-  surfaced from the delegate's `compatibility`.
-- **Any skill that must be installed** with the exact `npx skills@latest add`
+  `vllm` explanation layer is included by default. For `vllm`/`agentic`,
+  list what the user will see, matching the reference
+  `industrial-edge-insights-multimodal` app: the base dashboard, the
+  "... Explainability Dashboard" (`/insights-ui/`, **Explain** per result),
+  and for `agentic` the "... - Agentic Dashboard" (`/agentic-ui/`, **Run
+  Agentic Analysis**). Also list the models each needs and the hardware
+  gate.
+- **OpenMES** (only when requested): state that it is enabled, and what
+  will be reported. For a fused stack that means **only confirmed fused
+  defects** (camera and sensors agree, `fused_decision == 1`), as **one
+  OpenMES Issue per confirmed defect**; camera-only or sensor-only alerts
+  are never sent. Also give a volume warning: the camera runs at about 10
+  fps, so one defective weld in view can create many Issues. List the
+  OpenMES details received and those still needed (token by **file path
+  only**). Note that the issue type must be non-blocking, and that OpenMES
+  failures never stop inference or alerting.
+- **Requirements/assumptions** — always list explicitly, from the
+  delegate's `compatibility`: Docker + Docker Compose v2; Intel GPU/NPU
+  device access and the host `video`/`render` group permissions (when a GPU is
+  used); the exact ports that must be free (for example 80/443 or the Grafana
+  port, the Coturn UDP port, OPC-UA port); and network/model-download access
+  (outbound to Docker Hub, ghcr.io and Hugging Face for images, models and
+  datasets, plus RTSP reachability for a camera). If the delegate is not yet
+  installed locally, say its install step is deferred until approval.
+- **Any skill that must be installed** with the exact `npx skills@1.7.4 add`
   command (only for delegates not already local — see
   [`DISCOVERY.md`](references/DISCOVERY.md); the two manufacturing recipes
   never need this).
@@ -214,9 +260,17 @@ Only after confirmation:
    [`references/DISCOVERY.md`](references/DISCOVERY.md)); add any that
    aren't.
 2. **Invoke the delegate skill**, passing the parameters you inferred in
-   Step 3. Let it own the build — do not re-implement its work by hand.
+   Step 3 **verbatim as the approved values** (checkout/output path, app
+   name, ingestion transport, sensor fields and thresholds, alert channel,
+   dashboard, test choice, `{{DEPLOYMENT}}`, OpenMES details) — for example a
+   sensor-only app is `manufacturing-app-recipe` with `{{DEPLOYMENT}}=ts`
+   and `production` sub-mode. Let it own the build — do not re-implement its work by hand.
    Chain supporting skills in dependency order (e.g.
-   `time-series-analytics-user`'s UDF pattern feeds into
+   **`time-series-analytics-user` runs first** to author the UDF + TICKscript
+   (e.g. a threshold rule on the approved field), and its output is then
+   handed to `manufacturing-app-recipe` for the `ts`-mode `apps/<name>/`
+   scaffold, packaging and deployment — never reimplement the delegate's work.
+   The UDF pattern feeds into
    `manufacturing-app-recipe`'s `ts`-mode `apps/<name>/` scaffold, or its
    `multimodal`/`vllm`/`agentic`-mode sensor half; `dlsps-user` feeds the vision
    half).
@@ -226,10 +280,23 @@ Only after confirmation:
 ### Step 6 — Verify and hand back
 
 Verify against the **delegate skill's own completion criteria** (each
-delegate ships its own). Then summarize for the user in business terms: what
+delegate ships its own), citing real evidence rather than assuming success.
+For a sensor path that means all of: the app is registered; ingestion is
+healthy; sensor data is actually stored (rows present in the time-series
+store); an actual alert is observed on the configured channel; the dashboard
+shows the right data; and the generated tests pass (when requested). For
+fused/vision stacks add the fused/vision topics and the UI endpoints. Then summarize for the user in business terms: what
 was built, how to reach it (URLs/commands), and the immediate next action
 (e.g. "open the Grafana dashboard", "check the fused-alert MQTT topic"). If a
 step fails, report the failing delegate step and stop — do not loop.
+
+If OpenMES was enabled, tell the user where the defect alerts can be seen:
+- **dummy receiver** (only when the user asked to test without a real
+  OpenMES): give the alerts page URL `http://<HOST_IP>:8099/`, say it is a
+  read-only test page with dummy data and no login. Explain that the receiver
+  and publisher run in separate foreground terminals; stop each with Ctrl-C;
+- **real OpenMES**: say alerts appear as Issues on the configured work order,
+  with the delivered count from the recipe's verification.
 
 ## Examples
 
@@ -244,12 +311,8 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 - **User names a skill directly** → skip discovery; hand off to that skill.
 - **Objective spans two skills** (e.g. bare UDF prototype now, full scaffolded
   app later) → sequence them in the plan and confirm the whole pipeline once.
-- **Unsure if multimodal correlation is really needed** — if the user only wants a sensor
-  *or* vision alert and mentions the other modality just as context (not as
-  something to correlate into one verdict), route single-modality, not
-  `manufacturing-app-recipe`'s `multimodal`/`vllm`/`agentic` modes — multimodal correlation is for
-  when **both** signals must agree/combine into one decision, not merely
-  coexist.
+- **Unclear correlation requirement** → route single-modality if the other
+  signal is only context. Fused modes require both signals in one decision.
 - **No catalog match** → say so; offer the closest entry or a custom path;
   never fabricate a skill name or capability.
 - **User declines the plan** → adjust the business answers and re-propose;
@@ -257,6 +320,11 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 - **Missing prerequisite** (no Docker, no GPU, no OPC-UA/MQTT source) →
   surface it in the plan (Step 4) and let the user decide, rather than
   failing mid-build.
+- **OpenMES requested without its details** → plan it anyway, and list the
+  missing details as open questions (base URL, token file path, work order
+  ID, non-blocking issue type ID, station name). Never ask for or repeat
+  the token value. Never fill in IDs or URLs yourself. Offer the recipe's
+  dummy receiver only if the user wants to test without a real OpenMES.
 
 ## Notes
 

@@ -1,0 +1,1972 @@
+{
+  "metadata": {
+    "skill_name": "manufacturing-app-recipe",
+    "skill_path": "/home/ecgv-d1-l3t15/new_ts/manufacturing-ai-suite/.github/skills/manufacturing-app-recipe",
+    "executor_model": "claude-sonnet-5.5",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-11-03T05:35:11Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 70.3,
+        "tokens": 1091,
+        "tool_calls": 12,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects ts production mode and places the app under apps/pump-vibration-monitor/ in the specified existing checkout",
+          "passed": true,
+          "evidence": "Parameters table: 'Mode / sub-mode: ts / production'; tree rooted at /work/industrial-edge-insights-time-series/apps/pump-vibration-monitor/"
+        },
+        {
+          "text": "Appends pump-vibration-monitor to SAMPLE_APP_LIST without changing DEFAULT_SAMPLE_APP and reuses the shared topology rather than generating a new app-local docker-compose.yml",
+          "passed": true,
+          "evidence": "'SAMPLE_APP_LIST := wind-turbine-anomaly-detection pump-vibration-monitor' with DEFAULT_SAMPLE_APP unchanged; 'Do not write a new docker-compose.yml, Makefile or nginx config. The new app plugs into the shared topology.'"
+        },
+        {
+          "text": "Uses the streaming UDF pattern and does not generate unsupported batch-mode config files",
+          "passed": true,
+          "evidence": "'The UDF is a streaming per-point handler. Do not ship config-batch.json.'"
+        },
+        {
+          "text": "Explains that the bundled OPC-UA simulator is hardcoded to wind-turbine fields and proposes a per-app CSV/node adapter for vibration_mm_s with matching Telegraf nodes, rather than assuming any CSV works",
+          "passed": true,
+          "evidence": "Caveat section: simulator 'hardcoded to the wind-turbine schema... grid_active_power and wind_speed'; proposes adapting opcua_server.py with per-app CSV path and vibration_mm_s variable; Telegraf node identifier must match the adapted simulator."
+        },
+        {
+          "text": "Enables exactly one alert channel, MQTT, and uses alerts/pump-vibration as the alert topic",
+          "passed": true,
+          "evidence": "TICKscript uses .mqtt('my_mqtt_broker').topic('alerts/pump-vibration'); 'No .post(...opcua_alerts) anywhere'; exactly one alert node."
+        },
+        {
+          "text": "The proposed UDF reads vibration_mm_s and flags values strictly greater than 12, not equal to 12",
+          "passed": true,
+          "evidence": "'udfs/pump_vibration_udf.py # rule: vibration_mm_s > 12 -> anomaly_status=1'; tests: row above 12 flagged, row '(\u2264 12)' not flagged. UDF code itself is not shown, but strict > is stated consistently."
+        },
+        {
+          "text": "Generates tests because the user explicitly requested them",
+          "passed": true,
+          "evidence": "'Generated tests ({{GENERATE_TESTS}}=yes, at least 6 tests, no stubs)' with test_app_registration/ingestion/analytics/alerting/dashboard files."
+        },
+        {
+          "text": "Keeps config.json at or below 5 KB and omits a models key for the rule-based threshold UDF",
+          "passed": true,
+          "evidence": "'config.json # udfs{name, device} + alerts.mqtt; NO \"models\" key; must stay \u2264 5 KB'; 'remove any udfs.models key'"
+        },
+        {
+          "text": "Names the package apps/pump-vibration-monitor/time-series-analytics-config/pump-vibration-monitor.tar after the app and uses make up_opcua_ingestion app=pump-vibration-monitor to upload it before applying config",
+          "passed": true,
+          "evidence": "Tree lists time-series-analytics-config/pump-vibration-monitor.tar; step 4: 'make up_opcua_ingestion app=pump-vibration-monitor ... runs upload_tar_file and post_config'."
+        },
+        {
+          "text": "Obeys the guidance-only request and does not claim the app was deployed or tests passed",
+          "passed": true,
+          "evidence": "'Nothing below was executed: no files written, no services started...'; deployment section labeled 'to run later... not executed now'. Only response.md written."
+        }
+      ],
+      "notes": [
+        "Makefile upload_tar_file caveat for model-less apps"
+      ]
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 29.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Requires make check_env_variables and validate_host_ip as preflight and refuses startup on failure",
+          "passed": true,
+          "evidence": "Response: \"make check_env_variables and validate_host_ip run as step 0 of every up* target. They must exit non-zero on the first failure... before install.sh or docker compose up run.\""
+        },
+        {
+          "text": "Rejects XOR because FUSION_MODE must be AND or OR and rejects non-positive TOLERANCE_NS",
+          "passed": true,
+          "evidence": "Table: FUSION_MODE=XOR 'Reject. The value must be exactly AND or OR'; TOLERANCE_NS=0 'Reject. The value must be numeric and greater than 0'."
+        },
+        {
+          "text": "Rejects colliding raw/processed topics and explains their distinct ingestion and fusion responsibilities",
+          "passed": true,
+          "evidence": "'Topics must be distinct... Telegraf reads the raw topic and Fusion Analytics reads the processed topic. Fusion must never subscribe to the raw input.'"
+        },
+        {
+          "text": "Rejects 127.0.0.1 for remote/WebRTC access rather than treating it as a usable remote host",
+          "passed": true,
+          "evidence": "'Reject. validate_host_ip must reject 127.0.0.1 when validated for remote or WebRTC access... Set HOST_IP to the host's routable IP.'"
+        },
+        {
+          "text": "Requires non-empty TURN and SeaweedFS web-auth credentials and valid InfluxDB/Grafana credentials before startup",
+          "passed": true,
+          "evidence": "TURN and SEAWEEDFS_WEB_AUTH_USER/_PASSWORD rejected if blank; InfluxDB/Grafana empty rejected with charset/length rules listed."
+        },
+        {
+          "text": "Does not silently replace invalid values with defaults or claim validation passed",
+          "passed": true,
+          "evidence": "Says every setting fails preflight and should be rejected; corrections are explicit user actions, and it states it did not run the Makefile targets. Mentions OR as default only as an option."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 31.1,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Case A yields no anomalous AND verdict but does publish and persist an anomalous OR verdict with the missing modality's flag recorded as 0",
+          "passed": true,
+          "evidence": "Table: AND 'no fused alert'; OR 'fused verdict is published and persisted with fused_decision=1, timeseries_anomaly=1, vision_anomaly=0'."
+        },
+        {
+          "text": "Case B is within tolerance and combines both anomaly flags, yielding an anomalous verdict for AND and OR",
+          "passed": true,
+          "evidence": "Case B: 49 ms within 50 ms; '1 AND 1 gives fused_decision=1', '1 OR 1 gives fused_decision=1'."
+        },
+        {
+          "text": "Case C cannot be treated as a matched pair for AND, while OR can still emit an unmatched source anomaly rather than suppressing it solely because no match exists",
+          "passed": true,
+          "evidence": "Case C: 51 ms no match, AND no fused alert; OR 'two single-modality verdicts' each unmatched source."
+        },
+        {
+          "text": "For unmatched OR verdicts sets the missing timestamp and delta_ms to JSON null and omits unavailable fields from the InfluxDB point",
+          "passed": true,
+          "evidence": "'vision_time' and 'delta_ms' null in JSON payload; 'InfluxDB: fusion_result stores these unavailable fields by omitting them from the point'."
+        },
+        {
+          "text": "Reads the vision RTP sender timestamp and defensively parses sensor timestamps with fractional seconds up to 9 digits and optional timezone suffixes into epoch nanoseconds",
+          "passed": true,
+          "evidence": "Uses payload['metadata']['rtp']['sender_ntp_unix_timestamp_ns']; sensor regex parser accepts 0-9 fractional digits and optional, sometimes duplicated, timezone suffix; both become epoch ns."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 21.5,
+        "tokens": 908,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Derives pump-simulation-data from the first hyphen-separated token of pump-vibration-monitor rather than assuming pump/vibration is the default",
+          "passed": true,
+          "evidence": "response.md: derives topic as APP_NAME.split(\"-\")[0] + \"-simulation-data\" -> pump-simulation-data, not pump/vibration."
+        },
+        {
+          "text": "Explains the publisher emits CSV columns as top-level fields plus source and filename, not a nested object",
+          "passed": true,
+          "evidence": "response.md: 'flat JSON object: every CSV column is a top-level key, plus source and filename. It is not nested.'"
+        },
+        {
+          "text": "Uses Telegraf data_format=json with suitable string/tag handling instead of a nested json_v2 object parser",
+          "passed": true,
+          "evidence": "response.md: plain data_format = \"json\" with json_string_fields / tag_keys; do not use json_v2 nested object."
+        },
+        {
+          "text": "Confirms the topic and payload against publisher.py, publisher logs, or a captured MQTT message rather than relying only on the assumed naming rule",
+          "passed": true,
+          "evidence": "response.md: confirm in publisher.py main(); docker logs grep 'MQTT Topic'; mosquitto_sub -t '#' -v."
+        },
+        {
+          "text": "Keeps Telegraf name_override aligned with the TICKscript measurement and verifies raw InfluxDB data before changing the UDF",
+          "passed": true,
+          "evidence": "response.md: name_override must match {{SENSOR_MEASUREMENT}} used by TICKscript .measurement(); influx select query; 'Only after raw rows appear in InfluxDB should you ... troubleshoot the UDF'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 13,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 36.1,
+        "tokens": 1026,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Points Telegraf at the real OPC-UA endpoint with node identifiers matching the gateway, rather than feeding a sample CSV",
+          "passed": true,
+          "evidence": "response.md: 'Your real gateway; no simulator and no CSV'; endpoint is the gateway's real opc.tcp://host:port; one [[inputs.opcua.nodes]] per tag using the gateway's real namespace, identifier type and identifier."
+        },
+        {
+          "text": "Removes or scales both bundled simulators to 0 for direct real-device ingestion",
+          "passed": true,
+          "evidence": "response.md: 'Drop both simulators: --scale ia-opcua-server=0 --scale ia-mqtt-publisher=0, or a compose override that removes them'."
+        },
+        {
+          "text": "Uses the secure OPC-UA connection guide for certificates, authentication, and security policy/mode rather than assuming Anonymous/None",
+          "passed": true,
+          "evidence": "response.md section 3 references connect-to-secure-opcua-server.md, says to set auth_method other than Anonymous, set security_policy/security_mode, mount certs, and not disable cert verification."
+        },
+        {
+          "text": "Uses the TICKscript HTTP POST to http://localhost:5000/opcua_alerts for OPC-UA alerting and removes the MQTT alert block",
+          "passed": true,
+          "evidence": "response.md: 'Remove the .mqtt(...) and .topic(...) pair. Use .post('http://localhost:5000/opcua_alerts').timeout(30s)'."
+        },
+        {
+          "text": "Does not enable both MQTT and OPC-UA alert channels in one TICKscript",
+          "passed": true,
+          "evidence": "response.md: 'Enable exactly one alert channel. Enabling both in one TICKscript is unsupported. Delete the unused block'."
+        }
+      ],
+      "notes": [
+        "Created response.md despite no-files instruction"
+      ]
+    },
+    {
+      "eval_id": 14,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 21.9,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects ts with demo sub-mode and hands off to time-series-analytics-user",
+          "passed": true,
+          "evidence": "response.md: 'Question 0 = `ts`; Question 0b = `demo`' and 'STOP and delegate entirely to `time-series-analytics-user`'."
+        },
+        {
+          "text": "Does not create apps/<name>/, register SAMPLE_APP_LIST, or generate a new Compose stack",
+          "passed": true,
+          "evidence": "response.md: 'No `apps/<name>/` folder, no Makefile changes, no scaffold_stack.py... or new Compose stack'; only response.md was created."
+        },
+        {
+          "text": "Skips ts production-only questions and services rather than requiring a new checkout, dashboard, or simulator",
+          "passed": true,
+          "evidence": "response.md: 'I skip the production questions and the scaffold'; 'No simulator, Telegraf/InfluxDB ingestion, Grafana dashboard, Nginx'; 'No working-directory, app-name, or transport questions.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 21.7,
+        "tokens": 762,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "For Request A skips the tests/ folder entirely and does not require pytest or install test dependencies",
+          "passed": true,
+          "evidence": "response.md: 'tests/ folder: does not apply. Skip it entirely. Do not load or author from TESTS.md, and do not create the pytest venv at ./.venv.' and 'Pytest completion gate: does not apply.'"
+        },
+        {
+          "text": "For Request B explicitly asks whether to generate tests because GENERATE_TESTS has no default",
+          "passed": true,
+          "evidence": "response.md: 'Accepting the other defaults does not cover this choice, because it has no default... Ask the single question, \"Generate pytest tests in tests/? (yes/no)\", before scaffolding.'"
+        },
+        {
+          "text": "Does not use empty test stubs to satisfy test completion criteria or apply pytest gates after an opt-out",
+          "passed": true,
+          "evidence": "No stubs are suggested. Pytest gate is dropped for A (and for B if the answer is no); it applies only after a 'yes'. Do not 'silently generate tests'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 16,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 12,
+        "failed": 0,
+        "total": 12,
+        "time_seconds": 46.9,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses make up for multimodal, make up_vllm for vllm, and make up_agentic for agentic, not bare Compose overlay commands that bypass Makefile preflight",
+          "passed": true,
+          "evidence": "Table lists make up / make up_vllm / make up_agentic; 'Do not hand-run docker compose up for production'; check_env_variables preflight noted."
+        },
+        {
+          "text": "Verifies all containers running/healthy, explicitly including MediaMTX, Coturn, and SeaweedFS",
+          "passed": true,
+          "evidence": "'every container must be running/healthy. This explicitly includes: mediamtx..., coturn..., the seaweedfs-* containers'."
+        },
+        {
+          "text": "Captures messages on the vision, applicable raw sensor, processed sensor, and fused MQTT topics",
+          "passed": true,
+          "evidence": "Lists VISION_TOPIC, TS_RAW_TOPIC (only when MQTT-published), TS_PROCESSED_TOPIC, FUSION_TOPIC."
+        },
+        {
+          "text": "Requires fused output that matches FUSION_MODE semantics, and states that a REST 200 alone is insufficient",
+          "passed": true,
+          "evidence": "'Fused messages must follow FUSION_MODE (AND/OR) semantics... REST 200s alone are not proof.'"
+        },
+        {
+          "text": "Requires both the raw vision InfluxDB measurement and the fused/multimodal measurement to be populated",
+          "passed": true,
+          "evidence": "Requires VISION_MEASUREMENT and fusion_result populated."
+        },
+        {
+          "text": "Requires the Grafana dashboard to render the WebRTC panel plus a sensor trend and a fused-verdict table",
+          "passed": true,
+          "evidence": "Grafana panels: WebRTC iframe panel, sensor trend panel, multimodal verdict table."
+        },
+        {
+          "text": "Requires model-download completion, checks the actual host mount behind container MODEL_PATH, and waits for apm-llm GET /v1/config to return 200 before declaring apm-agent healthy",
+          "passed": true,
+          "evidence": "'model-download must complete. Check the host path behind the container MODEL_PATH...'; 'apm-llm GET /v1/config must return 200 before apm-agent is healthy.'"
+        },
+        {
+          "text": "For vllm verifies /insights-ui/api/vllm/health reports accessible and that Explain on one defective fused row returns VLM text, quoted",
+          "passed": true,
+          "evidence": "Health returns {\"accessible\": true}; POST /insights-ui/api/explain on one defective fused row returns VLM text, 'Quote that text verbatim.'"
+        },
+        {
+          "text": "For agentic runs Run Agentic Analysis (or POST /agentic-ui/run through nginx), waits for the run to complete on /agentic-ui/results/<run_id>, quotes the ticket text, and checks /api/v1/capabilities",
+          "passed": true,
+          "evidence": "Run Agentic Analysis reaches completed at /agentic-ui/results/<run_id>; 'Quote the ticket text verbatim'; GET /api/v1/capabilities returns 200."
+        },
+        {
+          "text": "Describes LLM_MODE=fallback as an apm-agent mode that still completes a run with structured rule-based outputs while apm-llm is stopped",
+          "passed": true,
+          "evidence": "Fallback table: apm-llm stopped; apm-agent 'Still completes the full policy \u2192 analysis \u2192 ticket run, but with structured rule-based output from policy_fallback.json'."
+        },
+        {
+          "text": "Uses --noproxy '*' only on calls to the local stack and always verifies TLS with the stack's own certificate (--cacert from nginx_proxy plus --resolve localhost:PORT:HOST_IP); never uses -k or disables verification",
+          "passed": true,
+          "evidence": "docker cp nginx_proxy cert; --cacert ./nginx-cert.pem --resolve localhost:${GRAFANA_PORT}:${HOST_IP}; 'Never use -k'; --noproxy '*' for these calls only."
+        },
+        {
+          "text": "Requires quoted captured evidence in a later live-run summary and does not claim any of the proposed checks have already passed",
+          "passed": true,
+          "evidence": "'Design/explanation only. Nothing below was run'; quoting of VLM and ticket text required; no claims of passing."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 28.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Presents vision, ts, multimodal, vllm, and agentic and asks for explicit mode selection without silently defaulting to multimodal",
+          "passed": true,
+          "evidence": "response.md has a table of all five modes under 'Question 0: Deployment mode (no default)' and asks 'Which mode do you want?'. It says multimodal or above suits the user's data and calls multimodal the 'recommended ceiling' without an Intel GPU, but it does not choose a mode."
+        },
+        {
+          "text": "Explains that ts production needs a confirmed existing checkout or clone location while fused modes need a confirmed parent for a new flat stack",
+          "passed": true,
+          "evidence": "'multimodal, vllm, agentic: I need the absolute parent path where a new, flat, standalone <stack-dir>/ is created.' and 'ts, production: I need the absolute path to an existing industrial-edge-insights-time-series checkout... If you have no checkout, tell me where to clone one.'"
+        },
+        {
+          "text": "Does not invent an output path, default to the current working directory, or write files before clarification",
+          "passed": true,
+          "evidence": "The response says 'I won't guess a path or default to the current directory' and 'Nothing will be built or written until you confirm both.' The only file written was response.md in the harness outputs folder, which is the answer itself and not a project scaffold."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 18,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 11,
+        "failed": 0,
+        "total": 11,
+        "time_seconds": 37.3,
+        "tokens": 1196,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Enables OpenMES publishing by setting OPENMES_ENABLED=yes",
+          "passed": true,
+          "evidence": "response.md: 'Set **`{{OPENMES_ENABLED}}=yes`**. The default is `no`.'"
+        },
+        {
+          "text": "Places the publisher in /work/stacks/weld-defect-stack/openmes/ with openmes_publisher.py copied verbatim from assets/openmes and a templated openmes-publisher.json",
+          "passed": true,
+          "evidence": "Folder at '/work/stacks/weld-defect-stack/openmes/' with 'openmes_publisher.py # copied verbatim from assets/openmes/' and a templated openmes-publisher.json."
+        },
+        {
+          "text": "Uses mode multimodal and subscribes only to weld/fusion/results with defect /fused_decision equal to 1, label /predicted_category and timestamp [/vision_time, /timeseries_time] in iso8601; never subscribes to the vision, processed-sensor or sensor-alert topics",
+          "passed": true,
+          "evidence": "JSON has mode multimodal, topic weld/fusion/results, defect_equals 1, fields defect /fused_decision, label /predicted_category, timestamp [/vision_time,/timeseries_time], timestamp_format iso8601. Notes: 'subscribe to weld/fusion/results only. Do not also subscribe to the vision topic or the sensor-alert topic'."
+        },
+        {
+          "text": "Uses the supplied base URL, work order 4711, issue type 12 and source_id weld-cell-03 exactly, and does not invent other IDs or URLs",
+          "passed": true,
+          "evidence": "base_url https://mes.plant.example, work_order_id 4711, issue_type_id 12, source_id weld-cell-03, batch_step_id null; no invented IDs."
+        },
+        {
+          "text": "References the token only by the user's existing path /secure/openmes_token (token_file points there; the token is not copied into the stack); never asks for, prints or stores the token value in config, chat or summary",
+          "passed": true,
+          "evidence": "'token_file': '/secure/openmes_token'; 'The token is **not** copied or moved'; 'never quote the token'."
+        },
+        {
+          "text": "Publishes the MQTT broker on 127.0.0.1:1883 only (a ports entry in the stack's docker-compose.yml), never 0.0.0.0",
+          "passed": true,
+          "evidence": "'add ports: [\"127.0.0.1:1883:1883\"] under ia-mqtt-broker in the stack's docker-compose.yml. Bind loopback only'."
+        },
+        {
+          "text": "Notes the token lifetime caveat (DEFAULT_TOKEN_TTL_MINUTES, 15 min by default) and the need to raise it or rotate the token file",
+          "passed": true,
+          "evidence": "'expire after DEFAULT_TOKEN_TTL_MINUTES, which defaults to 15 minutes ... admin must either raise DEFAULT_TOKEN_TTL_MINUTES ... or rotate the file at /secure/openmes_token'."
+        },
+        {
+          "text": "States that OpenMES publishing failures never block inference, fusion, or alerting",
+          "passed": true,
+          "evidence": "'Failure impact: none on the pipeline. Inference, fusion and alerting are unaffected'."
+        },
+        {
+          "text": "Verification covers a Delivered event with issue_id, Duplicate event ignored on replay, no Issue for a non-defect, and Auth failure (401) stored as blocked",
+          "passed": true,
+          "evidence": "Smoke test steps 1-4: 'Delivered event=<id> issue_id=<n>', 'Duplicate event ignored', non-defect creates no Issue, 'Auth failure (401)' and event is 'blocked'."
+        },
+        {
+          "text": "Warns that fused modes create one Issue per defective frame (up to about 10 per second) when a defect persists",
+          "passed": true,
+          "evidence": "'you will get N Issues ... at 10 fps for 3 s, expect about 30 Issues. Fused modes can produce up to about 10 per second.'"
+        },
+        {
+          "text": "Targets the user's real OpenMES at https://mes.plant.example and does not substitute the dummy receiver",
+          "passed": true,
+          "evidence": "base_url is https://mes.plant.example and issues POST to https://mes.plant.example/api/v1/issues; no dummy receiver mentioned."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 19,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 52.3,
+        "tokens": 1112,
+        "tool_calls": 10,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Writes a spec (mode agentic, object/title, reference_dir, out_dir, vision/sensor/vlm/llm paths, fusion_mode AND, openmes enabled with dummy true) from assets/vertical.example.yaml using only the supplied paths",
+          "passed": true,
+          "evidence": "response.md step 1 gives a YAML spec from vertical.example.yaml with mode: agentic, object, title, reference_dir, out_dir, fusion_mode: AND, vision/sensor/vlm/llm paths from the prompt, and openmes enabled: true, dummy: true. It is guidance-only, as the prompt required."
+        },
+        {
+          "text": "Runs scripts/scaffold_stack.py with --dry-run first and then for real, instead of hand-writing Compose files, Makefile, nginx, Fusion Analytics or the UI service, and without a manual cp -r",
+          "passed": true,
+          "evidence": "Step 2: 'Run scaffold_stack.py --spec cnc.yaml --dry-run, then run it again without --dry-run'. 'Do not hand-write anything... Never use a manual cp -r.'"
+        },
+        {
+          "text": "Edits the lines in the script's leftover report (UDF sensor fields and logic, labels, prompts, dashboard queries) and also applies the semantic checklists independently (e.g. agent policy mode AND/OR, ticketing backend), loading reference files only for those steps",
+          "passed": true,
+          "evidence": "Step 3 lists the leftover lines (UDF fields, TICKscript, label normalisation, dashboard queries, prompts). It adds 'I also walk the semantic settings, such as the copied policy's mode: OR and ticketing.backend: jira, which must become AND and none.' The plan does not say explicitly that reference files are loaded only for those steps."
+        },
+        {
+          "text": "Builds and starts with COMPOSE_BAKE=false make build and make up_agentic, then starts openmes/start_dummy_openmes_receiver.sh, waits for /health, starts openmes/start_dummy_openmes_publisher.sh, and runs scripts/verify_stack.py",
+          "passed": true,
+          "evidence": "Steps 6-8: 'COMPOSE_BAKE=false make build', 'make up_agentic', start the receiver and wait for /health, then start the publisher, then run 'python3 scripts/verify_stack.py ...'. The order is correct."
+        },
+        {
+          "text": "Quotes verify_stack.py PASS evidence in the final summary rather than claiming success without it",
+          "passed": true,
+          "evidence": "'Proof: the verify_stack.py PASS lines, quoted... I do not claim anything without a quoted line.'"
+        },
+        {
+          "text": "Gives the user the dummy OpenMES alerts page URL http://<HOST_IP>:8099/ and how to stop it (Ctrl-C in each terminal, or the tool's stop capability), and labels the results as dummy",
+          "passed": true,
+          "evidence": "'alerts go to the dummy receiver, not a real OpenMES. Its alerts page is http://<HOST_IP>:8099/ ... shows dummy data ... how to stop it (Ctrl-C in each terminal, or the tool's stop)'."
+        },
+        {
+          "text": "Does not invent model paths, OpenMES IDs for a real OpenMES, or secrets",
+          "passed": true,
+          "evidence": "Only the supplied paths are used. The Phi-4 HF id is a placeholder '<HF id of the Phi-4 model you converted>'. Real OpenMES details (URL, token file path, IDs) are requested from the user later, and the token is a generated throwaway. Minor: the spec contains a made-up source_id 'cnc-cell-01', but this is a dummy label."
+        }
+      ],
+      "notes": [
+        "Defect taxonomy draft",
+        "HF id for Phi-4",
+        "Grafana provisioning deletion on make up*"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 31.4,
+        "tokens": 954,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes that a pretrained sensor model is required but neither a local artifact nor a resolvable download source was supplied",
+          "passed": true,
+          "evidence": "response.md: 'Blocker: no IsolationForest model... you have no model file, no training dataset and no download URL.'"
+        },
+        {
+          "text": "Asks the user to provide the model artifact, training dataset, or concrete resolvable source before proceeding",
+          "passed": true,
+          "evidence": "Asks for one of: existing .pkl path, resolvable download URL, training dataset CSV, or switching to a model-free pattern."
+        },
+        {
+          "text": "Does not fabricate a model filename/path or create a dummy .pkl/.xml/.bin file",
+          "passed": true,
+          "evidence": "Metrics show files_created 0 aside from response.md; response states 'no scaffold, no .pkl, no placeholder'. Mentions models/gearbox_health.pkl only as a rejected placeholder example."
+        },
+        {
+          "text": "Does not leave a udfs.models entry pointing to an unavailable model",
+          "passed": true,
+          "evidence": "No config or scaffold was written; the checkout was not touched."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 41.5,
+        "tokens": 1359,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Builds the multimodal shape as a new flat stack directory at the requested location, not an apps/<name>/ folder",
+          "passed": true,
+          "evidence": "Guidance-only task; response.md titled 'Proposed multimodal stack: /work/stacks/weld-quality-stack' and places the stack at the requested flat path with no apps/<name>/ reference. Weak: never explicitly states 'flat'."
+        },
+        {
+          "text": "Configures Fusion Analytics with FUSION_MODE=AND and TOLERANCE_NS=50e6",
+          "passed": true,
+          "evidence": "'Fusion: AND, tolerance 50 ms (TOLERANCE_NS=50e6)'; payload mode AND. The literal FUSION_MODE variable name is not written."
+        },
+        {
+          "text": "Keeps weld/sensor/raw and weld/sensor/processed as distinct topics and subscribes Fusion to the processed topic rather than the raw topic",
+          "passed": true,
+          "evidence": "Topic table: raw -> Telegraf, 'Not Fusion'; processed -> Fusion. 'Fusion subscribes to the processed topic, not the raw or alert-only topics.'"
+        },
+        {
+          "text": "Publishes every processed sensor point to weld/sensor/processed and only anomalies to weld/sensor/alerts so normal observations remain available for fusion",
+          "passed": true,
+          "evidence": "'weld/sensor/processed | UDF/TICKscript, every processed point'; 'weld/sensor/alerts | TICKscript, alerts only'; 'The alert-only topic would hide the non-anomalous points that AND pairing needs.'"
+        },
+        {
+          "text": "Enables RTP reference timestamps on the vision pipeline (add-reference-timestamp-meta=true and add-rtp-timestamp=true) so Fusion matches on the RTP sender NTP timestamp, and allows the initial roughly 300-packet warm-up",
+          "passed": true,
+          "evidence": "Pipeline has rtspsrc add-reference-timestamp-meta=true and gvametaconvert add-rtp-timestamp=true; matches on metadata.rtp.sender_ntp_unix_timestamp_ns; warm-up ~300 packets with grace period in tests."
+        },
+        {
+          "text": "Pairs sensor and vision messages by timestamps within tolerance instead of fusing only the latest messages",
+          "passed": true,
+          "evidence": "'Pairing is first-come-first-served, not latest with latest': peek oldest, find_nearest, diff > 50,000,000 ns means no match."
+        },
+        {
+          "text": "Publishes the fused verdict on weld/fused-alerts as a flat JSON object (no nested objects) with fused_decision as a top-level scalar, e.g. shown in the example payload",
+          "passed": true,
+          "evidence": "Example JSON is flat with \"fused_decision\": 1 at top level, published to weld/fused-alerts."
+        },
+        {
+          "text": "Persists raw vision metadata for every frame, independently of matching, to its own named InfluxDB measurement that is separate from the fused-verdict measurement",
+          "passed": true,
+          "evidence": "Raw vision: VISION_MEASUREMENT (vision-weld-classification-results), 'Every vision message is written in the MQTT on_message callback, whether or not it is fused'; fused verdicts go to fusion_result."
+        }
+      ],
+      "notes": [
+        "Used reference measurement name vision-weld-classification-results as a proposal since the skill leaves it a placeholder"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 64.4,
+        "tokens": 1516,
+        "tool_calls": 11,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses vllm mode and retains the multimodal sensor path and Fusion Analytics correlator",
+          "passed": true,
+          "evidence": "Section 1: 'Mode vllm = flat multimodal stack + vllm-server + adapted ui-service. It keeps the sensor path and the Fusion Analytics correlator'."
+        },
+        {
+          "text": "Configures FUSION_MODE=AND independently of the explanation layer",
+          "passed": true,
+          "evidence": ".env has FUSION_MODE=AND, TOLERANCE_NS=50e6; 'FUSION_MODE=AND is set only in Fusion Analytics... the explanation layer never changes fused_decision'."
+        },
+        {
+          "text": "Serves the VLM with vllm-server (intel/vllm) from configs/vllm/huggingface, and with no adapter removes the LoRA flags and sets VLLM_ADAPTER_NAME to the served model name",
+          "passed": true,
+          "evidence": "VLLM_IMAGE=intel/vllm:<pinned tag>; configs/vllm/huggingface/quality-vlm; 'remove --enable-lora and --lora-modules'; VLLM_ADAPTER_NAME=${VLLM_SERVED_MODEL_NAME}."
+        },
+        {
+          "text": "Adds the reference ui-service, copied and adapted for this stack and built locally, reached at /insights-ui/ through nginx (NGINX_PROFILE=vllm), and provisions a _vlm Explainability dashboard whose panel iframes /insights-ui/",
+          "passed": true,
+          "evidence": "ui-service built locally as weld-explainer-ui; adapted per UI_SERVICE.md edit list; nginx NGINX_PROFILE=vllm adds /insights-ui/; weld_explainer_vlm.json 'VLLM Reasoning panel is an iframe src=\"/insights-ui/\"'."
+        },
+        {
+          "text": "Does not author a separate vllm-explainer service, OVMS, or Fusion Analytics batch-complete publishing for vllm mode",
+          "passed": true,
+          "evidence": "'Not added: no vllm-explainer service, no OVMS, no model-download... and no Fusion batch-complete publishing.'"
+        },
+        {
+          "text": "Keeps the data contract the Explain flow needs: vision measurement tagged search_time with frame_id and img_handle, fused vision_timestamp/timeseries_timestamp, and a DLSPS s3_write folder_prefix matching the UI BUCKET_NAME",
+          "passed": true,
+          "evidence": "Section 7 table: tag search_time, fields frame_id, img_handle; vision_timestamp/timeseries_timestamp; s3_write folder_prefix=weld must equal BUCKET_NAME=dlstreamer-pipeline-results/weld."
+        },
+        {
+          "text": "Keeps docker-compose-vllm.yml at the stack root and uses make up_vllm (with check_hardware and check_models) rather than plain make up",
+          "passed": true,
+          "evidence": "Layout lists docker-compose-vllm.yml 'at stack root'; Section 9: 'use make up_vllm, not plain make up' and 'runs check_hardware \u2192 check_models \u2192 ...'."
+        },
+        {
+          "text": "Uses the supplied local model paths rather than inventing model names or download sources",
+          "passed": true,
+          "evidence": "Uses /models/weld-classifier.xml and /models/quality-vlm/; 'Nothing is downloaded and no model id is invented'; served name derived from directory and flagged for confirmation."
+        }
+      ],
+      "notes": [
+        "Served model name quality-vlm and >=32GB RAM proposed for confirmation"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 47.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Builds agentic additively on top of the fused multimodal stack and the complete vllm layer (vllm-server and ui-service keep running)",
+          "passed": true,
+          "evidence": "response.md \u00a71: 'agentic mode is additive... builds on the fused multimodal stack and the complete vllm layer. vllm-server and ui-service keep running.'"
+        },
+        {
+          "text": "Includes apm-agent (agent-quality-handler), apm-llm (OVMS) serving the separate agent LLM from MODEL_PATH, model-download, and apm-metrics plus Prometheus",
+          "passed": true,
+          "evidence": "\u00a72 table lists apm-agent (intel/agent-quality-handler), apm-llm (OVMS, separate agent LLM from MODEL_PATH), model-download, apm-metrics, prometheus."
+        },
+        {
+          "text": "Uses the agentic UI's Run Agentic Analysis (POST /agentic-ui/run publishing apm/batch-complete for a time window) as the default trigger, not Fusion Analytics auto-batching",
+          "passed": true,
+          "evidence": "\u00a76: default trigger is UI; POST /agentic-ui/run publishes apm/batch-complete with start_id/end_id; auto-batching is an opt-in deviation not selected."
+        },
+        {
+          "text": "Provisions both the _vlm Explainability dashboard and the _agentic dashboard that iframes /agentic-ui/ through the same nginx origin (NGINX_PROFILE=agentic)",
+          "passed": true,
+          "evidence": "\u00a77 lists part-quality_vlm.json and part-quality_agentic.json; \u00a76 says iframe of origin + /agentic-ui/ on same nginx origin, NGINX_PROFILE=agentic."
+        },
+        {
+          "text": "Rewrites configs/agentic agents.yaml, prompts/<use_case_id>.txt and policy_fallback.json for the part-quality taxonomy",
+          "passed": true,
+          "evidence": "\u00a78 lists agents.yaml (use_case_id part-quality-monitoring, defect classes), prompts/part-quality-monitoring.txt, policy_fallback.json with the taxonomy."
+        },
+        {
+          "text": "Keeps docker-compose-vllm.yml and docker-compose-agentic.yml at the stack root, uses make up_agentic, and omits docker-compose-mcp.yml",
+          "passed": true,
+          "evidence": "\u00a71 compose files at stack root, docker-compose-mcp.yml omitted; \u00a79 'Use make up_agentic'."
+        },
+        {
+          "text": "Uses the supplied local model artifacts for both models and does not fabricate model paths",
+          "passed": true,
+          "evidence": "\u00a73 uses /models/part-inspection.xml, /models/quality-vlm/ (no adapter), /models/agent-llm/; states 'I would not invent a path'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 25.8,
+        "tokens": 944,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects vision demo/PoC mode and follows the lightweight single-component path",
+          "passed": true,
+          "evidence": "response.md: 'This is `vision` mode, a **demo/PoC only**. It is one lightweight, single-component app.' Sub-path: DL Streamer/GStreamer pipeline."
+        },
+        {
+          "text": "Does not generate the full production Docker Compose topology or dashboard/alert services",
+          "passed": true,
+          "evidence": "response.md: 'does not use the full Compose stack: no Telegraf/InfluxDB, Fusion Analytics, Grafana...' and 'Scaffolding (scaffold_stack.py, .env, verify_stack.py) does not apply'; non-goals list no dashboard/alerting."
+        },
+        {
+          "text": "Uses the provided local model path rather than inventing a model source",
+          "passed": true,
+          "evidence": "Pipeline uses 'gvaclassify model=/models/scratch.xml device=CPU'; 'no download step ... Do not substitute another classifier.'"
+        },
+        {
+          "text": "Delegates the custom pipeline demo to dlstreamer-coding-agent when available and requires one real inference round-trip before declaring a later live run successful",
+          "passed": true,
+          "evidence": "response.md: 'delegated to `dlstreamer-coding-agent`' and completion criterion 2: 'One inference round-trip end to end. A scratch classification result is quoted verbatim...' before summary."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 27.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not scaffold a manufacturing vision, time-series, multimodal, vllm, or agentic stack",
+          "passed": true,
+          "evidence": "Response only contains a generic OTel Collector/Prometheus/Grafana compose stack; it states 'I did not use its scaffolding or manufacturing components'."
+        },
+        {
+          "text": "Recognizes that web-API latency and error-rate monitoring is outside the skill's manufacturing quality and equipment-monitoring scope",
+          "passed": true,
+          "evidence": "response.md: 'manufacturing-app-recipe does not apply... Generic web-API observability is out of scope'; transcript: 'The skill doesn't apply (e-commerce web API observability)'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 74.1,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Treats the rule-based UDF as model-free (no udfs.models entry, model file, or placeholder/dummy artifact) and keeps config.json at or below 5 KB",
+          "passed": true,
+          "evidence": "Response: \"Add `models/` only if the UDF is model-backed; a pure rule-based UDF has none\" and \"`config.json` is 5 KB or smaller (microservice limit)\". It doesn't explicitly mention the udfs.models entry, but no model artifact is proposed."
+        },
+        {
+          "text": "Uses make check_env_variables for preflight and make up_mqtt_ingestion app=pump-pressure as the deployment entry point rather than bypassing the shared Makefile",
+          "passed": true,
+          "evidence": "Gives `make check_env_variables` and `make up_mqtt_ingestion app=pump-pressure`, and says \"Do not hand-write curl for this.\""
+        },
+        {
+          "text": "Checks /ts-api/kapacitor/v1/ping for 200 or 204 and verifies raw InfluxDB data within 30 seconds, not merely container startup",
+          "passed": true,
+          "evidence": "curl to /ts-api/kapacitor/v1/ping with \"expect 204 or 200\"; \"InfluxDB raw measurement is populated within about 30 s\"."
+        },
+        {
+          "text": "Requires both a real flagged-anomaly log line and a captured MQTT alert, and confirms the dashboard matches apps/pump-pressure/grafana-dashboard.json",
+          "passed": true,
+          "evidence": "Includes a grep for \"Flagged anomalous point\" and mosquitto_sub on the alert topic. Proof list requires both. Grafana check references apps/pump-pressure/grafana-dashboard.json."
+        },
+        {
+          "text": "Does not report proposed commands as executed or claim that the deployment or tests succeeded",
+          "passed": true,
+          "evidence": "Response begins \"Nothing below has been executed.\" The summary says no commands were run and no REST APIs were called."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "time_seconds": 68.1,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Includes DLSPS, MQTT broker, Telegraf, InfluxDB, Time Series Analytics, Fusion Analytics, Grafana, Nginx, MediaMTX, Coturn, and SeaweedFS S3 services, not just Metro's seven-container topology",
+          "passed": true,
+          "evidence": "response.md sections 2-5 cover DLSPS, ia-mqtt-broker, Telegraf, InfluxDB, Time Series Analytics microservice, Fusion Analytics, Grafana, nginx, MediaMTX, Coturn and SeaweedFS (master/volume/filer/s3). There is no single service table, but all are named."
+        },
+        {
+          "text": "Uses a GPU inference pipeline (device=GPU) with the host /dev/dri device mapping",
+          "passed": true,
+          "evidence": "gvaclassify ... device=GPU model=/models/cnc.xml; compose devices \"${DRI_MOUNT_PATH:-/dev/null}:/dev/dri\" with DRI_MOUNT_PATH=/dev/dri."
+        },
+        {
+          "text": "Grants video/render access via group_add without duplicate GIDs and keeps DLSPS running as its non-root user rather than root",
+          "passed": true,
+          "evidence": "group_add: [\"109\",\"110\",\"992\",\"993\"]; \"Compose rejects duplicate GIDs, so do not add ${RENDER_GID} if it equals one already listed\"; \"DLSPS runs non-root as uid=1999,gid=1999 ... Do not run it as root.\""
+        },
+        {
+          "text": "Enables RTSP and WebRTC, with metadata on cnc/vision and both webrtc and s3_write entries in a frame destination array",
+          "passed": true,
+          "evidence": "ENABLE_RTSP=true, ENABLE_WEBRTC=true; destination JSON has metadata mqtt topic cnc/vision and a frame array with type webrtc and type s3_write."
+        },
+        {
+          "text": "Provides WebRTC video with MediaMTX WHIP/WHEP and Coturn ICE/TURN, plus stored-frame review through SeaweedFS",
+          "passed": true,
+          "evidence": "Section 5: DLSPS publishes to MediaMTX via WHIP, browser plays via WHEP, Coturn gives ICE/TURN relay; s3_write to SeaweedFS reviewed via nginx /image-store."
+        },
+        {
+          "text": "Keeps internal MediaMTX, MQTT, and S3 traffic out of corporate proxies using appropriate NO_PROXY/no_proxy settings",
+          "passed": true,
+          "evidence": "\"no_proxy must list mediamtx, ${S3_STORAGE_HOST}, ia-mqtt-broker, otherwise WHIP/S3 writes fail silently behind a corporate proxy\"."
+        },
+        {
+          "text": "Builds Fusion Analytics from fusion-analytics/Dockerfile unless an actual prebuilt registry tag is pinned",
+          "passed": true,
+          "evidence": "\"Fusion Analytics is built from fusion-analytics/Dockerfile (COMPOSE_BAKE=false make build). No prebuilt registry tag is assumed.\""
+        },
+        {
+          "text": "Includes install.sh, .env, Makefile preflight/up/status/down targets and Grafana dashboard provisioning, without leftover weld or wind-turbine names in CNC artifacts",
+          "passed": true,
+          "evidence": "Section 6: install.sh generates .env secrets/GIDs; make check_env_variables (preflight), build, up, status, down; Grafana provisioning swap; \"No weld/wind-turbine names may remain\"."
+        },
+        {
+          "text": "Proposes a cnc-quality dashboard containing WebRTC video, a sensor trend panel, and a fused-verdict table",
+          "passed": true,
+          "evidence": "Section 7 lists panels: 1. WebRTC video iframe, 2. Vibration/sensor trend, 3. Multimodal verdict table/stat from fusion_result."
+        },
+        {
+          "text": "Copies the selected dashboard from dashboards_jsons into Grafana provisioning at install/up time",
+          "passed": true,
+          "evidence": "\"each up* target clears every file already in configs/grafana/provisioning/, then copies the selected dashboard JSON from configs/grafana/dashboards_jsons/ (here cnc-quality.json)\"."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6,
+        "passed": 6,
+        "failed": 4,
+        "total": 10,
+        "time_seconds": 30.8,
+        "tokens": 1083,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects ts production mode and places the app under apps/pump-vibration-monitor/ in the specified existing checkout",
+          "passed": true,
+          "evidence": "Response places files under /work/industrial-edge-insights-time-series/apps/pump-vibration-monitor/. No explicit 'ts production mode' selection, but the placement is correct."
+        },
+        {
+          "text": "Appends pump-vibration-monitor to SAMPLE_APP_LIST without changing DEFAULT_SAMPLE_APP and reuses the shared topology rather than generating a new app-local docker-compose.yml",
+          "passed": false,
+          "evidence": "No mention of SAMPLE_APP_LIST or DEFAULT_SAMPLE_APP. It proposes an 'APP=' Makefile target and a new docker-compose.pump.yml override, which is not the shared topology."
+        },
+        {
+          "text": "Uses the streaming UDF pattern and does not generate unsupported batch-mode config files",
+          "passed": false,
+          "evidence": "Proposes a generic Kapacitor-style UDF class plus an optional TICKscript file (tick_scripts/vibration_threshold.tick). It does not identify the streaming UDF pattern and may generate unsupported files."
+        },
+        {
+          "text": "Explains that the bundled OPC-UA simulator is hardcoded to wind-turbine fields and proposes a per-app CSV/node adapter for vibration_mm_s with matching Telegraf nodes, rather than assuming any CSV works",
+          "passed": false,
+          "evidence": "Proposes a new custom simulator container that replays /data/pump.csv, with a Telegraf node. It never says the bundled simulator is hardcoded to wind-turbine fields."
+        },
+        {
+          "text": "Enables exactly one alert channel, MQTT, and uses alerts/pump-vibration as the alert topic",
+          "passed": true,
+          "evidence": "config.json sketch has only an 'alerts.mqtt' block with topic 'alerts/pump-vibration'."
+        },
+        {
+          "text": "The proposed UDF reads vibration_mm_s and flags values strictly greater than 12, not equal to 12",
+          "passed": true,
+          "evidence": "UDF code uses 'value > THRESHOLD' with THRESHOLD = 12.0, and the tests assert 12.0 \u2192 0."
+        },
+        {
+          "text": "Generates tests because the user explicitly requested them",
+          "passed": true,
+          "evidence": "Proposes tests/test_udf.py, test_config.py and test_mqtt_alert.py, with described cases."
+        },
+        {
+          "text": "Keeps config.json at or below 5 KB and omits a models key for the rule-based threshold UDF",
+          "passed": true,
+          "evidence": "The config.json sketch is tiny and has no 'models' key. The 5 KB limit is not discussed, but it is trivially met."
+        },
+        {
+          "text": "Names the package apps/pump-vibration-monitor/time-series-analytics-config/pump-vibration-monitor.tar after the app and uses make up_opcua_ingestion app=pump-vibration-monitor to upload it before applying config",
+          "passed": false,
+          "evidence": "No tar package is proposed. Deployment uses 'make up APP=pump-vibration-monitor' and a generic REST load; make up_opcua_ingestion is never mentioned."
+        },
+        {
+          "text": "Obeys the guidance-only request and does not claim the app was deployed or tests passed",
+          "passed": true,
+          "evidence": "Response states 'Nothing was accessed, written, started, downloaded or called', and claims no deployment or passing tests."
+        }
+      ],
+      "notes": [
+        "Response admits names, ports and the UDF interface are assumed"
+      ]
+    },
+    {
+      "eval_id": 10,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 25.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Requires make check_env_variables and validate_host_ip as preflight and refuses startup on failure",
+          "passed": false,
+          "evidence": "Response requires generic preflight that exits non-zero before docker compose up, but never names make check_env_variables or validate_host_ip."
+        },
+        {
+          "text": "Rejects XOR because FUSION_MODE must be AND or OR and rejects non-positive TOLERANCE_NS",
+          "passed": true,
+          "evidence": "'Accept only the documented enum values... Use AND ... or OR'; 'Require an integer greater than 0'."
+        },
+        {
+          "text": "Rejects colliding raw/processed topics and explains their distinct ingestion and fusion responsibilities",
+          "passed": false,
+          "evidence": "Topics must differ (rejected), but the explanation is a feedback-loop rationale, not distinct ingestion vs fusion responsibilities."
+        },
+        {
+          "text": "Rejects 127.0.0.1 for remote/WebRTC access rather than treating it as a usable remote host",
+          "passed": true,
+          "evidence": "'Reject loopback (127.0.0.0/8, ::1), 0.0.0.0, and localhost when remote access is intended'."
+        },
+        {
+          "text": "Requires non-empty TURN and SeaweedFS web-auth credentials and valid InfluxDB/Grafana credentials before startup",
+          "passed": true,
+          "evidence": "Requires non-empty TURN and SeaweedFS credentials; InfluxDB/Grafana require non-empty user, password, token with minimum length and no defaults."
+        },
+        {
+          "text": "Does not silently replace invalid values with defaults or claim validation passed",
+          "passed": true,
+          "evidence": "Treats violations as hard errors, exits non-zero; corrections are explicit placeholders and no passing claim is made."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 40.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Case A yields no anomalous AND verdict but does publish and persist an anomalous OR verdict with the missing modality's flag recorded as 0",
+          "passed": false,
+          "evidence": "Response says Case A is unmatched and 'the sensor observation does not become an alert under OR either... nothing is written or published'. This contradicts the expected OR behavior."
+        },
+        {
+          "text": "Case B is within tolerance and combines both anomaly flags, yielding an anomalous verdict for AND and OR",
+          "passed": true,
+          "evidence": "'49 ms <= 50 ms -> paired. Both anomalous, so fused_decision = 1 under both AND and OR.'"
+        },
+        {
+          "text": "Case C cannot be treated as a matched pair for AND, while OR can still emit an unmatched source anomaly rather than suppressing it solely because no match exists",
+          "passed": false,
+          "evidence": "Case C is correctly unpaired, but the response says there is 'no fusion record under AND or OR' and 'OR never creates a fused alert from an unmatched observation'."
+        },
+        {
+          "text": "For unmatched OR verdicts sets the missing timestamp and delta_ms to JSON null and omits unavailable fields from the InfluxDB point",
+          "passed": false,
+          "evidence": "Response says unmatched results are internal only and not emitted, with nearest=None and anomalies 0. It describes null fields only for matched records and does not describe unmatched OR payload nulls or Influx field omission."
+        },
+        {
+          "text": "Reads the vision RTP sender timestamp and defensively parses sensor timestamps with fractional seconds up to 9 digits and optional timezone suffixes into epoch nanoseconds",
+          "passed": true,
+          "evidence": "Uses metadata.rtp.sender_ntp_unix_timestamp_ns for vision. parse_ts_string_to_ns strips UTC, converts Z, accepts 1-9 fractional digits padded to ns, defaults to UTC, and returns epoch ns."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.2,
+        "passed": 1,
+        "failed": 4,
+        "total": 5,
+        "time_seconds": 24.4,
+        "tokens": 697,
+        "tool_calls": 1,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Derives pump-simulation-data from the first hyphen-separated token of pump-vibration-monitor rather than assuming pump/vibration is the default",
+          "passed": false,
+          "evidence": "Response only says the default is 'very unlikely to be pump/vibration' and never derives pump-simulation-data."
+        },
+        {
+          "text": "Explains the publisher emits CSV columns as top-level fields plus source and filename, not a nested object",
+          "passed": false,
+          "evidence": "Response only guesses a 'flat JSON object' of field/value pairs; no mention of CSV columns, source or filename, and hedged as undocumented."
+        },
+        {
+          "text": "Uses Telegraf data_format=json with suitable string/tag handling instead of a nested json_v2 object parser",
+          "passed": false,
+          "evidence": "Suggests aligning json_v2 object/field paths; never recommends data_format=json or tag_keys/string handling."
+        },
+        {
+          "text": "Confirms the topic and payload against publisher.py, publisher logs, or a captured MQTT message rather than relying only on the assumed naming rule",
+          "passed": true,
+          "evidence": "Advises checking the publisher script's argparse/compose and subscribing to '#' to view one message. Note it did not do so itself (task forbade it)."
+        },
+        {
+          "text": "Keeps Telegraf name_override aligned with the TICKscript measurement and verifies raw InfluxDB data before changing the UDF",
+          "passed": false,
+          "evidence": "Says to confirm measurement name matches UDF/Kapacitor config and that the UDF only sees stored data, but never mentions name_override or TICKscript, and doesn't explicitly say to query raw InfluxDB data."
+        }
+      ],
+      "notes": [
+        "Response states it did not read repo/docs; guidance is general"
+      ]
+    },
+    {
+      "eval_id": 13,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 32.4,
+        "tokens": 1044,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Points Telegraf at the real OPC-UA endpoint with node identifiers matching the gateway, rather than feeding a sample CSV",
+          "passed": true,
+          "evidence": "Response gives [[inputs.opcua]] with endpoint opc.tcp://<gateway-host>:4840 and nodes with NodeIds (ns=2;s=Pump01.Vibration), advising mapping to expected field names. Illustrative but on target."
+        },
+        {
+          "text": "Removes or scales both bundled simulators to 0 for direct real-device ingestion",
+          "passed": false,
+          "evidence": "Only says 'Replace the simulator/sample input... remove it from the config'. No mention of two bundled simulators or scaling them to 0 in Compose."
+        },
+        {
+          "text": "Uses the secure OPC-UA connection guide for certificates, authentication, and security policy/mode rather than assuming Anonymous/None",
+          "passed": false,
+          "evidence": "Gives generic secure guidance (Basic256Sha256, SignAndEncrypt, certs, auth) and avoids None, but never references the stack's secure OPC-UA connection guide; it states it has not seen the repo."
+        },
+        {
+          "text": "Uses the TICKscript HTTP POST to http://localhost:5000/opcua_alerts for OPC-UA alerting and removes the MQTT alert block",
+          "passed": false,
+          "evidence": "No TICKscript or /opcua_alerts endpoint mentioned; it proposes writing alerts to OPC-UA nodes from the analytics service, which is incorrect for this stack."
+        },
+        {
+          "text": "Does not enable both MQTT and OPC-UA alert channels in one TICKscript",
+          "passed": true,
+          "evidence": "Advises disabling the MQTT alert path and using OPC-UA only; no both-channels config. Passes trivially without TICKscript specifics."
+        }
+      ],
+      "notes": [
+        "Executor stated it had not seen the repo; config keys are illustrative"
+      ]
+    },
+    {
+      "eval_id": 14,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 24.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects ts with demo sub-mode and hands off to time-series-analytics-user",
+          "passed": false,
+          "evidence": "Selects TS demo mode, but hands off to a generic 'time-series analytics skill' and says it cannot confirm the exact name; time-series-analytics-user is never named."
+        },
+        {
+          "text": "Does not create apps/<name>/, register SAMPLE_APP_LIST, or generate a new Compose stack",
+          "passed": true,
+          "evidence": "Response states 'Nothing was created in the repo'; only response.md was written; no app folder, SAMPLE_APP_LIST or Compose stack."
+        },
+        {
+          "text": "Skips ts production-only questions and services rather than requiring a new checkout, dashboard, or simulator",
+          "passed": true,
+          "evidence": "Explicitly lists new app folder, dashboard, simulator, Compose stack and production hardening as out of scope and asks no production questions."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 15,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 16.4,
+        "tokens": 583,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "For Request A skips the tests/ folder entirely and does not require pytest or install test dependencies",
+          "passed": true,
+          "evidence": "response.md: 'tests/ folder: does not apply... Pytest completion gate: does not apply.' It does not mention installing test dependencies, but it says no tests folder and no pytest requirement."
+        },
+        {
+          "text": "For Request B explicitly asks whether to generate tests because GENERATE_TESTS has no default",
+          "passed": false,
+          "evidence": "response.md says 'the default is to generate tests... there is no need to ask a follow-up question about tests.' This contradicts the expectation that the assistant should ask because there is no default."
+        },
+        {
+          "text": "Does not use empty test stubs to satisfy test completion criteria or apply pytest gates after an opt-out",
+          "passed": true,
+          "evidence": "Request A has no pytest gate and the response does not mention stubs. The pytest gate is applied only to Request B, which is not an opt-out."
+        }
+      ],
+      "notes": [
+        "The executor did not have the recipe text and relied on general conventions."
+      ]
+    },
+    {
+      "eval_id": 16,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.16666666666666666,
+        "passed": 2,
+        "failed": 10,
+        "total": 12,
+        "time_seconds": 42.6,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses make up for multimodal, make up_vllm for vllm, and make up_agentic for agentic, not bare Compose overlay commands that bypass Makefile preflight",
+          "passed": false,
+          "evidence": "Uses make up-multimodal/up-vllm/up-agentic (wrong names) and bare compose equivalent; not make up/up_vllm/up_agentic."
+        },
+        {
+          "text": "Verifies all containers running/healthy, explicitly including MediaMTX, Coturn, and SeaweedFS",
+          "passed": false,
+          "evidence": "Lists generic containers; no MediaMTX, Coturn, SeaweedFS."
+        },
+        {
+          "text": "Captures messages on the vision, applicable raw sensor, processed sensor, and fused MQTT topics",
+          "passed": true,
+          "evidence": "Lists raw sensor, vision, anomaly, and fused topic families to subscribe to (generic names)."
+        },
+        {
+          "text": "Requires fused output that matches FUSION_MODE semantics, and states that a REST 200 alone is insufficient",
+          "passed": false,
+          "evidence": "No FUSION_MODE semantics; no REST 200 insufficiency statement."
+        },
+        {
+          "text": "Requires both the raw vision InfluxDB measurement and the fused/multimodal measurement to be populated",
+          "passed": true,
+          "evidence": "Requires vision detection/defect measurement and fused result measurement both to have recent points."
+        },
+        {
+          "text": "Requires the Grafana dashboard to render the WebRTC panel plus a sensor trend and a fused-verdict table",
+          "passed": false,
+          "evidence": "Mentions sensor panel and fused panel, but no WebRTC panel or fused-verdict table."
+        },
+        {
+          "text": "Requires model-download completion, checks the actual host mount behind container MODEL_PATH, and waits for apm-llm GET /v1/config to return 200 before declaring apm-agent healthy",
+          "passed": false,
+          "evidence": "Says models already supplied; no MODEL_PATH mount check or apm-llm /v1/config wait."
+        },
+        {
+          "text": "For vllm verifies /insights-ui/api/vllm/health reports accessible and that Explain on one defective fused row returns VLM text, quoted",
+          "passed": false,
+          "evidence": "Only generic VLM /v1/models; no insights-ui health or Explain quote."
+        },
+        {
+          "text": "For agentic runs Run Agentic Analysis (or POST /agentic-ui/run through nginx), waits for the run to complete on /agentic-ui/results/<run_id>, quotes the ticket text, and checks /api/v1/capabilities",
+          "passed": false,
+          "evidence": "Generic agent checks; no agentic-ui run, results, ticket quote, or capabilities endpoint."
+        },
+        {
+          "text": "Describes LLM_MODE=fallback as an apm-agent mode that still completes a run with structured rule-based outputs while apm-llm is stopped",
+          "passed": false,
+          "evidence": "Describes fallback as deterministic rule/template path generally, but not apm-agent with apm-llm stopped completing a run."
+        },
+        {
+          "text": "Uses --noproxy '*' only on calls to the local stack and always verifies TLS with the stack's own certificate (--cacert from nginx_proxy plus --resolve localhost:PORT:HOST_IP); never uses -k or disables verification",
+          "passed": false,
+          "evidence": "Recommends curl -k for smoke checks; no --cacert/--resolve."
+        },
+        {
+          "text": "Requires quoted captured evidence in a later live-run summary and does not claim any of the proposed checks have already passed",
+          "passed": false,
+          "evidence": "Does not require quoted evidence; though it does not claim checks passed."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 17,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 19.1,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Presents vision, ts, multimodal, vllm, and agentic and asks for explicit mode selection without silently defaulting to multimodal",
+          "passed": true,
+          "evidence": "response.md lists five options (vision-only, sensor-only, fused, fused+VLM, fused+VLM+agentic) and asks questions to choose. It suggests option 3 only as an explicit, non-binding recommendation, not a silent default."
+        },
+        {
+          "text": "Explains that ts production needs a confirmed existing checkout or clone location while fused modes need a confirmed parent for a new flat stack",
+          "passed": false,
+          "evidence": "Response only asks generically 'What directory should the project be created in?' with 'new folder or existing repo path'. It does not distinguish ts (existing checkout/clone) from fused modes (parent for new flat stack)."
+        },
+        {
+          "text": "Does not invent an output path, default to the current working directory, or write files before clarification",
+          "passed": true,
+          "evidence": "No path is invented and no project files were created. The only file written was response.md in the outputs dir; the response asks the user for a directory."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 18,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.18181818181818182,
+        "passed": 2,
+        "failed": 9,
+        "total": 11,
+        "time_seconds": 26.9,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Enables OpenMES publishing by setting OPENMES_ENABLED=yes",
+          "passed": false,
+          "evidence": "Uses guessed 'openmes.enabled: true', not OPENMES_ENABLED=yes"
+        },
+        {
+          "text": "Places the publisher in /work/stacks/weld-defect-stack/openmes/ with openmes_publisher.py copied verbatim from assets/openmes and a templated openmes-publisher.json",
+          "passed": false,
+          "evidence": "No openmes dir, publisher script or openmes-publisher.json mentioned"
+        },
+        {
+          "text": "Uses mode multimodal and subscribes only to weld/fusion/results with defect /fused_decision equal to 1, label /predicted_category and timestamp [/vision_time, /timeseries_time] in iso8601; never subscribes to the vision, processed-sensor or sensor-alert topics",
+          "passed": false,
+          "evidence": "Only source_topic weld/fusion/results; no mode, /fused_decision, label or timestamp mappings"
+        },
+        {
+          "text": "Uses the supplied base URL, work order 4711, issue type 12 and source_id weld-cell-03 exactly, and does not invent other IDs or URLs",
+          "passed": false,
+          "evidence": "URL, 4711, 12 used, but weld-cell-03 given as 'station' not source_id; config is invented schema"
+        },
+        {
+          "text": "References the token only by the user's existing path /secure/openmes_token (token_file points there; the token is not copied into the stack); never asks for, prints or stores the token value in config, chat or summary",
+          "passed": true,
+          "evidence": "token_file: /secure/openmes_token, mounted read-only, never copied; no token value"
+        },
+        {
+          "text": "Publishes the MQTT broker on 127.0.0.1:1883 only (a ports entry in the stack's docker-compose.yml), never 0.0.0.0",
+          "passed": false,
+          "evidence": "No MQTT broker port publishing mentioned"
+        },
+        {
+          "text": "Notes the token lifetime caveat (DEFAULT_TOKEN_TTL_MINUTES, 15 min by default) and the need to raise it or rotate the token file",
+          "passed": false,
+          "evidence": "Says 'I can't determine this'; no 15 min or DEFAULT_TOKEN_TTL_MINUTES"
+        },
+        {
+          "text": "States that OpenMES publishing failures never block inference, fusion, or alerting",
+          "passed": false,
+          "evidence": "Hedged as assumed design to verify, not stated definitively"
+        },
+        {
+          "text": "Verification covers a Delivered event with issue_id, Duplicate event ignored on replay, no Issue for a non-defect, and Auth failure (401) stored as blocked",
+          "passed": false,
+          "evidence": "Covers four scenarios generically, but no 'Delivered' with issue_id, 'Duplicate event ignored', or 'blocked' storage; duplicate expectation hedged"
+        },
+        {
+          "text": "Warns that fused modes create one Issue per defective frame (up to about 10 per second) when a defect persists",
+          "passed": false,
+          "evidence": "Warns of up to N Issues but no ~10/sec figure and hedges on dedup"
+        },
+        {
+          "text": "Targets the user's real OpenMES at https://mes.plant.example and does not substitute the dummy receiver",
+          "passed": true,
+          "evidence": "base_url https://mes.plant.example; no dummy receiver used"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 19,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.14,
+        "passed": 1,
+        "failed": 6,
+        "total": 7,
+        "time_seconds": 22.3,
+        "tokens": 1159,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Writes a spec from assets/vertical.example.yaml using only the supplied paths",
+          "passed": false,
+          "evidence": "No spec is mentioned; response says to copy the reference and wire config manually."
+        },
+        {
+          "text": "Runs scripts/scaffold_stack.py with --dry-run first and then for real, instead of hand-writing",
+          "passed": false,
+          "evidence": "No scaffold script; step 2 says 'Copy the reference' and step 4 'Add a small mock HTTP service to the compose file'."
+        },
+        {
+          "text": "Edits leftover-report lines and applies semantic checklists (policy mode AND/OR, ticketing backend)",
+          "passed": false,
+          "evidence": "No leftover report or checklists; only generic 'set the mode to AND'."
+        },
+        {
+          "text": "Builds and starts with COMPOSE_BAKE=false make build and make up_agentic, dummy OpenMES receiver/publisher scripts, verify_stack.py",
+          "passed": false,
+          "evidence": "Uses 'docker compose up -d' and a self-made mock container; no make targets, start_dummy_openmes scripts, or verify_stack.py."
+        },
+        {
+          "text": "Quotes verify_stack.py PASS evidence in the final summary",
+          "passed": false,
+          "evidence": "No verify_stack.py; guidance-only, no evidence quoted."
+        },
+        {
+          "text": "Gives dummy OpenMES alerts page URL http://<HOST_IP>:8099/ and how to stop it, labels results as dummy",
+          "passed": false,
+          "evidence": "No URL or stop instructions. It does say the mock is a stub, but the URL and stopping are missing."
+        },
+        {
+          "text": "Does not invent model paths, OpenMES IDs for a real OpenMES, or secrets",
+          "passed": true,
+          "evidence": "Only the user-supplied paths are used; no invented IDs or secrets; the response says it is unverified."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 20.8,
+        "tokens": 1206,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Recognizes that a pretrained sensor model is required but neither a local artifact nor a resolvable download source was supplied",
+          "passed": true,
+          "evidence": "response.md: \"the app depends on a pretrained IsolationForest model, and you have no model file, training data, or download URL.\""
+        },
+        {
+          "text": "Asks the user to provide the model artifact, training dataset, or concrete resolvable source before proceeding",
+          "passed": true,
+          "evidence": "Lists options: pretrained .pkl/.joblib artifact, training data, download URL with checksum (plus synthetic placeholder approval). Stops before acting."
+        },
+        {
+          "text": "Does not fabricate a model filename/path or create a dummy .pkl/.xml/.bin file",
+          "passed": true,
+          "evidence": "Only response.md was created (files_created 0 in metrics; codeChanges lists only response.md). 'I won't invent or silently substitute a model.' The .pkl/.joblib mentions are generic examples, not fabricated paths."
+        },
+        {
+          "text": "Does not leave a udfs.models entry pointing to an unavailable model",
+          "passed": true,
+          "evidence": "Nothing was written to the checkout; no config was created."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.13,
+        "passed": 1,
+        "failed": 7,
+        "total": 8,
+        "time_seconds": 27.7,
+        "tokens": 755,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Builds the multimodal shape as a new flat stack directory at the requested location, not an apps/<name>/ folder",
+          "passed": false,
+          "evidence": "Response only describes services for /work/stacks/weld-quality-stack as guidance; it never states the flat directory layout (no apps/<name>/ discussion, no file structure)."
+        },
+        {
+          "text": "Configures Fusion Analytics with FUSION_MODE=AND and TOLERANCE_NS=50e6",
+          "passed": false,
+          "evidence": "Says 'AND-fuses... 50 ms tolerance' and 'rule: AND' but never mentions FUSION_MODE or TOLERANCE_NS env vars."
+        },
+        {
+          "text": "Keeps weld/sensor/raw and weld/sensor/processed as distinct topics and subscribes Fusion to the processed topic rather than the raw topic",
+          "passed": false,
+          "evidence": "Topics are distinct, but Fusion subscribes to 'weld/vision, weld/sensor/alerts (and weld/sensor/processed for context)' \u2014 primarily alerts, not processed."
+        },
+        {
+          "text": "Publishes every processed sensor point to weld/sensor/processed and only anomalies to weld/sensor/alerts so normal observations remain available for fusion",
+          "passed": false,
+          "evidence": "UDF publishes to both topics but no statement that every point goes to processed and only anomalies to alerts; fusion is fed by alerts, so normal observations are not available."
+        },
+        {
+          "text": "Enables RTP reference timestamps on the vision pipeline (add-reference-timestamp-meta=true and add-rtp-timestamp=true) so Fusion matches on the RTP sender NTP timestamp, and allows the initial roughly 300-packet warm-up",
+          "passed": false,
+          "evidence": "Uses gvametaconvert timestamp=true; no add-reference-timestamp-meta or add-rtp-timestamp; warm-up admitted as uncertain, no ~300 packets."
+        },
+        {
+          "text": "Pairs sensor and vision messages by timestamps within tolerance instead of fusing only the latest messages",
+          "passed": true,
+          "evidence": "Pairing: buffers keyed by timestamp, matches |t_vision - t_sensor| <= 50 ms, nearest."
+        },
+        {
+          "text": "Publishes the fused verdict on weld/fused-alerts as a flat JSON object (no nested objects) with fused_decision as a top-level scalar, e.g. shown in the example payload",
+          "passed": false,
+          "evidence": "Example payload has nested 'vision' and 'sensor' objects and uses 'verdict', not 'fused_decision'."
+        },
+        {
+          "text": "Persists raw vision metadata for every frame, independently of matching, to its own named InfluxDB measurement that is separate from the fused-verdict measurement",
+          "passed": false,
+          "evidence": "Names weld_vision and weld_fused_alerts as separate measurements, but marked 'name approximate' and no statement of per-frame persistence independent of matching."
+        }
+      ],
+      "notes": [
+        "Warm-up property unknown",
+        "Measurement names approximate"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.13,
+        "passed": 1,
+        "failed": 7,
+        "total": 8,
+        "time_seconds": 31.0,
+        "tokens": 683,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Uses vllm mode and retains the multimodal sensor path and Fusion Analytics correlator",
+          "passed": false,
+          "evidence": "Says 'mode: vllm' and has a pressure_bar sensor path, but fusion is a generic 'fusion: logic: AND' block in pipeline.yaml. No Fusion Analytics correlator service is named."
+        },
+        {
+          "text": "Configures FUSION_MODE=AND independently of the explanation layer",
+          "passed": false,
+          "evidence": "Uses 'fusion: logic: AND, tolerance_ms: 50' in pipeline.yaml. FUSION_MODE is never set. AND is separate from vlm.yaml, but not as the required env var."
+        },
+        {
+          "text": "Serves the VLM with vllm-server (intel/vllm) from configs/vllm/huggingface, and with no adapter removes the LoRA flags and sets VLLM_ADAPTER_NAME to the served model name",
+          "passed": false,
+          "evidence": "The vlm service uses a placeholder '<openvino-or-intel-gpu-vllm-image>' and '/models/quality-vlm'. There is no vllm-server, no intel/vllm and no configs/vllm/huggingface. It sets 'lora_adapter: null' and never mentions VLLM_ADAPTER_NAME."
+        },
+        {
+          "text": "Adds the reference ui-service, copied and adapted for this stack and built locally, reached at /insights-ui/ through nginx (NGINX_PROFILE=vllm), and provisions a _vlm Explainability dashboard whose panel iframes /insights-ui/",
+          "passed": false,
+          "evidence": "It has a generic '<dashboard-image>' service on port 3000. There is no ui-service, nginx, /insights-ui/, NGINX_PROFILE or _vlm dashboard."
+        },
+        {
+          "text": "Does not author a separate vllm-explainer service, OVMS, or Fusion Analytics batch-complete publishing for vllm mode",
+          "passed": false,
+          "evidence": "It does not author a vllm-explainer service or OVMS. But it invents its own pipeline, vlm and dashboard services and an on_demand trigger instead of the reference architecture, so this is a coincidental pass and is graded as failed."
+        },
+        {
+          "text": "Keeps the data contract the Explain flow needs: vision measurement tagged search_time with frame_id and img_handle, fused vision_timestamp/timeseries_timestamp, and a DLSPS s3_write folder_prefix matching the UI BUCKET_NAME",
+          "passed": false,
+          "evidence": "It only says to 'Retain the fused frame (JPEG) plus the sensor window and result metadata'. There is no search_time, frame_id, img_handle, vision_timestamp, timeseries_timestamp, s3_write or BUCKET_NAME."
+        },
+        {
+          "text": "Keeps docker-compose-vllm.yml at the stack root and uses make up_vllm (with check_hardware and check_models) rather than plain make up",
+          "passed": false,
+          "evidence": "It uses 'docker-compose.yml' and says 'Start with a single docker compose up -d'. There is no docker-compose-vllm.yml, make up_vllm, check_hardware or check_models."
+        },
+        {
+          "text": "Uses the supplied local model paths rather than inventing model names or download sources",
+          "passed": true,
+          "evidence": "It uses /models/weld-classifier.xml and /models/quality-vlm throughout, and invents no model names or downloads."
+        }
+      ],
+      "notes": [
+        "Image names, ports and schema keys are unverified assumptions"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.0,
+        "passed": 0,
+        "failed": 7,
+        "total": 7,
+        "time_seconds": 29.8,
+        "tokens": 904,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Builds agentic additively on top of the fused multimodal stack and the complete vllm layer (vllm-server and ui-service keep running)",
+          "passed": false,
+          "evidence": "Response proposes a generic nine-service stack (mqtt-broker, vision-pipeline, vlm-server, ...) in a single docker-compose.yml; no layered compose overlays and no ui-service."
+        },
+        {
+          "text": "Includes apm-agent (agent-quality-handler), apm-llm (OVMS) serving the separate agent LLM from MODEL_PATH, model-download, and apm-metrics plus Prometheus",
+          "passed": false,
+          "evidence": "Uses generic 'agent-llm' and 'agent-orchestrator'; no apm-agent, apm-llm, OVMS, model-download, apm-metrics or Prometheus."
+        },
+        {
+          "text": "Uses the agentic UI's Run Agentic Analysis (POST /agentic-ui/run publishing apm/batch-complete for a time window) as the default trigger, not Fusion Analytics auto-batching",
+          "passed": false,
+          "evidence": "No mention of Run Agentic Analysis, /agentic-ui/run or apm/batch-complete; the orchestrator is triggered by fused events."
+        },
+        {
+          "text": "Provisions both the _vlm Explainability dashboard and the _agentic dashboard that iframes /agentic-ui/ through the same nginx origin (NGINX_PROFILE=agentic)",
+          "passed": false,
+          "evidence": "Only a generic 'dashboard' service; no _vlm/_agentic dashboards, nginx or NGINX_PROFILE."
+        },
+        {
+          "text": "Rewrites configs/agentic agents.yaml, prompts/<use_case_id>.txt and policy_fallback.json for the part-quality taxonomy",
+          "passed": false,
+          "evidence": "Layout lists config/pipeline.yaml, sensor.yaml, fusion.yaml, agent.yaml; no agents.yaml, prompts or policy_fallback.json."
+        },
+        {
+          "text": "Keeps docker-compose-vllm.yml and docker-compose-agentic.yml at the stack root, uses make up_agentic, and omits docker-compose-mcp.yml",
+          "passed": false,
+          "evidence": "Uses a single docker-compose.yml and 'docker compose up -d'; no make up_agentic. Only the omission of MCP is satisfied."
+        },
+        {
+          "text": "Uses the supplied local model artifacts for both models and does not fabricate model paths",
+          "passed": false,
+          "evidence": "Uses the supplied paths /models/part-inspection.xml, /models/quality-vlm/, /models/agent-llm/ without fabrication, but there is no MODEL_PATH mapping or OVMS serving; the VLM is also told to be converted, and the stack is generic, so it does not meet the intended outcome."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 29.6,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Selects vision demo/PoC mode and follows the lightweight single-component path",
+          "passed": true,
+          "evidence": "Response: 'This is the lightweight sub-path. It runs one GStreamer pipeline with Intel DL Streamer.' and 'proof of concept for a single model'."
+        },
+        {
+          "text": "Does not generate the full production Docker Compose topology or dashboard/alert services",
+          "passed": true,
+          "evidence": "Only a single docker run with gst-launch; states no Compose stack, dashboard, sensors or alerts."
+        },
+        {
+          "text": "Uses the provided local model path rather than inventing a model source",
+          "passed": true,
+          "evidence": "Command uses model=/models/scratch.xml and /data/scratch.mp4 with device=CPU; no invented model source."
+        },
+        {
+          "text": "Delegates the custom pipeline demo to dlstreamer-coding-agent when available and requires one real inference round-trip before declaring a later live run successful",
+          "passed": false,
+          "evidence": "No mention of dlstreamer-coding-agent delegation or requiring a real inference round-trip; the response hand-writes the pipeline and only suggests inspecting output lines."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 23.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not scaffold a manufacturing vision, time-series, multimodal, vllm, or agentic stack",
+          "passed": true,
+          "evidence": "response.md provides only an OTel Collector/Prometheus/Grafana compose stack; no vision, time-series, multimodal, vllm or agentic components (grep count 0)."
+        },
+        {
+          "text": "Recognizes that web-API latency and error-rate monitoring is outside the skill's manufacturing quality and equipment-monitoring scope",
+          "passed": true,
+          "evidence": "response.md opens: \"this request is general web API observability, not a manufacturing-quality analytics use case, so the manufacturing/Intel Edge AI stack doesn't apply.\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 35.7,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Treats the rule-based UDF as model-free (no udfs.models entry, model file, or placeholder/dummy artifact) and keeps config.json at or below 5 KB",
+          "passed": false,
+          "evidence": "response.md never mentions model-free UDF or the 5 KB config.json limit; it only says the directory holds UDF, TICKscript and config.json."
+        },
+        {
+          "text": "Uses make check_env_variables for preflight and make up_mqtt_ingestion app=pump-pressure as the deployment entry point rather than bypassing the shared Makefile",
+          "passed": true,
+          "evidence": "Gives `make check_env_variables` and `make up_mqtt_ingestion app=pump-pressure`, and says not to use the OPC-UA target."
+        },
+        {
+          "text": "Checks /ts-api/kapacitor/v1/ping for 200 or 204 and verifies raw InfluxDB data within 30 seconds, not merely container startup",
+          "passed": false,
+          "evidence": "Verification uses `make status` and a vague 'check points are being written'. There is no kapacitor ping check, no 200/204 status and no 30-second raw-data check."
+        },
+        {
+          "text": "Requires both a real flagged-anomaly log line and a captured MQTT alert, and confirms the dashboard matches apps/pump-pressure/grafana-dashboard.json",
+          "passed": false,
+          "evidence": "Only says to open the Grafana dashboard and confirm that pressure data and anomaly flags appear. It does not require an anomaly log line, an MQTT alert capture or a match to grafana-dashboard.json."
+        },
+        {
+          "text": "Does not report proposed commands as executed or claim that the deployment or tests succeeded",
+          "passed": true,
+          "evidence": "States 'Nothing below has been executed' and 'I ran nothing'. It claims no success."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "without-skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.1,
+        "passed": 1,
+        "failed": 9,
+        "total": 10,
+        "time_seconds": 35.5,
+        "tokens": 977,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Includes DLSPS, MQTT broker, Telegraf, InfluxDB, Time Series Analytics, Fusion Analytics, Grafana, Nginx, MediaMTX, Coturn, and SeaweedFS S3 services, not just Metro's seven-container topology",
+          "passed": false,
+          "evidence": "Services table has Mosquitto, optional mediamtx, dlsps, telegraf, ts-analytics, fusion, influxdb, grafana, and a generic frame-server (nginx or small HTTP). Coturn and SeaweedFS S3 are absent."
+        },
+        {
+          "text": "Uses a GPU inference pipeline (device=GPU) with the host /dev/dri device mapping",
+          "passed": true,
+          "evidence": "Pipeline uses 'gvaclassify model=/models/cnc.xml device=GPU' and compose has 'devices: - /dev/dri:/dev/dri'."
+        },
+        {
+          "text": "Grants video/render access via group_add without duplicate GIDs and keeps DLSPS running as its non-root user rather than root",
+          "passed": false,
+          "evidence": "group_add lists both RENDER_GID and VIDEO_GID with no dedup handling for identical GIDs; it sets a generic 'user: 1000:1000' instead of the DLSPS image's own non-root user."
+        },
+        {
+          "text": "Enables RTSP and WebRTC, with metadata on cnc/vision and both webrtc and s3_write entries in a frame destination array",
+          "passed": false,
+          "evidence": "RTSP ingest and metadata to cnc/vision are present, but there is no frame destination array with webrtc and s3_write entries. Frames are written to local JPEG files."
+        },
+        {
+          "text": "Provides WebRTC video with MediaMTX WHIP/WHEP and Coturn ICE/TURN, plus stored-frame review through SeaweedFS",
+          "passed": false,
+          "evidence": "MediaMTX is optional and WHIP/WHEP is not mentioned. There is no Coturn, and stored frames go to a local volume rather than SeaweedFS."
+        },
+        {
+          "text": "Keeps internal MediaMTX, MQTT, and S3 traffic out of corporate proxies using appropriate NO_PROXY/no_proxy settings",
+          "passed": false,
+          "evidence": "No proxy or NO_PROXY handling is mentioned."
+        },
+        {
+          "text": "Builds Fusion Analytics from fusion-analytics/Dockerfile unless an actual prebuilt registry tag is pinned",
+          "passed": false,
+          "evidence": "The fusion service is only a 'fusion/' directory; no Dockerfile build or pinned image is specified."
+        },
+        {
+          "text": "Includes install.sh, .env, Makefile preflight/up/status/down targets and Grafana dashboard provisioning, without leftover weld or wind-turbine names in CNC artifacts",
+          "passed": false,
+          "evidence": "Layout has .env and Grafana provisioning, but no install.sh or Makefile with preflight/up/status/down targets."
+        },
+        {
+          "text": "Proposes a cnc-quality dashboard containing WebRTC video, a sensor trend panel, and a fused-verdict table",
+          "passed": false,
+          "evidence": "Dashboard has live video, raw vibration time series and a fused alerts timeline. The video is an optional iframe/WebRTC embed with no WHEP specifics, and fused results are a timeline rather than a verdict table. The WebRTC video panel is too vague to count, so this does not meet the bar."
+        },
+        {
+          "text": "Copies the selected dashboard from dashboards_jsons into Grafana provisioning at install/up time",
+          "passed": false,
+          "evidence": "No dashboards_jsons directory or copy step is described; the dashboard is just a static grafana/dashboards/cnc-quality.json."
+        }
+      ],
+      "notes": [
+        "Pipeline elements, image choices and Grafana video embedding are assumptions"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with-skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 40.8526,
+        "stddev": 17.4962,
+        "min": 21.5,
+        "max": 74.1
+      },
+      "tokens": {
+        "mean": 572.0,
+        "stddev": 579.5074,
+        "min": 0,
+        "max": 1516
+      }
+    },
+    "without-skill": {
+      "pass_rate": {
+        "mean": 0.4352,
+        "stddev": 0.3119,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 28.3421,
+        "stddev": 6.9564,
+        "min": 16.4,
+        "max": 42.6
+      },
+      "tokens": {
+        "mean": 478.4737,
+        "stddev": 491.2962,
+        "min": 0,
+        "max": 1206
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.56",
+      "time_seconds": "+12.5",
+      "tokens": "+94"
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,98 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Reviewed SkillSpector false positives for this skill. Picked up automatically
+# by the Skill Scanner workflow (any *baseline.yaml in the skill directory).
+version: 2
+rules:
+  - id: "PE3"
+    path: "references/INSTALL.md"
+    message: "*.env*"
+    reason: >-
+      Reviewed: .env is the generated stack's own Docker Compose/Makefile
+      configuration file, listed in the stack layout tree and documented in
+      the .env sections. Secrets in it are generated locally by install.sh,
+      kept chmod 600 and git-ignored, never requested in chat and never
+      printed (see "Secrets in .env"). The skill reads no credential files
+      outside the stack (no SSH keys, cloud or other projects' credentials).
+  - id: "PE3"
+    path: "references/*.md"
+    message: "*.env*"
+    reason: >-
+      Reviewed: reference docs name the stack's own .env only to describe
+      which Compose variables to set (topics, image tags, model names,
+      HOST_IP). No external credential paths are read.
+  - id: "PE3"
+    path: "SKILL.md"
+    message: "*.env*"
+    reason: >-
+      Reviewed: SKILL.md refers to the stack's own .env for configuration and
+      states the secret-handling guardrail (generated locally, never asked for
+      in chat, never printed). No external credential paths are read.
+  - id: "PE3"
+    path: "scripts/*.py"
+    message: "*.env*"
+    reason: >-
+      Reviewed: scaffold_stack.py writes the generated stack's own .env
+      (generated secrets, chmod 600, values never printed); verify_stack.py
+      reads only HOST_IP, GRAFANA_PORT and the InfluxDB credentials from that
+      same .env to run local checks, never printing them. No external
+      credential files are read.
+  - id: "PE3"
+    path: "assets/vertical.example.yaml"
+    message: "*.env*"
+    reason: >-
+      Reviewed: the "extra .env overrides" comment documents an optional map
+      written into the generated stack's own .env by scaffold_stack.py. It
+      names no external credential path and is never executed.
+  - id: "EA2"
+    path: "SKILL.md"
+    message: "*never ask the user*"
+    reason: >-
+      Reviewed: this is a safety guardrail instructing the agent NOT to ask
+      for secret values, not an autonomous-execution instruction. It reduces,
+      rather than expands, unsupervised agent behaviour.
+  - id: "EA2"
+    path: "references/OPENMES.md"
+    message: "*disable verification*"
+    reason: >-
+      Reviewed: "Never disable verification" instructs the agent to keep TLS
+      certificate verification enabled for OpenMES calls; it is a prohibition
+      on weakening security, not an autonomous action to take.
+  - id: "AST4"
+    path: "scripts/verify_stack.py"
+    message: "*subprocess.run(cmd, shell=False*"
+    reason: >-
+      Reviewed: the single subprocess call already follows the scanner's own
+      remediation: shell=False with an explicit argument list and a timeout.
+      It only runs fixed local commands (docker ps/exec/cp against this
+      stack's containers, and curl with TLS verification against the stack's
+      own nginx cert). Every value placed in those argument lists (HOST_IP,
+      ports, MQTT topics, measurements, HTTPS paths) is validated by
+      safe_host/safe_port/safe_token/safe_path, which reject flag-like and
+      shell-meaningful input. The checks need the docker CLI; replacing it
+      with the Docker SDK would add a dependency with broader socket access,
+      and querying MQTT/InfluxDB directly would require publishing those
+      ports on the host.
+  - id: "PE3"
+    path: "benchmark/benchmark.json"
+    message: "*.env*"
+    reason: >-
+      Reviewed: benchmark.json is generated eval output (prompts, graded
+      assertions and grader evidence), never executed or read by the skill.
+      ".env" appears only in quoted eval text about the generated stack's own
+      .env; no credential file is accessed.
+  - id: "TM1"
+    path: "benchmark/benchmark.json"
+    message: "*curl*"
+    reason: >-
+      Reviewed: benchmark.json is generated eval output. The match is quoted
+      assertion/evidence text describing the skill's verification checks
+      (curl --noproxy to the local stack), not a command the skill runs.
+  - id: "RP1"
+    path: "benchmark/benchmark.json"
+    message: "*Docker image referenced without tag or digest*"
+    reason: >-
+      Reviewed: benchmark.json is generated eval output. The match is grader
+      evidence text mentioning "docker run", not a Compose/image reference
+      that is pulled; the skill itself pins every image to a concrete tag.
