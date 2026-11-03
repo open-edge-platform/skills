@@ -9,9 +9,10 @@
 {{STACK_DIR}}/
 ├── README.md
 ├── docker-compose.yml
-├── docker-compose-vllm.yml        # {{DEPLOYMENT}}=vllm or agentic
-├── docker-compose-agentic.yml     # {{DEPLOYMENT}}=agentic only; layers the vLLM service
-├── .env
+├── docker-compose-vllm.yml        # {{DEPLOYMENT}}=vllm or agentic: vllm-server + multimodal-agentic-ui (VLM.md)
+├── docker-compose-agentic.yml     # {{DEPLOYMENT}}=agentic only: apm-agent, apm-llm, model-download, apm-metrics, prometheus (AGENTIC.md)
+├── docker-compose-mcp.yml         # agentic + {{AGENT_MCP}}=yes only
+├── .env                         # this stack's own config; secrets generated locally by install.sh (see *Secrets in `.env`*)
 ├── install.sh                   # preflight, .env bootstrap (HOST_IP/TURN/GIDs), model/data preparation
 ├── Makefile                     # required production entry points: check_env_variables, up_*, status, down
 ├── configs/
@@ -29,9 +30,22 @@
 │   │   └── config/Telegraf.conf
 │   ├── influxdb/{config,init-influxdb.sh}
 │   ├── mqtt-broker/mosquitto.conf
-│   ├── grafana/{dashboards_jsons/,provisioning/{dashboards.yml,datasources.yml}}
-│   ├── nginx/{nginx.conf,nginx-cert-gen.sh}
-│   └── seaweedfs-s3/{seaweedfs_s3_config.json.template,s3-init-buckets.sh}
+│   ├── grafana/
+│   │   ├── dashboards_jsons/{{DASHBOARD_SLUG}}.json           # multimodal (classic schema)
+│   │   ├── dashboards_jsons/{{DASHBOARD_SLUG}}_vlm.json       # vllm/agentic (v2 schema) — UI_SERVICE.md
+│   │   ├── dashboards_jsons/{{DASHBOARD_SLUG}}_agentic.json   # agentic (v2 schema)
+│   │   └── provisioning/{dashboards.yml,datasources.yml}
+│   ├── nginx/{nginx.conf.template,nginx-cert-gen.sh}           # NGINX_PROFILE base|vllm|agentic — PROXY_UI.md
+│   ├── seaweedfs-s3/{seaweedfs_s3_config.json.template,s3-init-buckets.sh}
+│   ├── vllm/                    # vllm/agentic: VLM weights, user-downloaded (VLM.md)
+│   │   ├── huggingface/<vlm-model-dir>/
+│   │   └── models/<lora-adapter-dir>/   # optional adapter
+│   └── agentic/                 # agentic only (AGENTIC.md)
+│       ├── agents.yaml          # use_case_id: {{USE_CASE_ID}}
+│       ├── policy_fallback.json
+│       ├── prompts/{{USE_CASE_ID}}.txt
+│       ├── prometheus/prometheus.yml
+│       └── models/llm_model_agentic/...   # agent LLM, written by make download_model
 ├── fusion-analytics/
 │   ├── Dockerfile
 │   ├── fusion.py                # FUSION.md
@@ -43,8 +57,10 @@
 │   ├── Dockerfile
 │   ├── publisher.py
 │   └── simulation-data/*.avi + *.csv pairs
-├── vllm/                          # {{DEPLOYMENT}}=vllm or agentic only — see VLM.md
-│   └── vllm-explainer/{Dockerfile,explainer.py,requirements.txt}
+├── ui-service/                    # vllm/agentic: copied from the reference and adapted — UI_SERVICE.md
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── src/{app.py,insights.py,system_prompt.json,templates/,static/}
 └── tests/                        # only if {{GENERATE_TESTS}}=yes — TESTS.md
     ├── conftest.py
     └── test_fusion_pipeline.py  # TESTS.md
@@ -53,13 +69,20 @@
 Keep Compose overlays at the stack root beside `docker-compose.yml`: the
 Makefile targets pass `docker-compose-vllm.yml` and
 `docker-compose-agentic.yml` as root-relative filenames. `vllm` mode includes
-the vLLM overlay; `agentic` mode includes both overlays, with the agentic
-overlay layering on top of the vLLM service.
+the vLLM overlay; `agentic` mode includes both overlays. The agentic overlay
+is additive: `vllm-server` and the UI keep running, and the agent services
+are added on top.
+
+`vllm`/`agentic` follow the reference format exactly: the same services,
+three dashboards, `/insights-ui/` (Explain) and `/agentic-ui/` (Run Agentic
+Analysis). Do **not** substitute a hand-written explainer service, a single
+merged dashboard, or raw-API links for the UI.
 
 This is a curated layout, not a mirror of the reference repo — omit
-`docker-compose-vllm.yml`/`docker-compose-agentic.yml`/`configs/agentic/`
-(unless `{{DEPLOYMENT}}` is `vllm`/`agentic`), `insights-workbench/`,
-`ui-service/`, `training/`, `helm/`, vertical-specific `docs/`,
+`docker-compose-vllm.yml`/`docker-compose-agentic.yml`/`configs/agentic/`/
+`configs/vllm/`/`ui-service/` (unless `{{DEPLOYMENT}}` is `vllm`/`agentic`),
+`docker-compose-mcp.yml`/`mcp-server/` (unless `{{AGENT_MCP}}=yes`),
+`insights-workbench/`, `training/`, `helm/`, vertical-specific `docs/`,
 `README-dockerhub.md`, `CHANGELOG.md`, and `third-party-programs.txt` from
 the reference — see *Reference implementation* below for the full
 copy/leave-behind table and renaming rule.
@@ -70,6 +93,36 @@ See [`APPS_CONVENTION.md`](APPS_CONVENTION.md) for the full `apps/{{APP_NAME}}/`
 tree (`simulation-data/`, `telegraf-config/`, `time-series-analytics-config/`,
 `grafana-dashboard.json`, `training/`) — this mode adds one folder to an
 existing shared repo, it does not generate a new Compose topology.
+
+## OpenMES publisher (optional, any mode — only if `{{OPENMES_ENABLED}}=yes`)
+
+Full guide: [`OPENMES.md`](OPENMES.md).
+
+- **Location:** `{{STACK_DIR}}/openmes/` (fused modes) or
+  `apps/{{APP_NAME}}/openmes/` (`ts`). The folder contains:
+  - `openmes_publisher.py`, copied verbatim from the skill's
+    `assets/openmes/`;
+  - `openmes-publisher.json`, templated per mode and holding no secrets;
+  - the user-provided `openmes_token`.
+- **Config:** set `mode`, `source_id`, the OpenMES IDs, the input topic
+  and the per-mode `fields`/`timestamp_format` from `OPENMES.md` →
+  *Per-mode input*. Validate the mapping against one real captured message
+  before running.
+- **Secret handling:**
+  - Ask the user for the token file **path** only. The file is created by
+    the user, set to `chmod 0400`, and kept out of the generated summary.
+  - Never generate a token file with a real secret.
+  - Add `openmes_token` and `openmes_events.db` to `.gitignore`.
+- **Broker reachability:** the publisher runs on the host, so publish
+  `ia-mqtt-broker` on `127.0.0.1:1883`:
+  - fused modes: a `ports:` entry in the generated `docker-compose.yml`;
+  - `ts`: a repo-root `docker-compose.override.yml`, picked up
+    automatically by plain `make up_*_ingestion`.
+
+  Never bind the anonymous broker to `0.0.0.0`.
+- **Startup:** after `make up`/`make up_*` reports healthy, run
+  `python -m venv .venv && . .venv/bin/activate && pip install paho-mqtt requests && python openmes_publisher.py --config ./openmes-publisher.json`.
+  Document these steps in the generated `README.md`.
 
 ## `.env` — `multimodal`/`vllm`/`agentic` modes
 
@@ -103,12 +156,49 @@ INFLUXDB_RETENTION_DURATION=1h0m0s
 S3_BUCKET_TTL=30m
 LOG_LEVEL=INFO
 
-# vllm/agentic modes only:
+# vllm/agentic modes only — VLM served by vllm-server (full key list in VLM.md):
+VLLM_IMAGE=intel/vllm:<pinned tag>
+VLLM_MODEL_DIR=huggingface/{{VLM_MODEL_DIR}}
+VLLM_SERVED_MODEL_NAME={{VLM_MODEL}}
+VLLM_ADAPTER_NAME={{VLM_ADAPTER_NAME}}      # = VLLM_SERVED_MODEL_NAME when there is no adapter
+VLLM_ADAPTER_DIR=lora-adapters/{{VLM_ADAPTER_DIR}}/
+VLLM_GPU_MEMORY_UTILIZATION=0.27
+MULTIMODAL_AGENTIC_UI_IMAGE={{STACK_DIR_SLUG}}-ui    # built from ./ui-service (UI_SERVICE.md)
+NGINX_PROFILE=base                          # overridden by make up_vllm / up_agentic
+
+# agentic mode only — agent LLM served by apm-llm (OVMS):
+LLM_MODE=llm                                # llm | fallback (nothing else is accepted)
 LLM_MODEL_NAME={{LLM_MODEL_NAME}}
-LLM_DEVICE={{LLM_DEVICE}}
+LLM_DEVICE={{LLM_DEVICE}}                   # CPU (default) | GPU
 LLM_WEIGHT_FORMAT={{LLM_WEIGHT_FORMAT}}
+LLM_PORT=8010
+MQTT_BATCH_TOPIC=apm/batch-complete
+AGENTIC_QUALITY_HANDLER_IMAGE=intel/agent-quality-handler
+MODEL_DOWLOADER_IMAGE=intel/model-download   # (sic) reference spelling, keep it
+METRICS_MANAGER_IMAGE=intel/metrics-manager
 HUGGINGFACEHUB_API_TOKEN=
+# agentic + {{AGENT_MCP}}=yes only:
+MCP_USERNAME=
+MCP_PASSWORD=
 ```
+
+### Secrets in `.env`
+
+`.env` is the generated stack's own configuration file, which Docker Compose
+and the Makefile load. The skill never reads credential files outside the
+stack directory (SSH keys, cloud credentials, other projects' `.env`).
+
+- Ship `.env` with every secret empty. `install.sh` fills the empty ones
+  with random values on the host (`openssl rand -hex 16` or an alphanumeric
+  generator that meets the validation rules). The user may set their own.
+  Never ask for these values in chat.
+- After generation, `chmod 600 .env`, and add `.env` to the stack's
+  `.gitignore`.
+- Never print, quote or echo secret values (passwords, tokens, keys) in
+  chat, logs or the final summary. Name the variable instead (for example
+  "log in with `VISUALIZER_GRAFANA_USER`/`VISUALIZER_GRAFANA_PASSWORD` from
+  `.env`"). When reading `.env` from a script, read only the keys needed,
+  never `cat` the whole file.
 
 ### Sensor topic wiring — `multimodal`/`vllm`/`agentic`
 
@@ -119,6 +209,14 @@ Keep the raw input and processed output topics distinct. In
 `${TS_PROCESSED_TOPIC}`. The TICKscript publishes every UDF-processed point
 to `{{TS_PROCESSED_TOPIC}}`; Fusion must never subscribe to the raw input
 topic.
+
+### Healthchecks and host proxies
+
+Docker injects the host's `http(s)_proxy` into every container. Write every
+`localhost` healthcheck with `curl --noproxy '*'` (BusyBox `wget` ignores
+`no_proxy`), and treat any HTTP status as healthy for the SeaweedFS S3
+gateway (it answers anonymous requests with 403). Otherwise
+`depends_on: condition: service_healthy` chains never start on proxied hosts.
 
 ### Env validation rules (`make check_env_variables`/`validate_host_ip`)
 
@@ -135,7 +233,8 @@ topic.
 | `{{VISION_TOPIC}}`, `{{TS_RAW_TOPIC}}` (when the simulator/sensor source publishes over MQTT), `{{TS_PROCESSED_TOPIC}}`, `{{SENSOR_ALERT_TOPIC}}`, `{{FUSION_TOPIC}}` | required where applicable and distinct from each other (a collision silently merges data streams); `TS_RAW_TOPIC` feeds Telegraf, while `TS_PROCESSED_TOPIC` feeds Fusion Analytics |
 | `MTX_WEBRTCICESERVERS2_0_USERNAME`/`PASSWORD` | non-empty (Coturn auth) |
 | `INPUT_TYPE` | `simulator` \| `rtsp` \| `device` \| `opcua` |
-| `vllm`/`agentic` only | `LLM_MODEL_NAME` set, `MODEL_PATH` resolvable |
+| `vllm`/`agentic` only | `configs/vllm/huggingface` and `configs/vllm/models` exist and are non-empty (`check_models`); `VLLM_ADAPTER_NAME` set |
+| `agentic` only | `LLM_MODEL_NAME` set; `LLM_MODE` is `llm` or `fallback`; `MODEL_PATH` resolvable on the host mount after `download_model`; `MCP_USERNAME`/`MCP_PASSWORD` valid when `MCP=true` |
 | Vision model file (`configs/dlstreamer-pipeline-server/models/{{DEFAULT_MODEL}}/…`), sensor `.pkl`/`.xml`/`.bin` if the pattern is pretrained | must exist on disk before `up`. This check existing is not a substitute for asking the user up front when the model has no known source — see SKILL.md's *Model availability* rule |
 
 Implement as `check_env_variables`/`validate_host_ip` Makefile targets (no
@@ -176,34 +275,56 @@ dependency of the `up`/`up_vllm`/`up_agentic` targets, same convention as
    one instead of fetching an unrelated dataset, per SKILL.md's *Model
    availability* rule. Once provided, land it under
    `<simulator>/simulation-data/`.
-6. **Grafana dashboard swap**: `rm configs/grafana/provisioning/*.json &&
-   cp configs/grafana/dashboards_jsons/{{DASHBOARD_SLUG}}.json
-   configs/grafana/provisioning/{{DASHBOARD_SLUG}}.json` — dashboards live in
-   `dashboards_jsons/` as source-of-truth and get copied into the
-   auto-provisioned `provisioning/` directory at install/up time (mirrors the
-   reference `Makefile`'s `up:` target).
+6. **Grafana dashboard swap** (done by each `up*` target, not by
+   `install.sh`): the reference Makefile's own `up*` step first clears every
+   file already under `configs/grafana/provisioning/` unconditionally, then
+   copies the mode's dashboards from `dashboards_jsons/`:
+   `{{DASHBOARD_SLUG}}.json` for `up`; `{{DASHBOARD_SLUG}}_vlm.json` (as
+   `{{DASHBOARD_SLUG}}.json`) for `up_vllm`; that file plus
+   `{{DASHBOARD_SLUG}}_agentic.json` for `up_agentic`. This mirrors the
+   reference `Makefile` — any dashboard JSON edited in place there (rather
+   than in `dashboards_jsons/`, which the swap only ever reads from) is lost
+   on the next `up*`. Tell the user this before the first `up*` run. If you
+   ever write this cleanup step yourself instead of relying on `make up*`,
+   scope it to the exact filenames about to be replaced rather than a
+   wildcard, confined to this stack's own generated provisioning directory.
 7. **TLS cert**: generated by Nginx's own entrypoint script
    (`nginx-cert-gen.sh`) on first container start — `install.sh` does not
    need to pre-generate it, just ensure the tmpfs cert volume exists.
-8. **Fusion Analytics image**: `docker compose build ia-fusion-analytics` (it
-   has no prebuilt registry tag in the reference — always build from
-   `fusion-analytics/Dockerfile` unless a registry tag is pinned).
-9. **`vllm`/`agentic` only — LLM weights**: run `model-download` ahead of
-   `apm-llm` startup; confirm `MODEL_PATH` resolves before marking install
-   complete — it is a container path under `/model`, so check the
-   stack-relative host mount (e.g. `./configs/agentic/models/...`), not `/model`
-   on the host.
+8. **Locally built images**: Fusion Analytics, the simulator and (for
+   `vllm`/`agentic`) `ui-service` are built from this stack's sources (`make
+   build`). If `docker compose build` (bake) hangs on the host, build each one
+   with plain `docker build -t <image>:<tag> ./<dir>`.
+9. **`vllm`/`agentic` only — VLM weights**: confirm `configs/vllm/huggingface/`
+   (and `configs/vllm/models/` when an adapter is used) are populated with
+   the user-named model (see [`VLM.md`](VLM.md#models-ask-never-fabricate)).
+   Never download a substitute.
+10. **`agentic` only — agent LLM weights**: `make download_model` (reference
+   target, including its root `chown` of `configs/agentic/models`) runs
+   `model-download` before `apm-llm` starts. It is skipped when the converted
+   model already exists at the host path. `MODEL_PATH` is a container path
+   under `/model`; check the stack-relative host mount
+   (`./configs/agentic/models/llm_model_agentic/...`), never `/model` on the host.
 
 ### Required `Makefile` targets — `multimodal`/`vllm`/`agentic`
 
 - `up`: `check_env_variables` → `validate_host_ip` → `down` → dashboard swap →
   `docker compose up -d` — plain `multimodal` mode, no LLM/VLM overlay.
-- `up_vllm`: same preflight chain (+ `check_hardware`/`check_models`) plus
-  `docker-compose-vllm.yml` — use this one, not `up`, when
-  `{{DEPLOYMENT}}=vllm`.
-- `up_agentic`: same preflight chain plus `docker-compose-agentic.yml` (which
-  itself layers in the vLLM service) — use this one when
-  `{{DEPLOYMENT}}=agentic`. Never bring up `vllm`/`agentic` mode by manually
+- `up_vllm`: `check_hardware` → `check_models` → the same preflight chain,
+  then `NGINX_PROFILE=vllm AGENTIC_UI_ENABLED=false MQTT_DISABLED=true`,
+  the `_vlm` dashboard swap, and `docker compose -f docker-compose.yml -f
+  docker-compose-vllm.yml up -d` — use this one, not `up`, when
+  `{{DEPLOYMENT}}=vllm`. Exact recipe in [`VLM.md`](VLM.md#makefile-target).
+- `up_agentic`: `check_hardware` → `check_models` → the same preflight
+  chain, then `NGINX_PROFILE=agentic` (`agentic_mcp` with `MCP=true`),
+  `AGENTIC_UI_ENABLED=true MQTT_DISABLED=false`, both `_vlm` and `_agentic`
+  dashboards, `make download_model`, and all three Compose files — use this
+  one when `{{DEPLOYMENT}}=agentic`. Exact recipe in
+  [`AGENTIC.md`](AGENTIC.md#makefile-target).
+- `check_hardware` / `check_models` / `download_model` / `build`: copy the
+  reference targets. `check_hardware` enforces Panther Lake and honours
+  `PLATFORM_CHECK=false` (CI/validation only). `check_models` checks
+  `configs/vllm/{models,huggingface}`. Never bring up `vllm`/`agentic` mode by manually
   passing `-f docker-compose-vllm.yml`/`-f docker-compose-agentic.yml` to a
   bare `docker compose up` — these three targets are the actual entry
   points, one per `{{DEPLOYMENT}}` value, not a single conditional `up`.
@@ -223,8 +344,14 @@ publishes over MQTT,
 the `FUSION_MODE` value and one example fused-decision JSON
 that matches its semantics; the InfluxDB `select * from` output for the
 multimodal measurement; the Grafana dashboard URL + confirmation the WebRTC
-iframe/panel is present; and, if `{{DEPLOYMENT}}` is `vllm`/`agentic`, the LLM
-explanation text for one flagged event.
+iframe/panel is present; and:
+
+- `vllm`/`agentic`: the dashboard names provisioned (`... Explainability
+  Dashboard`, plus `... - Agentic Dashboard` for agentic), `/insights-ui/api/vllm/health`
+  → `{"accessible": true}`, and the VLM text returned by **Explain** for one
+  defective row;
+- `agentic`: the `run_id` and ticket text of one **Run Agentic Analysis**
+  run that reached `completed`, and `/api/v1/capabilities` → 200.
 
 ## `.env` — `ts` mode (required fields, shared across all apps — do not fork per app)
 
@@ -318,35 +445,58 @@ ignore `*-weekly` pre-releases.
   (ICE/TURN), `chrislusf/seaweedfs:4.42` (S3) — `multimodal`, `vllm`, `agentic` only
 - `intel/ia-opcua-server:<latest>` / `intel/ia-mqtt-publisher:<latest>`
   (simulators) — `ts` only, whichever matches `{{INGEST_TRANSPORT}}`
-- `openvino/model_server:<gpu-tag>` (OVMS, serves the LLM/VLM) — `vllm`,
-  `agentic` only
-- Agentic-only: `intel/agent-quality-handler`, `intel/model-download`,
-  `intel/metrics-manager` (only if `{{AGENT_METRICS}}=yes`) — `agentic` only
+- `intel/vllm:<pinned>` (`vllm-server`, the VLM; reference
+  `0.21.0-ubuntu24.04`) — `vllm`, `agentic`
+- `multimodal-agentic-ui` — **built locally** from `{{STACK_DIR}}/ui-service/`
+  as `{{STACK_DIR_SLUG}}-ui:<tag>`. Reuse the prebuilt `intel/multimodal-agentic-ui`
+  only under the exception in [`UI_SERVICE.md`](UI_SERVICE.md) — `vllm`, `agentic`
+- `openvino/model_server:<tag>-gpu` (OVMS, serves the **agent** LLM as
+  `apm-llm`; reference `2026.4.1-gpu`) — `agentic` only
+- `intel/agent-quality-handler`, `intel/model-download`,
+  `intel/metrics-manager`, `prom/prometheus:v2.53.4` — `agentic` only; all
+  four are always included (the agentic UI needs `apm-metrics`)
+- `multimodal-mcp-server` (built from `mcp-server/`) — `agentic` with
+  `{{AGENT_MCP}}=yes` only
 
-## Reference implementation — a template to read, not a folder to clone
+## Reference implementation — copied and renamed by `scripts/scaffold_stack.py`
 
 The upstream
 [`industrial-edge-insights-time-series/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/industrial-edge-insights-time-series)
 wind-turbine-anomaly-detection sample (`ts` mode) and
 [`industrial-edge-insights-multimodal/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/industrial-edge-insights-multimodal)
 weld-defect-detection sample (`multimodal`/`vllm`/`agentic` modes) are the
-**shape reference** — read them to learn the structure, then **author the
-new stack's files with vertical-specific names and content**. Do **not**
-`cp -r` either reference repo and patch it in place — that leaves
+**source**. [`scripts/scaffold_stack.py`](../scripts/scaffold_stack.py) copies
+them and renames every vertical-specific path and name, so the generated
+stack keeps the reference's format exactly. Do **not** hand-copy with
+`cp -r`, and do **not** hand-write the generic files. A manual copy leaves
 vertical-specific leftovers (unused `weld_anomaly_detector.*` files, a
-`weld-data-simulator/` folder for a non-weld vertical, weld training
-scripts, weld docs) sitting in a stack that has nothing to do with that
-vertical, and is the single most common mistake when using this skill.
+`weld-data-simulator/` folder, weld docs), and hand-writing re-introduces bugs
+the reference already solved. The tables below describe what the script
+keeps, renames and drops. The agent edits the lines in the script's
+leftover report (naming only) **and** independently applies the per-vertical
+semantic checklists (agent policy `mode`, ticketing backend, thresholds,
+prompts), which the report cannot detect.
+
+**If `scripts/scaffold_stack.py` cannot be run** (permission/sandbox
+restriction, no filesystem access to the reference checkout, or similar):
+do not work around the restriction, and do not report the stack as
+scaffolded unless the files genuinely exist on disk. Instead, list the
+reference checkout's actual directory structure, reproduce the identical
+layout by hand under the new stack directory, and apply only the
+vertical-specific adaptations from the copy/leave-behind tables below —
+never substitute a different file layout or invent files the reference
+does not have.
 
 ### What to copy vs. what to leave behind (`multimodal`/`vllm`/`agentic`)
 
 | Copy (adapt names/content to `{{OBJECT}}`/`{{SENSOR_UDF_NAME}}`/`{{STACK_DIR}}`) | Leave out unless the mode/question explicitly requests it |
 |---|---|
 | `docker-compose.yml` topology, `.env` keys, and the required `Makefile` targets | `docker-compose-vllm.yml`/`docker-compose-agentic.yml`/`configs/agentic/` — `vllm`/`agentic` modes only |
-| `configs/{dlstreamer-pipeline-server,time-series-analytics-microservice,telegraf,influxdb,mqtt-broker,grafana,nginx,seaweedfs-s3}/` structure | `insights-workbench/`, `ui-service/` — weld-specific VLM/agentic UI, not part of the base multimodal stack |
+| `configs/{dlstreamer-pipeline-server,time-series-analytics-microservice,telegraf,influxdb,mqtt-broker,grafana,nginx,seaweedfs-s3}/` structure | `insights-workbench/` — superseded by `ui-service/`'s `/insights-ui/` |
+| `vllm`/`agentic`: `ui-service/`, adapted per [`UI_SERVICE.md`](UI_SERVICE.md)'s edit list and built locally; `configs/agentic/` with rewritten use-case files ([`AGENTIC.md`](AGENTIC.md)) | `ui-service/` and `configs/agentic/` in `multimodal` mode; the reference weld LoRA adapter for a non-weld vertical |
 | `fusion-analytics/{Dockerfile,fusion.py,api.py,requirements.txt}` (generalize label lists — see [FUSION.md](FUSION.md)) | `training/` (weld classifier/VLM training scripts) — the new vertical's model is supplied by the user or fetched via `model-download-user`, not trained here |
 | the data simulator's `Dockerfile`/`publisher.py` control flow (paired video+CSV replay) | `docs/user-guide/weld-defect-detection/`, `README-dockerhub.md`, `CHANGELOG.md`, `third-party-programs.txt` — reference-repo metadata |
-| one dashboard JSON as a layout template | the reference's other dashboard variants (`*_agentic.json`, `*_vlm.json`) unless `{{DEPLOYMENT}}` is `vllm`/`agentic` |
+| one dashboard JSON as a layout template; for `vllm`/`agentic` also the reference `*_vlm.json` (and `*_agentic.json` for agentic), renamed `{{DASHBOARD_SLUG}}_vlm.json` / `_agentic.json`, with the edits in [`UI_SERVICE.md`](UI_SERVICE.md) | the `*_vlm.json`/`*_agentic.json` variants in `multimodal` mode; a hand-built single dashboard replacing them in `vllm`/`agentic` |
 | `tests/` structure/pattern from [TESTS.md](TESTS.md) — only if `{{GENERATE_TESTS}}=yes` | the reference's actual weld-assertion test bodies — write new assertions against `{{VISION_TOPIC}}`/`{{TS_RAW_TOPIC}}`/`{{TS_PROCESSED_TOPIC}}`/`{{FUSION_TOPIC}}`; the whole `tests/` folder if `{{GENERATE_TESTS}}=no` |
 | `helm/` | always — Helm/Kubernetes deployment is out of scope for this skill; Docker Compose only |
 
@@ -386,7 +536,7 @@ of these):
 2. `make check_env_variables` exits 0 with a valid `.env`.
 3. `make up_{{INGEST_TRANSPORT}}_ingestion app={{APP_NAME}}` → all
    containers `running`/`healthy`; unused simulator scaled to `0`.
-4. `curl -k --noproxy '*' https://<HOST_IP>:${GRAFANA_PORT}/ts-api/kapacitor/v1/ping` returns 204/200 (`-k` only valid when `{{HOST_IP}}=localhost`; otherwise use `--cacert`/`--resolve` per SKILL.md's *Execution guardrails*).
+4. `curl -s --noproxy '*' --cacert ./nginx-cert.pem --resolve localhost:${GRAFANA_PORT}:${HOST_IP} https://localhost:${GRAFANA_PORT}/ts-api/kapacitor/v1/ping` returns 204/200 (certificate copied from `nginx_proxy` per SKILL.md's *Execution guardrails*).
 5. InfluxDB measurement for the raw sensor stream populated within 30 s.
 6. `config.json`'s `udfs.models` key consistent with the chosen UDF pattern.
 7. The UDF-flagged measurement populates; the alert channel captures one
@@ -413,20 +563,36 @@ of these):
    collected.
 9. No literal `{{...}}` remains anywhere.
 
-**`vllm`** (criteria 1–9 above, plus):
-10. The LLM/VLM service (OVMS/vLLM) health check passes before it is marked
-    ready.
-11. Publishing a synthetic fused-alert batch produces one explanation output,
-    quoted verbatim in the final summary.
-12. `LLM_MODE=fallback` (if selected) still produces a structured explanation
-    with no LLM running.
+**`vllm`** (criteria 1–9 above, plus — full wording in [`VLM.md`](VLM.md#completion-criteria-vllm-mode-in-addition-to-the-base-multimodal-criteria-19)):
+10. `/insights-ui/api/vllm/health` (through nginx) returns `{"accessible": true}`.
+11. `/insights-ui/` returns 200 through nginx, and the `... Explainability
+    Dashboard` renders it in its **VLLM Reasoning** iframe.
+12. **Explain** on one defective fused row returns VLM text grounded in the
+    stored frame and the sensor values, quoted verbatim.
 
-**`agentic`** (criteria 1–12 above, plus):
-13. `model-download` completes and `apm-llm`'s health check passes
-   (`GET /v1/config` returns 200) before `apm-agent` is marked healthy.
-14. An `apm/batch-complete` MQTT event (normally published by `ui-service`
-    on **Run**; for headless verification, published by hand with the same
-    payload — see [`AGENTIC.md`](AGENTIC.md)) produces one agent-orchestrated
-    explanation in `apm-agent`'s `OUTPUT_DIR`, quoted verbatim.
-15. If `{{AGENT_METRICS}}=yes`: `metrics-manager`/Prometheus reports at
-    least one LLM-latency metric.
+**`agentic`** (criteria 1–12 above, plus — full wording in [`AGENTIC.md`](AGENTIC.md#completion-criteria-agentic-mode-in-addition-to-vlmmds-criteria-1012)):
+13. `model-download` completes (or the converted model is already present),
+    and `apm-llm`'s health check passes (`GET /v1/config` returns 200) before
+    `apm-agent` is marked healthy.
+14. **Run Agentic Analysis** in the `... - Agentic Dashboard` (or `POST
+    /agentic-ui/run` through nginx) reaches `completed` on
+    `/agentic-ui/results/<run_id>`. Quote the ticket text verbatim.
+15. `/api/v1/capabilities` returns 200 through nginx, and the metrics cards
+    render in `/agentic-ui/`.
+
+**`{{OPENMES_ENABLED}}=yes`** (any mode, on top of that mode's criteria;
+see [`OPENMES.md`](OPENMES.md) → *Manual verification*):
+O1. The publisher logs `Subscribed topic=<{{OPENMES_INPUT_TOPIC}}>`. One
+     injected defect logs `Delivered event=<id> issue_id=<n>`, and that
+     Issue is visible in OpenMES with a populated `description`.
+O2. Replaying the identical payload logs `Duplicate event ignored`, and no
+     new Issue appears.
+O3. One injected non-defect creates no Issue.
+O4. An invalid token file logs `Auth failure (401)`, and the event is
+     stored as `blocked`.
+O5. Dummy receiver only: `verify_stack.py` reports `dummy OpenMES receiver`
+     PASS, and the final summary gives the user the alerts page URL
+     `http://<HOST_IP>:8099/` and how to stop it (Ctrl-C in each terminal,
+     or your tool's stop capability — there is no separate stop script).
+
+Never quote the token.

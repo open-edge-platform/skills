@@ -1,0 +1,35 @@
+{
+  "mode": "multimodal",
+  "source_id": "inspection-station-01",
+  "timestamp_format": "iso8601",
+  "defect_equals": 1,
+  "sqlite_db": "openmes_events.db",
+  "use_env_proxy": false,
+  "openmes": {
+    "base_url": "https://mes.example.internal",
+    "token_file": "./openmes_token",
+    "work_order_id": 123,
+    "issue_type_id": 7,
+    "batch_step_id": null
+  },
+  "mqtt": {
+    "host": "127.0.0.1",
+    "port": 1883,
+    "topic": "inspection/fusion/results",
+    "client_id": "inspection-station-01-openmes",
+    "tls": false
+  },
+  "fields": {
+    "defect": "/fused_decision",
+    "label": "/predicted_category",
+    "timestamp": ["/vision_time", "/timeseries_time"],
+    "item_id": "/item_id"
+  },
+  "details": {
+    "mode": "/mode",
+    "vision_anomaly": "/vision_anomaly",
+    "timeseries_anomaly": "/timeseries_anomaly",
+    "timeseries_time": "/timeseries_time",
+    "delta_ms": "/delta_ms"
+  }
+}

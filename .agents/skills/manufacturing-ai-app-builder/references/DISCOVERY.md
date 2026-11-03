@@ -43,15 +43,18 @@ delegating.
 Do not install anything during discovery/planning. After the user approves
 the plan, add any not-yet-installed delegate. `manufacturing-app-recipe` is
 **not yet published upstream** — if a target environment is missing it, copy
-the folder from this workspace rather than trying to fetch it via
-`npx skills`. The other four are published upstream:
+the folder from this workspace rather than trying to fetch it with the
+`skills` CLI. The other four are published upstream. Always run the CLI at the
+pinned version below (never `@latest` or without a version), so a
+compromised upstream release can't run unreviewed code. Bump the pin only
+after reviewing the new release. The pinned CLI needs Node.js >= 22.20:
 
 ```bash
 # metro-ai-app-recipe, dlsps-user, time-series-analytics-user
-npx skills@latest add open-edge-platform/skills --skill <skill-name>
+npx skills@1.7.4 add open-edge-platform/skills --skill <skill-name>
 
 # dlstreamer-coding-agent lives in its own repo
-npx skills@latest add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent
+npx skills@1.7.4 add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent
 ```
 
 ## 4. Refresh the live index (rarely needed)

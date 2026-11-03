@@ -25,6 +25,36 @@ so the cert regenerates fresh each deploy).
 | `/{{peer-id}}/` (prefix, non-signalling) | MediaMTX WHEP/HLS asset paths | separate `location ^~` block below the exact regex match so static asset requests don't fall through to `/` |
 | `/` | `ia-grafana` | default catch-all |
 
+### Profile routes — `vllm`/`agentic` (`NGINX_PROFILE`)
+
+Copy the reference `nginx.conf.template` + `nginx-cert-gen.sh` unchanged
+(apart from the `peer-id` path). The template `include`s
+`/opt/nginx/certs/nginx-extra-locations.conf`, which `nginx-cert-gen.sh`
+renders at container start from the `NGINX_PROFILE` env var that the
+Makefile target exports:
+
+| `NGINX_PROFILE` (set by) | Extra locations | Default / stream timeouts |
+|---|---|---|
+| `base` (`make up`) | none (empty include) | 60 s / 300 s |
+| `vllm` (`make up_vllm`) | `= /insights-ui` → 308 to `/insights-ui/`; `/insights-ui/` → `multimodal-agentic-ui:5003` | 180 s / 180 s (VLM calls are slow) |
+| `agentic` (`make up_agentic`) | the `vllm` ones + `/agentic-ui/` → `multimodal-agentic-ui:5003`; `/api/metrics/` → `apm-metrics:9090/metrics/` (SSE, `proxy_buffering off`); `/api/v1/capabilities` → `apm-metrics:9090` | 60 s / 300 s |
+| `agentic_mcp` (`make up_agentic MCP=true`) | the `agentic` ones + `= /mcp` → `multimodal-mcp-server:8000` | 60 s / 300 s |
+
+- Proxy optional upstreams (`apm-metrics`, the MCP server) through a
+  variable with `resolver 127.0.0.11`, as the reference does, so nginx
+  starts even before those containers exist. Upstreams referenced directly
+  (`dlstreamer-pipeline-server`, `ia-grafana`, ...) must be in nginx's
+  `depends_on`; otherwise nginx exits with `host not found in upstream`.
+- **Same-origin rule.** The explanation UIs are reachable only as
+  `https://<HOST_IP>:${GRAFANA_PORT}/insights-ui/` and `/agentic-ui/` and are
+  embedded in Grafana as iframes. Never publish `multimodal-agentic-ui`,
+  `apm-agent` or `vllm-server` on a separate host port for browser use, and
+  never add a raw-API route (for example `/agent-api/`) as the user-facing
+  way to see results. Same origin is what makes Run and Explain work
+  without a second certificate prompt or CORS.
+- Add `multimodal-agentic-ui` and `apm-metrics` to nginx's
+  `no_proxy`/`NO_PROXY`.
+
 Reuse `metro-ai-app-recipe`'s WHIP/WHEP + `--noproxy '*'` guidance from
 [`PROXY_UI.md`](../metro-ai-app-recipe/references/PROXY_UI.md) verbatim for
 the MediaMTX signalling block; the only difference here is the additional
@@ -72,8 +102,15 @@ datasources:
       password: $INFLUXDB_PASSWORD
 ```
 
-Dashboard JSON (`configs/grafana/dashboards_jsons/{{DASHBOARD_SLUG}}.json`,
-copied into `provisioning/` at install time — see `INSTALL.md`) needs at
+Dashboards live in `configs/grafana/dashboards_jsons/` and are copied into
+`provisioning/` by the `up*` target (see `INSTALL.md`). There is one file
+per mode: `{{DASHBOARD_SLUG}}.json` (`multimodal`),
+`{{DASHBOARD_SLUG}}_vlm.json` (`vllm` and `agentic`) and
+`{{DASHBOARD_SLUG}}_agentic.json` (`agentic`). The `_vlm`/`_agentic`
+files are copied from the reference in Grafana's **v2** dashboard schema
+and keep their `/insights-ui/` and `/agentic-ui/` iframes. Their
+change list is in [`UI_SERVICE.md`](UI_SERVICE.md#dashboards--three-files-same-as-the-reference).
+The base `{{DASHBOARD_SLUG}}.json` (classic schema) needs at
 minimum:
 
 - **WebRTC `<iframe>` panel** — `src="/<peer-id>/whep"` or whatever exact
@@ -88,6 +125,9 @@ minimum:
 - Grafana's minimum refresh interval is 5 s — tell the user in the README
   that graph/video sync may lag by a few seconds; this is expected, not a
   bug.
+- Embed other same-origin pages only as iframes. A relative `<a
+  href="/...">` inside a Grafana text panel is caught by Grafana's
+  client-side router and shows "Page not found".
 
 ## Grafana — one dashboard file per app (`ts` mode)
 

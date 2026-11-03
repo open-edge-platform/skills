@@ -1,0 +1,314 @@
+{
+  "skill_name": "manufacturing-app-recipe",
+  "notes": "These self-contained evals compare mode-specific design, deployment commands, diagnosis, and verification guidance against the recipe references. Guidance-only cases assume the stated inputs exist and must not access example /work or /models paths, start containers, download models, or execute REST calls. Expected files and settings can be shown as proposed content in the response. Clarification cases must pause on missing inputs instead of fabricating artifacts. Verification cases grade the proposed checks and evidence requirements, not claims of a live deployment. Do not copy Metro's fixed seven-container topology or Grafana 11.5.4 pin into this recipe's different architecture.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "sensor-ts-app-scaffold",
+      "prompt": "Show the proposed files and deployment procedure for a ts production app named pump-vibration-monitor in an existing industrial-edge-insights-time-series checkout at /work/industrial-edge-insights-time-series. Assume the checkout contains docker-compose.yml, Makefile, and apps/, and /data/pump.csv contains vibration_mm_s. Use a rule-based UDF that flags vibration_mm_s > 12, OPC-UA simulator ingestion, MQTT alerts on alerts/pump-vibration, dashboard title Pump Vibration, and generated tests. Keep the existing default app. Guidance only: do not access these example paths, write files, start services, download anything, or execute REST calls.",
+      "expected_output": "A proposed apps/pump-vibration-monitor/ scaffold, registration preserving the default, an OPC-UA adapter for the non-wind-turbine schema, streaming UDF packaging/configuration, MQTT-only alerts, Grafana dashboard, tests, and the correct Makefile deployment procedure.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Selects ts production mode and places the app under apps/pump-vibration-monitor/ in the specified existing checkout",
+        "Appends pump-vibration-monitor to SAMPLE_APP_LIST without changing DEFAULT_SAMPLE_APP and reuses the shared topology rather than generating a new app-local docker-compose.yml",
+        "Uses the streaming UDF pattern and does not generate unsupported batch-mode config files",
+        "Explains that the bundled OPC-UA simulator is hardcoded to wind-turbine fields and proposes a per-app CSV/node adapter for vibration_mm_s with matching Telegraf nodes, rather than assuming any CSV works",
+        "Enables exactly one alert channel, MQTT, and uses alerts/pump-vibration as the alert topic",
+        "The proposed UDF reads vibration_mm_s and flags values strictly greater than 12, not equal to 12",
+        "Generates tests because the user explicitly requested them",
+        "Keeps config.json at or below 5 KB and omits a models key for the rule-based threshold UDF",
+        "Names the package apps/pump-vibration-monitor/time-series-analytics-config/pump-vibration-monitor.tar after the app and uses make up_opcua_ingestion app=pump-vibration-monitor to upload it before applying config",
+        "Obeys the guidance-only request and does not claim the app was deployed or tests passed"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "missing-pretrained-model-stop",
+      "prompt": "Build a ts production app called gearbox-health in my existing time-series stack checkout at /work/industrial-edge-insights-time-series. Use a pretrained IsolationForest model for vibration and temperature anomaly detection with a dashboard and MQTT alerts. I do not have a model file, training dataset, or download URL. Before accessing the example checkout or writing anything, tell me what you need to proceed.",
+      "expected_output": "Stops before generating a deployable model-backed config or packaging step and asks for a real model artifact or resolvable source; does not invent or create a placeholder model.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recognizes that a pretrained sensor model is required but neither a local artifact nor a resolvable download source was supplied",
+        "Asks the user to provide the model artifact, training dataset, or concrete resolvable source before proceeding",
+        "Does not fabricate a model filename/path or create a dummy .pkl/.xml/.bin file",
+        "Does not leave a udfs.models entry pointing to an unavailable model"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "multimodal-fusion-contract",
+      "prompt": "Describe the proposed multimodal stack in /work/stacks/weld-quality-stack. Assume the user-supplied vision IR /models/weld.xml with its companion .bin and paired sample video /data/weld.avi and CSV /data/weld.csv already exist. Use CPU vision, a rule-based vibration_mm_s > 12 UDF, AND fusion with 50 ms tolerance, and topics weld/vision, weld/sensor/raw, weld/sensor/processed, weld/sensor/alerts, and weld/fused-alerts. Dashboard slug weld-quality; generate tests. Cover: the exact vision-pipeline element properties that provide the timestamp Fusion matches on and the startup warm-up; which topic each service publishes and subscribes to; how vision and sensor messages are paired; an example fused-verdict JSON payload; and the InfluxDB measurement(s) used for raw vision metadata and for fused verdicts. Guidance only: do not access these example paths, write files, start services, download anything, or execute REST calls.",
+      "expected_output": "A proposed flat multimodal stack with separate raw, processed, and anomaly-only topics, complete timestamp-aware vision/sensor fusion, stored raw vision and fused data, and tests. No deployment is performed.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Builds the multimodal shape as a new flat stack directory at the requested location, not an apps/<name>/ folder",
+        "Configures Fusion Analytics with FUSION_MODE=AND and TOLERANCE_NS=50e6",
+        "Keeps weld/sensor/raw and weld/sensor/processed as distinct topics and subscribes Fusion to the processed topic rather than the raw topic",
+        "Publishes every processed sensor point to weld/sensor/processed and only anomalies to weld/sensor/alerts so normal observations remain available for fusion",
+        "Enables RTP reference timestamps on the vision pipeline (add-reference-timestamp-meta=true and add-rtp-timestamp=true) so Fusion matches on the RTP sender NTP timestamp, and allows the initial roughly 300-packet warm-up",
+        "Pairs sensor and vision messages by timestamps within tolerance instead of fusing only the latest messages",
+        "Publishes the fused verdict on weld/fused-alerts as a flat JSON object (no nested objects) with fused_decision as a top-level scalar, e.g. shown in the example payload",
+        "Persists raw vision metadata for every frame, independently of matching, to its own named InfluxDB measurement that is separate from the fused-verdict measurement"
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "vllm-reference-format",
+      "prompt": "Show the configuration and deployment design for a vllm-mode stack at /work/stacks/weld-explainer using camera-plus-pressure fused weld alerts. Assume a complete vision IR at /models/weld-classifier.xml, a Hugging Face vision-language model already downloaded at /models/quality-vlm/ (no LoRA adapter), an Intel Core Ultra Series 3 host with iGPU, and RTSP and MQTT sources available. CPU vision, rule-based pressure_bar outside [80,150], AND fusion, 50 ms tolerance, dashboard and MQTT alerts, no generated tests. Operators should be able to ask for an explanation of a selected fused result. Guidance only: do not access these example paths, write files, download anything, start services, or execute REST calls.",
+      "expected_output": "A vllm stack in the reference industrial-edge-insights-multimodal format: the multimodal stack plus vllm-server and an adapted ui-service, an Explainability dashboard embedding /insights-ui/, on-demand Explain grounded in the stored frame and sensor row, and no change to the AND fusion verdict.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses vllm mode and retains the multimodal sensor path and Fusion Analytics correlator",
+        "Configures FUSION_MODE=AND independently of the explanation layer",
+        "Serves the VLM with vllm-server (intel/vllm) from configs/vllm/huggingface, and with no adapter removes the LoRA flags and sets VLLM_ADAPTER_NAME to the served model name",
+        "Adds the reference ui-service, copied and adapted for this stack and built locally, reached at /insights-ui/ through nginx (NGINX_PROFILE=vllm), and provisions a _vlm Explainability dashboard whose panel iframes /insights-ui/",
+        "Does not author a separate vllm-explainer service, OVMS, or Fusion Analytics batch-complete publishing for vllm mode",
+        "Keeps the data contract the Explain flow needs: vision measurement tagged search_time with frame_id and img_handle, fused vision_timestamp/timeseries_timestamp, and a DLSPS s3_write folder_prefix matching the UI BUCKET_NAME",
+        "Keeps docker-compose-vllm.yml at the stack root and uses make up_vllm (with check_hardware and check_models) rather than plain make up",
+        "Uses the supplied local model paths rather than inventing model names or download sources"
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "agentic-reference-format",
+      "prompt": "Show the proposed agentic deployment at /work/stacks/part-quality-stack for a camera and temperature sensor that must jointly flag a defective part. Assume complete vision IR at /models/part-inspection.xml, a Hugging Face vision-language model at /models/quality-vlm/ (no adapter), an OpenVINO agent LLM already converted at /models/agent-llm/, an Intel Core Ultra Series 3 host, and RTSP/MQTT sources available. CPU vision, CPU agent LLM, threshold temperature_c > 90, AND fusion, 50 ms tolerance, dashboard and MQTT alerts, no generated tests, and no MCP server. Guidance only: do not access these example paths, write files, download anything, start services, or execute REST calls.",
+      "expected_output": "An agentic stack in the reference format: the full vllm layer (vllm-server, ui-service /insights-ui/) plus apm-agent, apm-llm, model-download, apm-metrics and Prometheus, the /agentic-ui/ Run Agentic Analysis trigger, and both _vlm and _agentic dashboards, without the MCP overlay.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Builds agentic additively on top of the fused multimodal stack and the complete vllm layer (vllm-server and ui-service keep running)",
+        "Includes apm-agent (agent-quality-handler), apm-llm (OVMS) serving the separate agent LLM from MODEL_PATH, model-download, and apm-metrics plus Prometheus",
+        "Uses the agentic UI's Run Agentic Analysis (POST /agentic-ui/run publishing apm/batch-complete for a time window) as the default trigger, not Fusion Analytics auto-batching",
+        "Provisions both the _vlm Explainability dashboard and the _agentic dashboard that iframes /agentic-ui/ through the same nginx origin (NGINX_PROFILE=agentic)",
+        "Rewrites configs/agentic agents.yaml, prompts/<use_case_id>.txt and policy_fallback.json for the part-quality taxonomy",
+        "Keeps docker-compose-vllm.yml and docker-compose-agentic.yml at the stack root, uses make up_agentic, and omits docker-compose-mcp.yml",
+        "Uses the supplied local model artifacts for both models and does not fabricate model paths"
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "vision-poc-no-full-stack",
+      "prompt": "Explain the vision-mode DL Streamer/GStreamer demo sub-path for classifying scratches from /data/scratch.mp4 using a complete OpenVINO IR at /models/scratch.xml on CPU. No dashboard, sensors, or alerts. Assume those inputs exist. Guidance only: do not access these example paths, create files, or start services.",
+      "expected_output": "A lightweight single-app vision demo/PoC, not the full production stack, with no unnecessary sensor, dashboard, or alert services.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Selects vision demo/PoC mode and follows the lightweight single-component path",
+        "Does not generate the full production Docker Compose topology or dashboard/alert services",
+        "Uses the provided local model path rather than inventing a model source",
+        "Delegates the custom pipeline demo to dlstreamer-coding-agent when available and requires one real inference round-trip before declaring a later live run successful"
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "web-api-monitoring-negative-boundary",
+      "prompt": "Set up Prometheus and OpenTelemetry with Grafana dashboards for request latency and error rates of our e-commerce web API.",
+      "expected_output": "The manufacturing-app-recipe skill should not trigger because web-API request monitoring is unrelated to its Intel manufacturing analytics deployment modes.",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Does not scaffold a manufacturing vision, time-series, multimodal, vllm, or agentic stack",
+        "Recognizes that web-API latency and error-rate monitoring is outside the skill's manufacturing quality and equipment-monitoring scope"
+      ]
+    },
+    {
+      "id": 8,
+      "eval_name": "ts-deployment-sequence-and-proof",
+      "prompt": "My ts app pump-pressure is already scaffolded and registered in an existing time-series checkout. It uses MQTT ingestion (not OPC-UA); the streaming rule-based UDF, TICKscript, MQTT ingestion config, and dashboard are ready. Explain with the exact make commands how to package, deploy, and verify it, with tests enabled. I will run the commands myself: do not execute anything, start containers, or call REST APIs.",
+      "expected_output": "An ordered Makefile-based deployment procedure with app-named packaging, preflight, upload-before-config, correct simulator scaling, and proof of stored data, real alerts, dashboard selection, and test count.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Treats the rule-based UDF as model-free (no udfs.models entry, model file, or placeholder/dummy artifact) and keeps config.json at or below 5 KB",
+        "Uses make check_env_variables for preflight and make up_mqtt_ingestion app=pump-pressure as the deployment entry point rather than bypassing the shared Makefile",
+        "Checks /ts-api/kapacitor/v1/ping for 200 or 204 and verifies raw InfluxDB data within 30 seconds, not merely container startup",
+        "Requires both a real flagged-anomaly log line and a captured MQTT alert, and confirms the dashboard matches apps/pump-pressure/grafana-dashboard.json",
+        "Does not report proposed commands as executed or claim that the deployment or tests succeeded"
+      ]
+    },
+    {
+      "id": 9,
+      "eval_name": "gpu-rtsp-topology-and-provisioning",
+      "prompt": "Describe the complete multimodal deployment design for CNC inspection at /work/stacks/cnc-quality-stack on Intel GPU. Assume a complete local classifier IR at /models/cnc.xml and live RTSP camera plus MQTT vibration source are available. Use vibration_mm_s > 12, OR fusion, 50 ms tolerance, topics cnc/vision, cnc/sensor/raw, cnc/sensor/processed, cnc/sensor/alerts, cnc/fused, dashboard slug cnc-quality, and generated tests. Include video and stored-frame review, the GPU device access and container user/group permissions for DLSPS, and the panels on the cnc-quality dashboard. Guidance only: do not access these example paths, download images/models, start services, or write files.",
+      "expected_output": "A manufacturing-specific GPU multimodal topology with RTSP timestamp metadata, WebRTC and S3 frame sinks, permissions, pinned-image policy, production scripts/Makefile, provisioning, and CNC-specific naming rather than a copy of the Metro seven-container stack.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Includes DLSPS, MQTT broker, Telegraf, InfluxDB, Time Series Analytics, Fusion Analytics, Grafana, Nginx, MediaMTX, Coturn, and SeaweedFS S3 services, not just Metro's seven-container topology",
+        "Uses a GPU inference pipeline (device=GPU) with the host /dev/dri device mapping",
+        "Grants video/render access via group_add without duplicate GIDs and keeps DLSPS running as its non-root user rather than root",
+        "Enables RTSP and WebRTC, with metadata on cnc/vision and both webrtc and s3_write entries in a frame destination array",
+        "Provides WebRTC video with MediaMTX WHIP/WHEP and Coturn ICE/TURN, plus stored-frame review through SeaweedFS",
+        "Keeps internal MediaMTX, MQTT, and S3 traffic out of corporate proxies using appropriate NO_PROXY/no_proxy settings",
+        "Builds Fusion Analytics from fusion-analytics/Dockerfile unless an actual prebuilt registry tag is pinned",
+        "Includes install.sh, .env, Makefile preflight/up/status/down targets and Grafana dashboard provisioning, without leftover weld or wind-turbine names in CNC artifacts",
+        "Proposes a cnc-quality dashboard containing WebRTC video, a sensor trend panel, and a fused-verdict table",
+        "Copies the selected dashboard from dashboards_jsons into Grafana provisioning at install/up time"
+      ]
+    },
+    {
+      "id": 10,
+      "eval_name": "production-preflight-rejects-invalid-parameters",
+      "prompt": "Review these proposed multimodal production settings before deployment: FUSION_MODE=XOR, TOLERANCE_NS=0, TS_RAW_TOPIC=cnc/data, TS_PROCESSED_TOPIC=cnc/data, HOST_IP=127.0.0.1 for remote WebRTC users, blank TURN credentials, blank SeaweedFS web-auth credentials, and empty InfluxDB/Grafana credentials. Explain the required validation behavior and corrections only. Do not edit files or execute installation.",
+      "expected_output": "Rejects the invalid settings before startup, explains every failure, and requires the existing production preflight instead of silently substituting defaults or continuing.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Requires make check_env_variables and validate_host_ip as preflight and refuses startup on failure",
+        "Rejects XOR because FUSION_MODE must be AND or OR and rejects non-positive TOLERANCE_NS",
+        "Rejects colliding raw/processed topics and explains their distinct ingestion and fusion responsibilities",
+        "Rejects 127.0.0.1 for remote/WebRTC access rather than treating it as a usable remote host",
+        "Requires non-empty TURN and SeaweedFS web-auth credentials and valid InfluxDB/Grafana credentials before startup",
+        "Does not silently replace invalid values with defaults or claim validation passed"
+      ]
+    },
+    {
+      "id": 11,
+      "eval_name": "fusion-unmatched-or-and-timestamp-boundaries",
+      "prompt": "Explain the recipe's fusion result for these cases, without running code or services. Tolerance is 50 ms. Case A: one anomalous sensor observation has no matching camera observation. Case B: anomalous camera and sensor observations are 49 ms apart. Case C: anomalous camera and sensor observations are 51 ms apart. Compare AND and OR, describe missing-timestamp payload fields, and explain how timestamps are parsed and paired.",
+      "expected_output": "Correct first-come-first-served nearest-timestamp pairing and unmatched OR behavior; AND requires a match and both flags, OR preserves a lone anomaly, and missing source timestamps/delta are null rather than fabricated.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Case A yields no anomalous AND verdict but does publish and persist an anomalous OR verdict with the missing modality's flag recorded as 0",
+        "Case B is within tolerance and combines both anomaly flags, yielding an anomalous verdict for AND and OR",
+        "Case C cannot be treated as a matched pair for AND, while OR can still emit an unmatched source anomaly rather than suppressing it solely because no match exists",
+        "For unmatched OR verdicts sets the missing timestamp and delta_ms to JSON null and omits unavailable fields from the InfluxDB point",
+        "Reads the vision RTP sender timestamp and defensively parses sensor timestamps with fractional seconds up to 9 digits and optional timezone suffixes into epoch nanoseconds"
+      ]
+    },
+    {
+      "id": 12,
+      "eval_name": "mqtt-simulator-topic-payload-diagnosis",
+      "prompt": "My ts app pump-vibration-monitor uses the shared bundled MQTT publisher without a --topic override. Telegraf currently subscribes to pump/vibration and uses json_v2 with a nested object parser. No raw sensor data reaches InfluxDB. Explain the documented topic and payload wiring to check before touching the UDF. Do not execute commands or modify files.",
+      "expected_output": "Identifies the shared publisher's default topic derivation and flat JSON schema, proposes source/log/message verification, and corrects Telegraf before diagnosing downstream analytics.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Derives pump-simulation-data from the first hyphen-separated token of pump-vibration-monitor rather than assuming pump/vibration is the default",
+        "Explains the publisher emits CSV columns as top-level fields plus source and filename, not a nested object",
+        "Uses Telegraf data_format=json with suitable string/tag handling instead of a nested json_v2 object parser",
+        "Confirms the topic and payload against publisher.py, publisher logs, or a captured MQTT message rather than relying only on the assumed naming rule",
+        "Keeps Telegraf name_override aligned with the TICKscript measurement and verifies raw InfluxDB data before changing the UDF"
+      ]
+    },
+    {
+      "id": 13,
+      "eval_name": "live-opcua-ingest-and-single-alert-channel",
+      "prompt": "For a ts production pump app, I want Telegraf to read a real OPC-UA gateway instead of sample data, and I want only OPC-UA alerts. Explain the differences from a simulator/MQTT-alert setup, including secure gateway handling. Guidance only; do not connect to any service or generate files.",
+      "expected_output": "Direct real-device Telegraf ingestion with simulators disabled, proper secure-connection reference guidance, and an OPC-UA-only alert bridge without a simultaneous MQTT alert.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Points Telegraf at the real OPC-UA endpoint with node identifiers matching the gateway, rather than feeding a sample CSV",
+        "Removes or scales both bundled simulators to 0 for direct real-device ingestion",
+        "Uses the secure OPC-UA connection guide for certificates, authentication, and security policy/mode rather than assuming Anonymous/None",
+        "Uses the TICKscript HTTP POST to http://localhost:5000/opcua_alerts for OPC-UA alerting and removes the MQTT alert block",
+        "Does not enable both MQTT and OPC-UA alert channels in one TICKscript"
+      ]
+    },
+    {
+      "id": 14,
+      "eval_name": "ts-demo-delegate-without-production-scaffold",
+      "prompt": "Select ts demo mode, not production. I only need a bare pressure_bar threshold UDF and TICKscript for an already-running Time Series Analytics service. No new app folder, dashboard, simulator, or Compose stack. Explain the appropriate skill handoff only; do not create or deploy anything.",
+      "expected_output": "Stops the production question/scaffold path and delegates the bare analytics task entirely to time-series-analytics-user.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Selects ts with demo sub-mode and hands off to time-series-analytics-user",
+        "Does not create apps/<name>/, register SAMPLE_APP_LIST, or generate a new Compose stack",
+        "Skips ts production-only questions and services rather than requiring a new checkout, dashboard, or simulator"
+      ]
+    },
+    {
+      "id": 15,
+      "eval_name": "test-opt-out-and-missing-choice",
+      "prompt": "Explain the recipe's test-generation behavior for two otherwise complete production requests. Request A explicitly says GENERATE_TESTS=no. Request B omits the test choice but accepts all other defaults. For each, say whether a tests/ folder and pytest completion gate apply. Guidance only; do not write files or run tests.",
+      "expected_output": "Honors an explicit test opt-out and asks for the test-generation choice when omitted, rather than assuming defaults or creating empty test stubs.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "For Request A skips the tests/ folder entirely and does not require pytest or install test dependencies",
+        "For Request B explicitly asks whether to generate tests because GENERATE_TESTS has no default",
+        "Does not use empty test stubs to satisfy test completion criteria or apply pytest gates after an opt-out"
+      ]
+    },
+    {
+      "id": 16,
+      "eval_name": "explanation-deployment-readiness-and-proof",
+      "prompt": "I have fully scaffolded multimodal, vllm, and agentic stacks with all required models and env settings already supplied. Explain their correct production start targets and how to prove each one actually works. Also describe how the agentic LLM_MODE=fallback check differs. Include base multimodal verification (which containers must be healthy, which MQTT topics, InfluxDB measurements, and Grafana panels to check) and local HTTPS/proxy handling. Do not run commands, start containers, or call APIs.",
+      "expected_output": "Uses the per-mode Makefile entry points and overlay layout, checks the complete base data path before explanation layers, enforces readiness/model ordering, and demands captured outputs rather than treating REST 200 or startup as sufficient.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses make up for multimodal, make up_vllm for vllm, and make up_agentic for agentic, not bare Compose overlay commands that bypass Makefile preflight",
+        "Verifies all containers running/healthy, explicitly including MediaMTX, Coturn, and SeaweedFS",
+        "Captures messages on the vision, applicable raw sensor, processed sensor, and fused MQTT topics",
+        "Requires fused output that matches FUSION_MODE semantics, and states that a REST 200 alone is insufficient",
+        "Requires both the raw vision InfluxDB measurement and the fused/multimodal measurement to be populated",
+        "Requires the Grafana dashboard to render the WebRTC panel plus a sensor trend and a fused-verdict table",
+        "Requires model-download completion, checks the actual host mount behind container MODEL_PATH, and waits for apm-llm GET /v1/config to return 200 before declaring apm-agent healthy",
+        "For vllm verifies /insights-ui/api/vllm/health reports accessible and that Explain on one defective fused row returns VLM text, quoted",
+        "For agentic runs Run Agentic Analysis (or POST /agentic-ui/run through nginx), waits for the run to complete on /agentic-ui/results/<run_id>, quotes the ticket text, and checks /api/v1/capabilities",
+        "Describes LLM_MODE=fallback as an apm-agent mode that still completes a run with structured rule-based outputs while apm-llm is stopped",
+        "Uses --noproxy '*' only on calls to the local stack and always verifies TLS with the stack's own certificate (--cacert from nginx_proxy plus --resolve localhost:PORT:HOST_IP); never uses -k or disables verification",
+        "Requires quoted captured evidence in a later live-run summary and does not claim any of the proposed checks have already passed"
+      ]
+    },
+    {
+      "id": 17,
+      "eval_name": "deployment-mode-and-build-location-clarification",
+      "prompt": "Use the manufacturing recipe for my quality-monitoring project. I have camera footage and pressure readings, but I have not chosen whether to make a quick demo, a sensor app, a fused alert stack, or an explained/agentic solution. I also have not chosen where files should go. Clarify before building; do not create anything.",
+      "expected_output": "Asks Question 0 with all five deployment modes and no assumed default, then collects the appropriate mode-specific build location instead of choosing the current directory.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Presents vision, ts, multimodal, vllm, and agentic and asks for explicit mode selection without silently defaulting to multimodal",
+        "Explains that ts production needs a confirmed existing checkout or clone location while fused modes need a confirmed parent for a new flat stack",
+        "Does not invent an output path, default to the current working directory, or write files before clarification"
+      ]
+    },
+    {
+      "id": 18,
+      "eval_name": "openmes-fused-defect-publishing",
+      "prompt": "Show the OpenMES additions for my multimodal weld stack at /work/stacks/weld-defect-stack (FUSION_MODE=AND, fused topic weld/fusion/results). OpenMES runs at https://mes.plant.example, the token already exists at /secure/openmes_token and must stay there (point the config at that path; do not copy or move it), work order 4711, issue type 12 (non-blocking), station weld-cell-03. Each confirmed defect must become one OpenMES Issue. Name the recipe parameter you set to enable OpenMES, warn me how many Issues to expect when a defect persists across frames, and tell me how long the token stays valid and what happens to inference, fusion and alerting if OpenMES publishing fails. Include the smoke-test steps I should run to verify publishing works (a delivered defect, a replayed duplicate, a non-defect, and an invalid token). Guidance only: do not access these example paths, write files, call OpenMES, or start services.",
+      "expected_output": "An openmes/ folder with the skill's publisher copied verbatim, a templated multimodal config that reads only the fused topic, loopback-only broker access, token handling by file path only, and verification of delivery, deduplication, non-defect skipping and auth failure.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Enables OpenMES publishing by setting OPENMES_ENABLED=yes",
+        "Places the publisher in /work/stacks/weld-defect-stack/openmes/ with openmes_publisher.py copied verbatim from assets/openmes and a templated openmes-publisher.json",
+        "Uses mode multimodal and subscribes only to weld/fusion/results with defect /fused_decision equal to 1, label /predicted_category and timestamp [/vision_time, /timeseries_time] in iso8601; never subscribes to the vision, processed-sensor or sensor-alert topics",
+        "Uses the supplied base URL, work order 4711, issue type 12 and source_id weld-cell-03 exactly, and does not invent other IDs or URLs",
+        "References the token only by the user's existing path /secure/openmes_token (token_file points there; the token is not copied into the stack); never asks for, prints or stores the token value in config, chat or summary",
+        "Publishes the MQTT broker on 127.0.0.1:1883 only (a ports entry in the stack's docker-compose.yml), never 0.0.0.0",
+        "Notes the token lifetime caveat (DEFAULT_TOKEN_TTL_MINUTES, 15 min by default) and the need to raise it or rotate the token file",
+        "States that OpenMES publishing failures never block inference, fusion, or alerting",
+        "Verification covers a Delivered event with issue_id, Duplicate event ignored on replay, no Issue for a non-defect, and Auth failure (401) stored as blocked",
+        "Warns that fused modes create one Issue per defective frame (up to about 10 per second) when a defect persists",
+        "Targets the user's real OpenMES at https://mes.plant.example and does not substitute the dummy receiver"
+      ]
+    },
+    {
+      "id": 19,
+      "eval_name": "scaffold-fast-path",
+      "prompt": "Create an agentic stack for CNC tool wear at /work/stacks/cnc-tool-wear-stack from the multimodal reference at /work/industrial-edge-insights-multimodal. Camera IR at /models/cnc-ir/, spindle sensor pretrained model at /models/cnc.pkl and /models/cnc_labels.pkl, paired sample video/CSV in /data/cnc-sim/, VLM at /models/qwen-vlm/ (no adapter), agent LLM already converted at /models/phi4-int4-cpu/, AND fusion, and send confirmed defects to a dummy OpenMES because we have none yet. Explain the fastest correct procedure and what you would tell me at the end. Guidance only: do not access these paths, write files, or start services.",
+      "expected_output": "Uses the fast path: a spec from assets/vertical.example.yaml, scaffold_stack.py (dry run, then real) to copy and rename the multimodal reference, edits only the leftover report lines, builds with the agentic Makefile target, runs verify_stack.py, and ends by giving the dummy OpenMES alerts URL.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Writes a spec (mode agentic, object/title, reference_dir, out_dir, vision/sensor/vlm/llm paths, fusion_mode AND, openmes enabled with dummy true) from assets/vertical.example.yaml using only the supplied paths",
+        "Runs scripts/scaffold_stack.py with --dry-run first and then for real, instead of hand-writing Compose files, Makefile, nginx, Fusion Analytics or the UI service, and without a manual cp -r",
+        "Edits the lines in the script's leftover report (UDF sensor fields and logic, labels, prompts, dashboard queries) and also applies the semantic checklists independently (e.g. agent policy mode AND/OR, ticketing backend), loading reference files only for those steps",
+        "Builds and starts with COMPOSE_BAKE=false make build and make up_agentic, then starts openmes/start_dummy_openmes_receiver.sh, waits for /health, starts openmes/start_dummy_openmes_publisher.sh, and runs scripts/verify_stack.py",
+        "Quotes verify_stack.py PASS evidence in the final summary rather than claiming success without it",
+        "Gives the user the dummy OpenMES alerts page URL http://<HOST_IP>:8099/ and how to stop it (Ctrl-C in each terminal, or the tool’s stop capability), and labels the results as dummy",
+        "Does not invent model paths, OpenMES IDs for a real OpenMES, or secrets"
+      ]
+    }
+  ]
+}

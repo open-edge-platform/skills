@@ -9,8 +9,27 @@ pytest completion criteria entirely otherwise.
 
 `pytest --collect-only -q tests/ | tail -1` should report at least the
 counts noted per section below (no stubs). Mirror `metro-ai-app-recipe`'s
-pytest layout (`conftest.py` with `NO_PROXY=*` + `--cacert`/`-k` handling for
-the self-signed Nginx cert).
+pytest layout (`conftest.py` with `NO_PROXY=*` and certificate pinning for
+the self-signed Nginx cert). Never use `verify=False`/`-k`. The cert is
+`CN=localhost` with no SAN, which current urllib3 refuses for hostname
+matching, so pin the exact certificate instead. In a session fixture, copy
+`nginx_proxy:/opt/nginx/certs/cert.pem`, then mount this adapter on the
+`requests.Session` (`trust_env=False`):
+
+```python
+ctx = ssl.create_default_context(cafile=cert_path)  # trust only this cert
+ctx.check_hostname = False                          # no SAN; the pin below replaces it
+fp = hashlib.sha256(ssl.PEM_cert_to_DER_cert(open(cert_path).read())).hexdigest()
+
+class PinnedStackCert(HTTPAdapter):
+    def init_poolmanager(self, *a, **k):
+        k.update(ssl_context=ctx, assert_hostname=False, assert_fingerprint=fp)
+        return super().init_poolmanager(*a, **k)
+```
+
+The chain is still verified against the copied cert, and any other
+certificate is rejected by the fingerprint check. Re-copy the cert after
+nginx restarts, because it is regenerated.
 
 ## `conftest.py` (all production modes)
 
@@ -129,17 +148,42 @@ the self-signed Nginx cert).
 - `test_dashboard_provisioned` — the `{{DASHBOARD_SLUG}}` dashboard exists via
   Grafana's search API.
 
-## `vllm`/`agentic` modes — additional tests (on top of `multimodal`'s, ≥ 2 more)
+## `vllm`/`agentic` modes — additional tests (on top of `multimodal`'s)
 
-### `test_explanation.py`
+All HTTP calls go through nginx (`https://{host_ip}:{grafana_port}`) with
+the conftest's TLS/`--noproxy` handling, exactly as a browser reaches the
+dashboard iframes. Allow for `vllm-server`'s ~10-minute first start
+(poll, then skip with a clear reason rather than fail on a cold host).
 
-- `test_llm_health` — `GET /v1/config` on `apm-llm` returns 200.
-- `test_batch_complete_produces_explanation` — publish a synthetic
-  batch-complete MQTT event, assert one explanation output appears in the
-  explainer's (`vllm-explainer` or `apm-agent`'s) `OUTPUT_DIR`, quote it
-  verbatim.
-- `test_fallback_mode` (only if `LLM_MODE=fallback` was selected) — assert a
-  structured explanation is still produced with `apm-llm` absent/stopped.
-- `agentic` mode only: `test_agent_metrics_reported` (only if
-  `{{AGENT_METRICS}}=yes`) — assert `metrics-manager`/Prometheus reports at
-  least one LLM-latency metric after one explanation round-trip.
+### `test_vlm_explain.py` (`vllm` and `agentic`, ≥ 3 tests)
+
+- `test_vllm_health` — `GET /insights-ui/api/vllm/health` returns
+  `{"accessible": true}`.
+- `test_insights_ui_served` — `GET /insights-ui/` returns 200 HTML, and
+  `GET /insights-ui/api/data?page=1&page_size=10` returns JSON whose `rows`
+  come from `{{FUSION_MEASUREMENT}}`.
+- `test_explain_defective_row` — pick a row with `fused_decision == 1`
+  from `/insights-ui/api/data`, `POST /insights-ui/api/explain` with
+  `{"selected_times": ["<row time>"]}` (exactly one entry), assert 200 and
+  non-empty model text, and quote it. A 502 "image unavailable" or 404
+  "No sensor data" response means the data contract in
+  [`UI_SERVICE.md`](UI_SERVICE.md#data-contract) is broken: fail with that
+  hint.
+- `test_vlm_dashboard_provisioned` — Grafana `/api/search` lists the
+  `... Explainability Dashboard`, and its JSON contains the `/insights-ui/`
+  iframe.
+
+### `test_agentic_run.py` (`agentic` only, ≥ 3 tests)
+
+- `test_agent_llm_health` — `apm-llm` `GET /v1/config` returns 200 (from
+  the stack network, for example `docker exec apm-agent python3 -c ...`).
+- `test_run_agentic_analysis` — `POST /agentic-ui/run` with form
+  `time_range=5m` over a window that has confirmed defects; follow the 303 to
+  `/agentic-ui/results/<run_id>` and poll until the run is `completed`
+  (CPU agent LLM: allow several minutes). Assert the ticket text is
+  non-empty and quote it.
+- `test_metrics_routes` — `GET /api/v1/capabilities` returns 200.
+- `test_fallback_mode` (only if `LLM_MODE=fallback`) — the same run
+  completes with `"mode": "fallback"` outputs and `apm-llm` stopped.
+- `test_agentic_dashboard_provisioned` — Grafana lists the `... - Agentic
+  Dashboard`, and its JSON builds the iframe from `/agentic-ui/`.

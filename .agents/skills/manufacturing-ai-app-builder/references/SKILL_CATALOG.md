@@ -15,7 +15,7 @@ the decision") to a **primary** skill and any **supporting** skills, then plan
 > `time-series-analytics-user` live in **other** repos/suites, not under
 > this suite's `.github/skills/` — never assume one is present; confirm and
 > install per [`DISCOVERY.md`](DISCOVERY.md) before delegating to it
-> (`npx skills@latest add open-edge-platform/skills --skill <name>`, or
+> (`npx skills@1.7.4 add open-edge-platform/skills --skill <name>`, or
 > `open-edge-platform/dlstreamer` for `dlstreamer-coding-agent`).
 
 ## 1. Vision + sensor multimodal — one correlated verdict from both a camera and a sensor
@@ -23,8 +23,8 @@ the decision") to a **primary** skill and any **supporting** skills, then plan
 | If the user wants… | Primary skill | Supporting |
 |---|---|---|
 | A defect/anomaly verdict that must **combine** a camera-side defect signal **and** a sensor-side anomaly signal (AND/OR logic, timestamp-correlated) — e.g. weld quality (vision + pressure/gas/current), machining (surface defect + vibration), PCB (visual + electrical test); no explanation requested | **`manufacturing-app-recipe`** (`{{DEPLOYMENT}}=multimodal`) | `dlsps-user` (vision pipeline ops), `time-series-analytics-user` (sensor UDF pattern), `model-download-user` (custom vision IR) |
-| The same, plus a written/narrative explanation of each fused alert | **`manufacturing-app-recipe`** (`{{DEPLOYMENT}}=vllm`) | same as above |
-| The same, plus an agent-coordinated explanation/workflow (includes the `vllm` explanation layer by default) | **`manufacturing-app-recipe`** (`{{DEPLOYMENT}}=agentic`) | same as above |
+| The same, plus an on-demand explanation of a selected fused result from its stored frame and sensor readings (vision-language model, Explainability dashboard; Intel GPU) | **`manufacturing-app-recipe`** (`{{DEPLOYMENT}}=vllm`) | same as above |
+| The same, plus an agent-run policy decision, analysis and ticket over a time window, started from an Agentic dashboard (includes the `vllm` layer by default; needs a second, agent LLM) | **`manufacturing-app-recipe`** (`{{DEPLOYMENT}}=agentic`) | same as above |
 
 Deliverable shape: end-to-end Compose stack (DLSPS + Telegraf/InfluxDB + Time
 Series Analytics + Fusion Analytics + Grafana + Nginx). Route here **only**

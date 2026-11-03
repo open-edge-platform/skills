@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Reviewed SkillSpector false positives for this skill. Picked up automatically
+# by the Skill Scanner workflow (any *baseline.yaml in the skill directory).
+#
+# All rules below are scoped to benchmark/benchmark.json: generated eval output
+# (eval prompts, graded assertions and grader evidence) written by the
+# multi-CLI eval runner. It is never executed or read by the skill, and it is
+# regenerated on every benchmark run, so the matched text cannot be edited away.
+version: 2
+rules:
+  - id: "EA2"
+    path: "benchmark/benchmark.json"
+    message: "*without asking*"
+    reason: >-
+      Reviewed: quoted eval assertion text such as "Asks for missing business
+      inputs ... without asking user to choose technical components". The
+      assertions require the agent to ask the user business questions and
+      wait for approval; they do not grant autonomous decision making.
+  - id: "EA2"
+    path: "benchmark/benchmark.json"
+    message: "*without confirmation*"
+    reason: >-
+      Reviewed: quoted eval assertion text "Asks for the new standalone build
+      location rather than reusing the time-series checkout or current
+      directory without confirmation". It checks that the agent asks before
+      choosing a location, the opposite of acting autonomously.
+  - id: "PE3"
+    path: "benchmark/benchmark.json"
+    message: "*access token*"
+    reason: >-
+      Reviewed: quoted grader evidence that the agent asks only for the
+      *path* to a file holding the OpenMES access token, never the token
+      value. No credential file is read by the skill.
+  - id: "RP1"
+    path: "benchmark/benchmark.json"
+    message: "*without pinned version*"
+    reason: >-
+      Reviewed: quoted grader evidence mentioning an npx install step. It is
+      not an MCP server or package reference the skill installs; the skill's
+      own install commands pin the version (npx skills@1.7.4 ...).
