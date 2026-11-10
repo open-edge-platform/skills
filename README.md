@@ -6,9 +6,10 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-11-05 00:03 UTC -->
+<!-- Last updated: 2026-11-10 04:46 UTC -->
 | Product | Skills |
 |---------|--------|
+| [Agent Harness Install](https://github.com/open-edge-platform/edge-ai-libraries) | [agent-harness-install](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/agent-harness-install) |
 | [Anomalib](https://github.com/open-edge-platform/anomalib) | [anomalib-adding-a-datamodule](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-datamodule), [anomalib-adding-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-adding-a-model), [anomalib-benchmarking](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-benchmarking), [anomalib-tiled-ensemble](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-tiled-ensemble), [anomalib-training](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/anomalib-training) |
 | [Chat Question and Answer](https://github.com/open-edge-platform/edge-ai-libraries) | [chatqna-docker-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-docker-deploy), [chatqna-helm-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-helm-deploy) |
 | [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent) |
@@ -28,7 +29,7 @@ to build solutions with Open Edge Platform products.
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user) |
 | [UAV Mission Compute SDK](https://github.com/open-edge-platform/federal-and-aerospace-ai-suite) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk) |
 | [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video) |
-| **Total** | **19 products, 38 skills** |
+| **Total** | **20 products, 39 skills** |
 <!-- END SKILLS INDEX -->
 
 ---

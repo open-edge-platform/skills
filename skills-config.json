@@ -288,6 +288,17 @@
           "name": "edgemart-agent-mcp"
         }
       ]
+    },
+    {
+      "product": "Agent Harness Install",
+      "repo": "open-edge-platform/edge-ai-libraries",
+      "ref": "main",
+      "path": "frameworks/agent-harness-install/.github/skills",
+      "skills": [
+        {
+          "name": "agent-harness-install"
+        }
+      ]
     }
   ]
 }
