@@ -6,7 +6,7 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-11-10 04:46 UTC -->
+<!-- Last updated: 2026-11-10 05:09 UTC -->
 | Product | Skills |
 |---------|--------|
 | [Agent Harness Install](https://github.com/open-edge-platform/edge-ai-libraries) | [agent-harness-install](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/agent-harness-install) |
@@ -14,6 +14,7 @@ to build solutions with Open Edge Platform products.
 | [Chat Question and Answer](https://github.com/open-edge-platform/edge-ai-libraries) | [chatqna-docker-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-docker-deploy), [chatqna-helm-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/chatqna-helm-deploy) |
 | [DL Streamer](https://github.com/open-edge-platform/dlstreamer) | [dlstreamer-coding-agent](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlstreamer-coding-agent) |
 | [DL Streamer Pipeline Server](https://github.com/open-edge-platform/edge-ai-libraries) | [dlsps-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/dlsps-user) |
+| [EdgeMart QSR Store POS Agent](https://github.com/intel-retail/qsr-store-pos-agent) | [edgemart-agent-mcp](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/edgemart-agent-mcp), [edgemart-stack-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/edgemart-stack-deploy), [edgemart-store-services](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/edgemart-store-services) |
 | [Geti](https://github.com/open-edge-platform/geti) | [geti-using-the-pipeline](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/geti-using-the-pipeline), [getitune-discovering-models](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-discovering-models), [getitune-exporting-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-exporting-a-model), [getitune-optimizing-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-optimizing-a-model), [getitune-preparing-datasets](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-preparing-datasets), [getitune-running-inference](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-running-inference), [getitune-training-a-model](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/getitune-training-a-model) |
 | [Manufacturing AI Suite - AI App Builder](https://github.com/open-edge-platform/manufacturing-ai-suite) | [manufacturing-ai-app-builder](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/manufacturing-ai-app-builder) |
 | [Manufacturing AI Suite - App Recipe](https://github.com/open-edge-platform/manufacturing-ai-suite) | [manufacturing-app-recipe](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/manufacturing-app-recipe) |
@@ -29,7 +30,7 @@ to build solutions with Open Edge Platform products.
 | [Time Series Analytics Microservice](https://github.com/open-edge-platform/edge-ai-libraries) | [time-series-analytics-user](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/time-series-analytics-user) |
 | [UAV Mission Compute SDK](https://github.com/open-edge-platform/federal-and-aerospace-ai-suite) | [uav-mission-compute-sdk](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/uav-mission-compute-sdk) |
 | [Video Search and Summarization](https://github.com/open-edge-platform/edge-ai-libraries) | [vss-deploy](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy), [vss-deploy-helm](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-deploy-helm), [vss-search-index](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-search-index), [vss-summarize-video](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/vss-summarize-video) |
-| **Total** | **20 products, 39 skills** |
+| **Total** | **21 products, 42 skills** |
 <!-- END SKILLS INDEX -->
 
 ---

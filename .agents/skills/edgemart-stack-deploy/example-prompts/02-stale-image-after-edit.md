@@ -1,0 +1,1 @@
+I edited `backend/src/table-occupancy-service/index.js` and ran `docker compose up -d --force-recreate table-occupancy-service`, but the old behaviour is still there. What is wrong and how do I apply my change?

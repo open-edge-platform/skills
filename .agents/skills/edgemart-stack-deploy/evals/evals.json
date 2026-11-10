@@ -1,0 +1,74 @@
+{
+  "skill_name": "edgemart-stack-deploy",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I cloned qsr-store-pos-agent and ran docker compose up but it exits immediately complaining about a variable. What do I do?",
+      "expected_output": "Explains the four required .env secrets and how to set them",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Tells the user to copy .env.example to .env",
+        "Names DB_PASSWORD, HERMES_API_KEY, MQTT_USERNAME and MQTT_PASSWORD as required",
+        "Does not suggest hardcoding defaults into docker-compose.yml"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I edited backend/src/table-occupancy-service/index.js and ran docker compose up -d --force-recreate table-occupancy-service but the old behaviour is still there.",
+      "expected_output": "Explains the image must be rebuilt",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "States that source is baked into the image so force-recreate reuses the old image",
+        "Recommends docker compose up --build for the service",
+        "Names the sidecar by its real Compose service name, table-occupancy-service-mcp, in the rebuild command"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The Agent Chat tab says the gateway is disconnected, but the backend container is healthy. Hermes is running on my host.",
+      "expected_output": "Diagnoses gateway reachability from the container",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Mentions HERMES_GATEWAY_URL and host.docker.internal",
+        "Says Hermes must listen on 0.0.0.0 rather than 127.0.0.1",
+        "Says HERMES_API_KEY must match the gateway API_SERVER_KEY"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our network needs a proxy. How do I build the images for the store event services?",
+      "expected_output": "Uses the proxy build args",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Mentions HTTP_PROXY, HTTPS_PROXY and NO_PROXY build args",
+        "Uses docker compose build or up --build"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I changed database/cafe/schema.sql but the running Postgres container doesn't have the new column.",
+      "expected_output": "Explains init scripts only run on an empty volume and warns about data loss",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains schema files are applied only when the volume is first initialised",
+        "Mentions docker compose down -v and that it deletes data",
+        "Asks for confirmation or warns before removing the volume"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "How do I write a docker-compose file for a generic Node and Redis app?",
+      "expected_output": "Generic answer, skill not needed",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Provides a complete docker-compose file with Node and Redis services"
+      ]
+    }
+  ]
+}

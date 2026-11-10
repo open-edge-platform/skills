@@ -1,0 +1,73 @@
+{
+  "skill_name": "edgemart-store-services",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We have a real camera pipeline that detects people entering zones. How do I feed it into the footfall service instead of the simulator?",
+      "expected_output": "Switch to SOURCE=real and use the ingest endpoint",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Sets SOURCE=real, via FOOTFALL_SIM_SOURCE in Compose",
+        "Posts to /footfall/ingest on port 3300",
+        "Tells the user to get the envelope shape from describe_service",
+        "Mentions the API key header if FOOTFALL_SIM_API_KEY is set"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "POST /store-activity/ingest returns 409. Why?",
+      "expected_output": "Service is in sim mode",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains ingestion is accepted only when SOURCE=real",
+        "Suggests setting SIM_SOURCE=real for the store-activity service"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need 30 days of table history to demo utilization charts. How do I preload it?",
+      "expected_output": "Runs the seed-history script",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Runs node src/table-occupancy-service/seed-history.js --days=30 from backend",
+        "Notes history is deterministic for a given SIM_SEED"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "My dashboard subscribes to the table occupancy SSE stream and misses events whenever the connection drops. How do I fix that?",
+      "expected_output": "Use Last-Event-ID resume",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses /table-occupancy/events/stream on port 3200",
+        "Sends Last-Event-ID with the last seen event_id on reconnect",
+        "Says missed events are replayed from the durable log"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I'm benchmarking the store-activity service and want clean results with no MQTT or SSE overhead, but I still need the events recorded.",
+      "expected_output": "Enable benchmark mode",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Sets SIM_BENCHMARK=1",
+        "States the log still records every event while fanout is disabled"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Add a new product category to the grocery POS frontend.",
+      "expected_output": "Unrelated to the event services",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Gives concrete steps for adding a product category to the grocery POS"
+      ]
+    }
+  ]
+}
