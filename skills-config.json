@@ -273,6 +273,23 @@
       ]
     },
     {
+      "product": "EdgeMart QSR Store POS Agent",
+      "repo": "intel-retail/qsr-store-pos-agent",
+      "ref": "main",
+      "path": ".github/skills",
+      "skills": [
+        {
+          "name": "edgemart-stack-deploy"
+        },
+        {
+          "name": "edgemart-store-services"
+        },
+        {
+          "name": "edgemart-agent-mcp"
+        }
+      ]
+    },
+    {
       "product": "Agent Harness Install",
       "repo": "open-edge-platform/edge-ai-libraries",
       "ref": "main",
