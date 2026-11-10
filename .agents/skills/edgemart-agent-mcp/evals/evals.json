@@ -1,0 +1,75 @@
+{
+  "skill_name": "edgemart-agent-mcp",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Register the EdgeMart cafe sales MCP server with Hermes so the agent can answer questions about lattes sold last week.",
+      "expected_output": "mcp_servers entry for pos-tools pointed at the cafe database",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses backend/src/mcp-server.js with command node",
+        "Sets MCP_DB_NAME to pos_cafe",
+        "Notes the default database is grocery"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My agent framework can't spawn child processes. How can it call the table occupancy tools over the network?",
+      "expected_output": "Uses the streamable HTTP sidecar",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Points to POST /mcp on port 3201 of table-occupancy-service-mcp",
+        "Mentions MCP_API_KEY with X-Api-Key or bearer token",
+        "Does not claim pos-tools or table-status are available over HTTP"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The agent keeps passing table_id to get_utilization and getting an error. Which parameter should it use?",
+      "expected_output": "Explains parameter naming difference",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "States table-occupancy and store-activity tools take table_ref",
+        "States the table-status server takes table_id",
+        "Gives an example id such as table-4"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Set up Hermes so the EdgeMart Agent Chat tab works with my local model.",
+      "expected_output": "Hermes API server configuration",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Sets API_SERVER_ENABLED, API_SERVER_PORT=3001, API_SERVER_HOST and API_SERVER_KEY",
+        "Says API_SERVER_KEY must equal the backend HERMES_API_KEY",
+        "Mentions the 64K minimum context for the model"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Ask the agent to clear table-7 and report how long tables stay dirty on average this month.",
+      "expected_output": "Chooses correct tools and handles the state-changing action carefully",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Uses get_dirty_duration_stats from table-occupancy for the duration question",
+        "Uses mark_table_cleared for the action",
+        "States that intent should be confirmed or restated before calling mark_table_cleared"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a new MCP server in Python that wraps a weather API.",
+      "expected_output": "Unrelated to EdgeMart",
+      "should_trigger": false,
+      "files": [],
+      "expectations": [
+        "Provides a complete MCP server implementation for the weather API request"
+      ]
+    }
+  ]
+}

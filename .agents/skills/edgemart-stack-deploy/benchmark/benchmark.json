@@ -1,0 +1,434 @@
+{
+  "metadata": {
+    "skill_name": "edgemart-stack-deploy",
+    "skill_path": ".github/skills/edgemart-stack-deploy",
+    "executor_model": "claude-sonnet-5.5",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-11-04T08:51:32Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 32.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Tells the user to copy .env.example to .env",
+          "passed": true,
+          "evidence": "response.md step 1: 'cp .env.example .env  # PowerShell: Copy-Item .env.example .env'"
+        },
+        {
+          "text": "Names DB_PASSWORD, HERMES_API_KEY, MQTT_USERNAME and MQTT_PASSWORD as required",
+          "passed": true,
+          "evidence": "response.md: 'four required secrets' and 'fill in all four values' listing DB_PASSWORD, MQTT_USERNAME, MQTT_PASSWORD, HERMES_API_KEY."
+        },
+        {
+          "text": "Does not suggest hardcoding defaults into docker-compose.yml",
+          "passed": true,
+          "evidence": "The response only directs edits to .env; it never suggests editing docker-compose.yml or adding defaults."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 32.3,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "States that source is baked into the image so force-recreate reuses the old image",
+          "passed": true,
+          "evidence": "response.md: '--force-recreate only recreates the container from the existing image. Your source is baked into the image by COPY at build time'"
+        },
+        {
+          "text": "Recommends docker compose up --build for the service",
+          "passed": true,
+          "evidence": "response.md: 'docker compose up -d --build table-occupancy-service table-occupancy-service-mcp'"
+        },
+        {
+          "text": "Names the sidecar by its real Compose service name, table-occupancy-service-mcp, in the rebuild command",
+          "passed": true,
+          "evidence": "The rebuild command includes table-occupancy-service-mcp, and the text says the name must be exactly that."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 32.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions HERMES_GATEWAY_URL and host.docker.internal",
+          "passed": true,
+          "evidence": "response.md: 'reaches Hermes via `HERMES_GATEWAY_URL` (default `http://host.docker.internal:3001`)'"
+        },
+        {
+          "text": "Says Hermes must listen on 0.0.0.0 rather than 127.0.0.1",
+          "passed": true,
+          "evidence": "response.md: 'If the listener shows 127.0.0.1:3001, restart Hermes so it listens on 0.0.0.0'"
+        },
+        {
+          "text": "Says HERMES_API_KEY must match the gateway API_SERVER_KEY",
+          "passed": true,
+          "evidence": "response.md: '`HERMES_API_KEY` in the EdgeMart `.env` must exactly equal Hermes's `API_SERVER_KEY`'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 31.3,
+        "tokens": 803,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions HTTP_PROXY, HTTPS_PROXY and NO_PROXY build args",
+          "passed": true,
+          "evidence": "response.md: 'forward `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` as build args' with export examples for bash and PowerShell."
+        },
+        {
+          "text": "Uses docker compose build or up --build",
+          "passed": true,
+          "evidence": "response.md shows `docker compose build` and `docker compose up -d --build table-occupancy-service table-occupancy-service-mcp`."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 28.2,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains schema files are applied only when the volume is first initialised",
+          "passed": true,
+          "evidence": "response.md: 'database/init-db.sh only runs database/cafe/schema.sql when the Postgres volume is first created. Rebuilding or restarting won't re-apply it'"
+        },
+        {
+          "text": "Mentions docker compose down -v and that it deletes data",
+          "passed": true,
+          "evidence": "Option 1 gives 'docker compose down -v' and says it 'deletes ALL data in both pos_grocery and pos_cafe'"
+        },
+        {
+          "text": "Asks for confirmation or warns before removing the volume",
+          "passed": true,
+          "evidence": "'Confirm you're OK losing the data first' appears before the command"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 1,
+        "failed": 0,
+        "total": 1,
+        "time_seconds": 35.6,
+        "tokens": 664,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Provides a complete docker-compose file with Node and Redis services",
+          "passed": true,
+          "evidence": "outputs/response.md contains a docker-compose.yml with an `app` service (build, ports, env REDIS_URL, depends_on service_healthy, restart) and a `redis` service (redis:7-alpine, volume, healthcheck), plus a top-level volumes section and a Dockerfile for the Node app."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 41.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Tells the user to copy .env.example to .env",
+          "passed": true,
+          "evidence": "response.md step 1: 'cp .env.example .env  # PowerShell: Copy-Item .env.example .env'"
+        },
+        {
+          "text": "Names DB_PASSWORD, HERMES_API_KEY, MQTT_USERNAME and MQTT_PASSWORD as required",
+          "passed": true,
+          "evidence": "response.md step 2: 'Fill in the four required values' listing all four; final message says compose requires four values with no defaults."
+        },
+        {
+          "text": "Does not suggest hardcoding defaults into docker-compose.yml",
+          "passed": true,
+          "evidence": "The response only recommends editing .env and never suggests editing docker-compose.yml or adding defaults."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 33.8,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "States that source is baked into the image so force-recreate reuses the old image",
+          "passed": true,
+          "evidence": "response.md: \"--force-recreate only recreates the container from the existing image. If your code is baked into the image at build time... the new container starts from the old image\""
+        },
+        {
+          "text": "Recommends docker compose up --build for the service",
+          "passed": true,
+          "evidence": "response.md: \"docker compose up -d --build table-occupancy-service\""
+        },
+        {
+          "text": "Names the sidecar by its real Compose service name, table-occupancy-service-mcp, in the rebuild command",
+          "passed": false,
+          "evidence": "Commands use 'table-occupancy-service' (the user's name), never 'table-occupancy-service-mcp'; the agent did not inspect the compose file."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 44.4,
+        "tokens": 1048,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions HERMES_GATEWAY_URL and host.docker.internal",
+          "passed": true,
+          "evidence": "response.md: 'The backend reaches Hermes at HERMES_GATEWAY_URL. In docker-compose.yml this defaults to http://host.docker.internal:3001'"
+        },
+        {
+          "text": "Says Hermes must listen on 0.0.0.0 rather than 127.0.0.1",
+          "passed": true,
+          "evidence": "response.md: 'With API_SERVER_HOST=127.0.0.1, the host can reach Hermes but the container cannot... Set 0.0.0.0 and restart Hermes.'"
+        },
+        {
+          "text": "Says HERMES_API_KEY must match the gateway API_SERVER_KEY",
+          "passed": true,
+          "evidence": "response.md: 'HERMES_API_KEY in the repo's .env must equal Hermes's API_SERVER_KEY. A mismatch gives 401 errors.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 113.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Mentions HTTP_PROXY, HTTPS_PROXY and NO_PROXY build args",
+          "passed": true,
+          "evidence": "Answer: 'pass HTTP_PROXY, HTTPS_PROXY and NO_PROXY as build args in docker-compose.yml' and instructs setting all three."
+        },
+        {
+          "text": "Uses docker compose build or up --build",
+          "passed": true,
+          "evidence": "Answer step 3: 'docker compose build store-activity-service table-occupancy-service footfall-service'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 30.6,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains schema files are applied only when the volume is first initialised",
+          "passed": true,
+          "evidence": "response.md: 'only runs files in /docker-entrypoint-initdb.d/ ... when the data directory is empty, i.e. on first initialization... editing schema.sql has no effect'"
+        },
+        {
+          "text": "Mentions docker compose down -v and that it deletes data",
+          "passed": true,
+          "evidence": "'docker compose down -v  # -v removes named volumes, including the DB data' and header 'Wipe and re-initialize (loses data...)'"
+        },
+        {
+          "text": "Asks for confirmation or warns before removing the volume",
+          "passed": true,
+          "evidence": "Option 1 is labelled '(loses data; fine for dev/demo seed data)' and Option 2 'Use this if the data matters', placed before the command. It warns but does not ask for confirmation."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 1,
+        "failed": 0,
+        "total": 1,
+        "time_seconds": 22.9,
+        "tokens": 482,
+        "tool_calls": 1,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Provides a complete docker-compose file with Node and Redis services",
+          "passed": true,
+          "evidence": "outputs/response.md contains a full docker-compose.yml with an `app` service (build, ports, env, depends_on with service_healthy) and a `redis` service (redis:7-alpine, volume, healthcheck), plus a named volume and a Dockerfile."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 32.1,
+        "stddev": 2.3967,
+        "min": 28.2,
+        "max": 35.6
+      },
+      "tokens": {
+        "mean": 244.5,
+        "stddev": 381.3197,
+        "min": 0,
+        "max": 803
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.945,
+        "stddev": 0.1347,
+        "min": 0.67,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 47.6833,
+        "stddev": 32.91,
+        "min": 22.9,
+        "max": 113.0
+      },
+      "tokens": {
+        "mean": 255.0,
+        "stddev": 433.6999,
+        "min": 0,
+        "max": 1048
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.06",
+      "time_seconds": "-15.6",
+      "tokens": "-10"
+    }
+  },
+  "notes": []
+}
