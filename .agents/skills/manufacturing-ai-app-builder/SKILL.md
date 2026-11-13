@@ -12,8 +12,8 @@ license: Apache-2.0
 compatibility: >-
   External delegates require git/gh, github.com access, Node.js >= 22.20,
   and the pinned CLI `npx skills@1.7.4` (never @latest).
-  `manufacturing-app-recipe` is local under `.github/skills/`; no install
-  needed. Surface each delegate's Docker Compose v2 and Intel CPU/GPU/NPU
+  `manufacturing-app-recipe` is installed with the same CLI from its folder
+  URL when missing. Surface each delegate's Docker Compose v2 and Intel CPU/GPU/NPU
   requirements during planning; do not assume availability.
 metadata:
   author: open-edge-platform
@@ -30,7 +30,7 @@ instead of asking the user to choose it, except for Step 1 Q8.
 1. **Ask business questions** — outcome, what feeds the decision (camera,
    sensor, or both), deployment target, hardware, operations — never ask which
    framework/model/precision/device, or the modality, by name.
-2. **Discover** the relevant skill(s) — the two local manufacturing recipes,
+2. **Discover** the relevant skill(s) — the manufacturing recipe,
    or the vision-only skills, from
    [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and
    [`references/DISCOVERY.md`](references/DISCOVERY.md).
@@ -238,8 +238,8 @@ Present a concise plan and **stop for approval**. Include:
   installed locally, say its install step is deferred until approval.
 - **Any skill that must be installed** with the exact `npx skills@1.7.4 add`
   command (only for delegates not already local — see
-  [`DISCOVERY.md`](references/DISCOVERY.md); the two manufacturing recipes
-  never need this).
+  [`DISCOVERY.md`](references/DISCOVERY.md); this includes
+  `manufacturing-app-recipe` when it is missing).
 - **Next action on approval** — close the plan with one explicit line naming
   what you will do the moment the user says `go`: *delegate to `<primary
   skill>` (then the supporting skills, in order) and verify the result
@@ -329,9 +329,10 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 ## Notes
 
 - The manufacturing-domain delegate (`manufacturing-app-recipe`, covering
-  `vision`/`ts`/`multimodal`/`vllm`/`agentic` modes) and this skill ship locally
-  in this workspace under `.github/skills/` — no install needed to delegate
-  to them.
+  `vision`/`ts`/`multimodal`/`vllm`/`agentic` modes) may be absent when only
+  this skill was installed — confirm and install it per
+  [`DISCOVERY.md`](references/DISCOVERY.md) (folder-URL `npx skills@1.7.4 add`,
+  never a clone) before delegating.
 - `metro-ai-app-recipe`, `dlsps-user`, `dlstreamer-coding-agent`, and
   `time-series-analytics-user` live in **other** repos/suites, not under
   this suite's `.github/skills/` — do not assume they're present; always

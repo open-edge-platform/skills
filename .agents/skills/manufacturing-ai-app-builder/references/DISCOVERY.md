@@ -15,15 +15,16 @@ manufacturing business objectives to skills. Only fall through to discovery
 below when it does not resolve the objective or you need to confirm a skill
 still exists in this workspace.
 
-## 2. Check what is already installed locally — usually only the first is
+## 2. Check what is already installed locally
 
-Only `manufacturing-app-recipe` is guaranteed to ship in this suite's
-`.github/skills/`. The other four delegates live in different repos/suites
-(e.g. `metro-ai-app-recipe` under `metro-ai-suite`, `dlsps-user`/
-`time-series-analytics-user` under `edge-ai-libraries` microservices,
-`dlstreamer-coding-agent` in its own `dlstreamer` repo) and are **not**
-present in a standalone `manufacturing-ai-suite` checkout — check before
-assuming:
+A user who installed only this orchestrator with `npx skills add` has **no**
+delegates. `manufacturing-app-recipe` is in this suite's `.github/skills/`
+only inside a full checkout. The other four delegates live in different
+repos/suites (e.g. `metro-ai-app-recipe` under `metro-ai-suite`,
+`dlsps-user`/`time-series-analytics-user` under `edge-ai-libraries`
+microservices, `dlstreamer-coding-agent` in its own `dlstreamer` repo) and
+are **not** present in a standalone `manufacturing-ai-suite` checkout — check
+before assuming:
 
 ```bash
 ls .github/skills/manufacturing-app-recipe \
@@ -41,15 +42,16 @@ delegating.
 ## 3. Add a delegate skill on demand (only if missing, Step 5, after confirmation)
 
 Do not install anything during discovery/planning. After the user approves
-the plan, add any not-yet-installed delegate. `manufacturing-app-recipe` is
-**not yet published upstream** — if a target environment is missing it, copy
-the folder from this workspace rather than trying to fetch it with the
-`skills` CLI. The other four are published upstream. Always run the CLI at the
-pinned version below (never `@latest` or without a version), so a
+the plan, add any not-yet-installed delegate with the `skills` CLI; do not
+clone the repository or copy folders from another workspace. Always run the
+CLI at the pinned version below (never `@latest` or without a version), so a
 compromised upstream release can't run unreviewed code. Bump the pin only
 after reviewing the new release. The pinned CLI needs Node.js >= 22.20:
 
 ```bash
+# manufacturing-app-recipe lives in this suite's repo
+npx skills@1.7.4 add https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/.github/skills/manufacturing-app-recipe
+
 # metro-ai-app-recipe, dlsps-user, time-series-analytics-user
 npx skills@1.7.4 add open-edge-platform/skills --skill <skill-name>
 
@@ -70,12 +72,9 @@ sed -n '1,60p' .github/skills/<skill-name>/SKILL.md
 
 ## 5. Fallbacks
 
-- **A manufacturing recipe is missing and can't be copied** → tell the user
-  plainly; offer to build the equivalent scaffold manually from the recipe's
-  own `references/` design (slower, but the recipe's SKILL.md documents the
-  full file layout) rather than fabricating a different skill.
-- **`npx` unavailable** for one of the four upstream delegates → read its
-  `SKILL.md` directly from GitHub raw and follow it in-context.
+- **`npx` unavailable** for any delegate, including
+  `manufacturing-app-recipe` → read its `SKILL.md` directly from GitHub raw
+  and follow it in-context.
 - **No match anywhere** → say so; suggest the closest catalog entry or a
   custom path. Never fabricate a skill name.
 

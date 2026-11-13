@@ -6,7 +6,7 @@ to build solutions with Open Edge Platform products.
 ---
 
 <!-- BEGIN SKILLS INDEX -->
-<!-- Last updated: 2026-11-13 00:03 UTC -->
+<!-- Last updated: 2026-11-13 02:54 UTC -->
 | Product | Skills |
 |---------|--------|
 | [Agent Harness Install](https://github.com/open-edge-platform/edge-ai-libraries) | [agent-harness-install](https://github.com/open-edge-platform/skills/tree/main/.agents/skills/agent-harness-install) |
