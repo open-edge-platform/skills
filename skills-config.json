@@ -3,7 +3,7 @@
     {
       "product": "OEP CLI Installer",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "frameworks/oep-installer-cli/.github/skills",
       "skills": [
         {
@@ -25,7 +25,7 @@
     {
       "product": "Chat Question and Answer",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "sample-applications/chat-question-and-answer-core/.github/skills",
       "skills": [
         {
@@ -39,7 +39,7 @@
     {
       "product": "Video Search and Summarization",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "sample-applications/video-search-and-summarization/.github/skills",
       "skills": [
         {
@@ -59,7 +59,7 @@
     {
       "product": "Multimodal Embedding Serving Microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "microservices/multimodal-embedding-serving/.github/skills",
       "skills": [
         {
@@ -70,7 +70,7 @@
     {
       "product": "Multimodal DataPrep microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/.github/skills",
       "skills": [
         {
@@ -81,7 +81,7 @@
     {
       "product": "Model Download",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "microservices/model-download/.github/skills",
       "skills": [
         {
@@ -92,7 +92,7 @@
     {
       "product": "DL Streamer Pipeline Server",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "microservices/dlstreamer-pipeline-server/.github/skills",
       "skills": [
         {
@@ -103,7 +103,7 @@
     {
       "product": "Time Series Analytics Microservice",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "microservices/time-series-analytics/.github/skills",
       "skills": [
         {
@@ -186,7 +186,7 @@
     {
       "product": "Scenescape",
       "repo": "open-edge-platform/scenescape",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": ".github/skills",
       "skills": [
         {
@@ -197,7 +197,7 @@
     {
       "product": "Metro AI Suite - AI App Builder",
      "repo": "open-edge-platform/metro-ai-suite",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "prompt-library/.github/skills",
       "skills": [
         {
@@ -208,7 +208,7 @@
     {
       "product": "Metro AI Suite - Vision AI App Recipe",
       "repo": "open-edge-platform/metro-ai-suite",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "metro-vision-ai-app-recipe/.github/skills",
       "skills": [
         {
@@ -219,7 +219,7 @@
     {
       "product": "Manufacturing AI Suite - AI App Builder",
      "repo": "open-edge-platform/manufacturing-ai-suite",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": ".github/skills",
       "skills": [
         {
@@ -230,7 +230,7 @@
     {
       "product": "Manufacturing AI Suite - App Recipe",
       "repo": "open-edge-platform/manufacturing-ai-suite",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": ".github/skills",
       "skills": [
         {
@@ -241,7 +241,7 @@
     {
       "product": "UAV Mission Compute SDK",
       "repo": "open-edge-platform/federal-and-aerospace-ai-suite",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "uav-mission-compute-sdk/skills",
       "skills": [
         {
@@ -292,7 +292,7 @@
     {
       "product": "Agent Harness Install",
       "repo": "open-edge-platform/edge-ai-libraries",
-      "ref": "main",
+      "ref": "release-2026.3.0",
       "path": "frameworks/agent-harness-install/.github/skills",
       "skills": [
         {
