@@ -8,13 +8,14 @@ Map the user's **business objective** (Step 1 answers, especially "what feeds
 the decision") to a **primary** skill and any **supporting** skills, then plan
 + delegate.
 
-> `manufacturing-app-recipe` ships in **this workspace** under
-> `.github/skills/` — no install needed; it covers `vision`/`ts`/`multimodal`/
-> `vllm`/`agentic` deployment modes.
+> `manufacturing-app-recipe` covers `vision`/`ts`/`multimodal`/`vllm`/
+> `agentic` deployment modes. It is not present when only this orchestrator
+> was installed; install it with the folder-URL `npx skills@1.7.4 add`
+> command in [`DISCOVERY.md`](DISCOVERY.md) before delegating to it.
 > `metro-ai-app-recipe`, `dlsps-user`, `dlstreamer-coding-agent`, and
-> `time-series-analytics-user` live in **other** repos/suites, not under
-> this suite's `.github/skills/` — never assume one is present; confirm and
-> install per [`DISCOVERY.md`](DISCOVERY.md) before delegating to it
+> `time-series-analytics-user` live in **other** repos/suites — never assume
+> one is present; confirm and install per [`DISCOVERY.md`](DISCOVERY.md)
+> before delegating to it
 > (`npx skills@1.7.4 add open-edge-platform/skills --skill <name>`, or
 > `open-edge-platform/dlstreamer` for `dlstreamer-coding-agent`).
 
