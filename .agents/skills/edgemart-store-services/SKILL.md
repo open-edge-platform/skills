@@ -89,7 +89,7 @@ edgemart-agent-mcp.
 | `SIM_MODE` | `live` | `live`, or `replay` of a recorded day (sim only). |
 | `SIM_REPLAY_DATE` | today UTC | Day to replay, `YYYY-MM-DD`. |
 | `SIM_SEED` | `edgemart-default-seed` | Same seed and day give identical events. |
-| `SIM_SPEED` | `60` | 60 means one simulated hour per real minute. |
+| `SIM_SPEED` | `10` | 10 means ten simulated hours per real hour (60 = one simulated hour per real minute). |
 | `SIM_BENCHMARK` | `0` | `1` turns off SSE and MQTT fanout; the log still records events. |
 | `SIM_EXPERIENCE` | `cafe` | `cafe` or `grocery`. |
 | `CAFE_TABLE_COUNT` | `15` | Clamped to 1 to 200. |
