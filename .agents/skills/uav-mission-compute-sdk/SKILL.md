@@ -50,7 +50,7 @@ make init  # Creates .env, auto-detects GPU and RealSense devices
 ### Capture Frames
 ```bash
 curl -X POST http://localhost:8080/action/arm  # Required: RTSP only when armed
-ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 /tmp/frame.jpg -y
+ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 /tmp/frame.jpg -y
 ```
 
 ### Run Benchmarks

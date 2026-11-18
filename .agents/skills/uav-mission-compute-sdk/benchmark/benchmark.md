@@ -107,7 +107,7 @@ SPDX-License-Identifier: Apache-2.0
 ### Eval 3: camera-capture-and-legacy-mqtt ✅ PASS (6/6)
 
 **Expectations Met**:
-1. ✅ RTSP default: `ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1`
+1. ✅ RTSP default: `ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -frames:v 1`
 2. ✅ Arm requirement: streams only when armed
 3. ✅ JPEG validation: `file /tmp/frame.jpg`
 4. ✅ Legacy MQTT: `mosquitto_sub -t "uav/uav-1/camera/<cam>/frame"`
