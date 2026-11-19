@@ -461,9 +461,9 @@ ignore `*-weekly` pre-releases.
 ## Reference implementation — copied and renamed by `scripts/scaffold_stack.py`
 
 The upstream
-[`industrial-edge-insights-time-series/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/industrial-edge-insights-time-series)
+[`industrial-edge-insights-time-series/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/release-2026.3.0/industrial-edge-insights-time-series)
 wind-turbine-anomaly-detection sample (`ts` mode) and
-[`industrial-edge-insights-multimodal/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/industrial-edge-insights-multimodal)
+[`industrial-edge-insights-multimodal/`](https://github.com/open-edge-platform/manufacturing-ai-suite/tree/release-2026.3.0/industrial-edge-insights-multimodal)
 weld-defect-detection sample (`multimodal`/`vllm`/`agentic` modes) are the
 **source**. [`scripts/scaffold_stack.py`](../scripts/scaffold_stack.py) copies
 them and renames every vertical-specific path and name, so the generated
