@@ -50,7 +50,7 @@ after reviewing the new release. The pinned CLI needs Node.js >= 22.20:
 
 ```bash
 # manufacturing-app-recipe lives in this suite's repo
-npx skills@1.7.4 add https://github.com/open-edge-platform/manufacturing-ai-suite/tree/main/.github/skills/manufacturing-app-recipe
+npx skills@1.7.4 add https://github.com/open-edge-platform/manufacturing-ai-suite/tree/release-2026.3.0/.github/skills/manufacturing-app-recipe
 
 # metro-ai-app-recipe, dlsps-user, time-series-analytics-user
 npx skills@1.7.4 add open-edge-platform/skills --skill <skill-name>

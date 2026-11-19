@@ -880,7 +880,7 @@ def report(root, spec, changed, generated, model_proc, om, hits):
     print(f"\nScaffolded {spec['mode']} '{spec['slug']}' at {root}")
     print(f"  files rewritten by the rename map: {changed}")
     if generated:
-        print(f"  secrets generated in .env (values not shown): {', '.join(generated)}")
+        print(f"  secrets generated in .env (values not shown): {len(generated)} entries")
     if model_proc:
         print(f"  vision model-proc written: {model_proc}")
     if om:
