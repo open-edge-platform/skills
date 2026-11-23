@@ -115,7 +115,7 @@ jobs:
       - name: Create pull request if anything changed
         if: ${{ inputs.dry_run != 'true' }}
         id: create-pr
-        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           token: ${{ steps.get-github-app-token.outputs.token }}
           author: oep-skills[bot] <330355342+oep-skills[bot]@users.noreply.github.com>
