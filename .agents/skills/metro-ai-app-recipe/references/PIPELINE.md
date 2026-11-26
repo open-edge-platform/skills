@@ -100,7 +100,7 @@ When `{{CLASSIFIER}} != none` (e.g. PPE compliant/non-compliant), wire a second 
 For `X in 1..{{NUM_SOURCES}}` POST to `https://<HOST>/api/pipelines/user_defined_pipelines/<pipeline_name>`:
 ```json
 {
-  "source":      { "uri": "file:///home/pipeline-server/videos/new_video_X.mp4", "type": "uri" },
+  "source":      { "uri": "file:///home/pipeline-server/resources/new_video_X.mp4", "type": "uri" },
   "destination": {
     "metadata": { "type": "mqtt", "topic": "{{DETECTIONS_TOPIC_PREFIX}}_X", "publish_frame": false },
     "frame":    { "type": "webrtc", "peer-id": "{{DETECTIONS_TOPIC_PREFIX}}_X" }
@@ -117,14 +117,14 @@ For `X in 1..{{NUM_SOURCES}}` POST to `https://<HOST>/api/pipelines/user_defined
 
 The launch body's `source.uri` is driven by the invoking prompt's **Inputs** answer; `sample_start.sh` builds it per source index `X`:
 
-- **Sample video / local file** (default): `"uri":"file:///home/pipeline-server/videos/new_video_X.mp4","type":"uri"`. `install.sh` downloads the videos; the **file-source watchdog is REQUIRED** (file:// is one-shot — see below).
+- **Sample video / local file** (default): `"uri":"file:///home/pipeline-server/resources/new_video_X.mp4","type":"uri"`. `install.sh` downloads the videos; the **file-source watchdog is REQUIRED** (file:// is one-shot — see below).
 - **RTSP cameras** (`rtsp://…`, one URL per source): `"uri":"rtsp://<user>:<pass>@<cam-X-host>/<path>","type":"uri"`. RTSP is a **continuous** stream — DLSPS never emits EOS, so **do NOT download sample videos** and **do NOT run the file:// watchdog** (no `COMPLETED` respawn needed). Store the URLs in `.env` as `RTSP_URL_1..N` (quote values) and read them in `sample_start.sh`.
 - **USB/CSI device** (`/dev/videoN`): `"uri":"/dev/videoN","type":"device"`; also continuous — no video download, no watchdog.
 
 `sample_start.sh` selects behaviour from an `INPUT_TYPE` (`file`|`rtsp`|`device`) written to `.env` by `install.sh`, e.g.:
 ```sh
 case "$INPUT_TYPE" in
-  file)   SRC='{"uri":"file:///home/pipeline-server/videos/new_video_'"$X"'.mp4","type":"uri"}' ;;
+  file)   SRC='{"uri":"file:///home/pipeline-server/resources/new_video_'"$X"'.mp4","type":"uri"}' ;;
   rtsp)   eval 'U=$RTSP_URL_'"$X"; SRC='{"uri":"'"$U"'","type":"uri"}' ;;
   device) eval 'U=$DEV_VIDEO_'"$X"; SRC='{"uri":"'"$U"'","type":"device"}' ;;
 esac
@@ -164,7 +164,7 @@ while :; do
     [ -z "$idx" ] && continue
     curl --noproxy '*' -s --cacert "$CACERT" -X DELETE "https://${HOST}/api/pipelines/${id}" >/dev/null || true
     curl --noproxy '*' -s --cacert "$CACERT" -X POST -H 'Content-Type: application/json' \
-      -d '{"source":{"uri":"file:///home/pipeline-server/videos/new_video_'"$idx"'.mp4","type":"uri"},"destination":{"metadata":{"type":"mqtt","topic":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'","publish_frame":false},"frame":{"type":"webrtc","peer-id":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'"}}}' \
+      -d '{"source":{"uri":"file:///home/pipeline-server/resources/new_video_'"$idx"'.mp4","type":"uri"},"destination":{"metadata":{"type":"mqtt","topic":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'","publish_frame":false},"frame":{"type":"webrtc","peer-id":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'"}}}' \
       "$BASE" >/dev/null || true
   done
   sleep 3

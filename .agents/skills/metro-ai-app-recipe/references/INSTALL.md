@@ -126,7 +126,9 @@ docker run --rm --user root -e http_proxy -e https_proxy -e no_proxy \
     export MODELS_PATH=/opt/project/src/dlstreamer-pipeline-server/models
     mkdir -p "$MODELS_PATH"/public
     if [ ! -f "$MODELS_PATH/public/{{PIPELINE_NAME}}/INT8/{{PIPELINE_NAME}}.xml" ]; then
-      /home/dlstreamer/dlstreamer/samples/download_public_models.sh {{PIPELINE_NAME}} coco128
+      python3 -m venv /tmp/ultra-venv
+      /tmp/ultra-venv/bin/pip install -r "/opt/intel/dlstreamer/scripts/download_models/requirements_download_ultralytics_models.txt"
+      /tmp/ultra-venv/bin/python "/opt/intel/dlstreamer/scripts/download_models/download_ultralytics_models.py" --model {{PIPELINE_NAME}}.pt --outdir "$MODELS_PATH/public/{{PIPELINE_NAME}}/INT8" --int8 --data coco128.yaml
     fi
     if [ "{{CLASSIFIER}}" != "none" ] && [ ! -f "$MODELS_PATH/{{CLASSIFIER_XML}}" ]; then
       mkdir -p "$MODELS_PATH/{{CLASSIFIER}}"
