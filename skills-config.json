@@ -299,6 +299,35 @@
           "name": "agent-harness-install"
         }
       ]
+    },
+    {
+      "product": "Trusted Compute",
+      "repo": "open-edge-platform/trusted-compute",
+      "ref": "main",
+      "path": "security-config-agent/skills",
+      "skills": [
+        {
+          "name": "secure-boot"
+        },
+        {
+          "name": "boot-guard"
+        },
+        {
+          "name": "tme"
+        },
+        {
+          "name": "disk-encryption"
+        },
+        {
+          "name": "crypto-capabilities"
+        },
+        {
+          "name": "trusted-compute-install"
+        },
+        {
+          "name": "trusted-compute-app-onboarding"
+        }
+      ]
     }
   ]
 }
